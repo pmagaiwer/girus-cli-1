@@ -65,35 +65,24 @@ jobs:
             echo "has_dockerhub_credentials=true" >> $GITHUB_OUTPUT
           else
             echo "has_dockerhub_credentials=false" >> $GITHUB_OUTPUT
-            echo "Docker Hub credentials not found. Will only push to GitHub Container Registry."
+            echo "::error::Docker Hub credentials not found. Please set DOCKERHUB_USERNAME and DOCKERHUB_TOKEN secrets."
+            exit 1
           fi
 
       - name: Login to Docker Hub
-        if: steps.dockerhub_check.outputs.has_dockerhub_credentials == 'true'
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Set image names
-        id: image_names
-        run: |
-          IMAGES="ghcr.io/${{ github.repository }}"
-          if [ "${{ steps.dockerhub_check.outputs.has_dockerhub_credentials }}" == "true" ]; then
-            IMAGES="$IMAGES,${{ secrets.DOCKERHUB_USERNAME }}/girus-cli"
-          fi
-          echo "images=$IMAGES" >> $GITHUB_OUTPUT
-
       - name: Extract metadata for Docker
         id: meta
         uses: docker/metadata-action@v4
         with:
-          images: ${{ steps.image_names.outputs.images }}
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/girus-cli
           tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=sha,format=long
-            type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'main') }}
+            type=sha,format=short
+            type=raw,value=latest
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v4
