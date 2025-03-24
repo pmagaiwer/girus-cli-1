@@ -37,7 +37,7 @@ jobs:
         run: GOOS=windows GOARCH=amd64 go build -v -o dist/girus-windows-amd64.exe -ldflags="-X 'github.com/linuxtips/girus/girus-cli/cmd.Version=${{ github.ref_name }}'" ./main.go
 
       - name: Create Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
