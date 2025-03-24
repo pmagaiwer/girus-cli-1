@@ -33,11 +33,17 @@ jobs:
       - name: Create dist directory
         run: mkdir -p dist
 
-      - name: Build for Linux
+      - name: Build for Linux AMD64
         run: GOOS=linux GOARCH=amd64 go build -v -o dist/girus-linux-amd64 -ldflags="-X 'github.com/linuxtips/girus/girus-cli/cmd.Version=${{ github.ref_name }}'" ./main.go
 
-      - name: Build for macOS
+      - name: Build for Linux ARM64
+        run: GOOS=linux GOARCH=arm64 go build -v -o dist/girus-linux-arm64 -ldflags="-X 'github.com/linuxtips/girus/girus-cli/cmd.Version=${{ github.ref_name }}'" ./main.go
+
+      - name: Build for macOS AMD64 (Intel)
         run: GOOS=darwin GOARCH=amd64 go build -v -o dist/girus-darwin-amd64 -ldflags="-X 'github.com/linuxtips/girus/girus-cli/cmd.Version=${{ github.ref_name }}'" ./main.go
+
+      - name: Build for macOS ARM64 (Apple Silicon)
+        run: GOOS=darwin GOARCH=arm64 go build -v -o dist/girus-darwin-arm64 -ldflags="-X 'github.com/linuxtips/girus/girus-cli/cmd.Version=${{ github.ref_name }}'" ./main.go
 
       - name: Build for Windows
         run: GOOS=windows GOARCH=amd64 go build -v -o dist/girus-windows-amd64.exe -ldflags="-X 'github.com/linuxtips/girus/girus-cli/cmd.Version=${{ github.ref_name }}'" ./main.go
@@ -48,7 +54,9 @@ jobs:
         with:
           files: |
             dist/girus-linux-amd64
+            dist/girus-linux-arm64
             dist/girus-darwin-amd64
+            dist/girus-darwin-arm64
             dist/girus-windows-amd64.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
