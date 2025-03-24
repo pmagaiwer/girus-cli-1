@@ -12,61 +12,88 @@ elif [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" || "$OSTYPE" == "cygwin" ]];
 OS="windows"
 fi
 
+# Detectar arquitetura
+ARCH=$(uname -m)
+if [ "$ARCH" == "x86_64" ]; then
+ARCH="amd64"
+elif [[ "$ARCH" == "arm64" || "$ARCH" == "aarch64" ]]; then
+ARCH="arm64"
+fi
+
 echo "Sistema operacional detectado: $OS"
+echo "Arquitetura detectada: $ARCH"
 
-# Função para instalar Go
-install_go() {
-echo "Instalando Go (última versão estável)..."
+# URL base para os binários do Girus CLI
+RELEASE_VERSION="0.1.0" # Ajuste para a versão atual
+RELEASES_URL="https://github.com/linuxtips/girus-cli/releases/download/v${RELEASE_VERSION}"
 
-# Obter a última versão estável do Go
-LATEST_GO_VERSION=$(curl -s https://golang.org/VERSION?m=text | head -n 1 | sed 's/go//')
+# Armazenar o diretório atual
+ORIGINAL_DIR=$(pwd)
+TEMP_DIR=$(mktemp -d)
+cd "$TEMP_DIR"
 
-if [ "$OS" == "linux" ]; then
-# Linux
-wget -q https://golang.org/dl/go${LATEST_GO_VERSION}.linux-amd64.tar.gz
-sudo rm -rf /usr/local/go
-sudo tar -C /usr/local -xzf go${LATEST_GO_VERSION}.linux-amd64.tar.gz
-rm go${LATEST_GO_VERSION}.linux-amd64.tar.gz
+# Função para baixar e instalar o binário
+download_and_install() {
+local binary_name="girus"
 
-# Adicionar ao PATH temporariamente
-export PATH=$PATH:/usr/local/go/bin
+# No Windows, adicionar extensão .exe
+if [ "$OS" == "windows" ]; then
+binary_name="girus.exe"
+fi
 
-echo "Go instalado em /usr/local/go"
-echo "Para tornar permanente, adicione ao seu arquivo ~/.bashrc ou ~/.zshrc:"
-echo 'export PATH=$PATH:/usr/local/go/bin'
+# Construir a URL do binário
+local binary_url="${RELEASES_URL}/girus-${OS}-${ARCH}"
 
-elif [ "$OS" == "darwin" ]; then
-# MacOS
-if command -v brew &> /dev/null; then
-brew install go
+echo "Baixando Girus CLI para ${OS}-${ARCH}..."
+
+# Tentar baixar com curl ou wget
+if command -v curl &> /dev/null; then
+curl -L -o "$binary_name" "$binary_url"
+elif command -v wget &> /dev/null; then
+wget -O "$binary_name" "$binary_url"
 else
-wget -q https://golang.org/dl/go${LATEST_GO_VERSION}.darwin-amd64.pkg
-sudo installer -pkg go${LATEST_GO_VERSION}.darwin-amd64.pkg -target /
-rm go${LATEST_GO_VERSION}.darwin-amd64.pkg
-
-# Adicionar ao PATH temporariamente
-export PATH=$PATH:/usr/local/go/bin
-
-echo "Go instalado em /usr/local/go"
-echo "Para tornar permanente, adicione ao seu arquivo ~/.bash_profile ou ~/.zshrc:"
-echo 'export PATH=$PATH:/usr/local/go/bin'
-fi
-
-elif [ "$OS" == "windows" ]; then
-# Windows - sugestão para instalação manual
-echo "Instalação automática do Go não suportada no Windows."
-echo "Por favor, baixe e instale Go manualmente de https://golang.org/dl/"
-echo "Após a instalação, reabra o terminal e execute este script novamente."
+echo "❌ Erro: Nem curl nem wget estão instalados. Por favor, instale um deles e tente novamente."
 exit 1
 fi
 
-# Verificar a instalação
-if ! command -v go &> /dev/null; then
-echo "Falha ao instalar o Go. Por favor, instale manualmente."
+# Verificar se o download foi bem-sucedido
+if [ ! -f "$binary_name" ]; then
+echo "❌ Erro: Falha ao baixar o binário do Girus CLI."
+
+# Informar ao usuário sobre a possibilidade de compilar do código-fonte
+echo "Binário pré-compilado não disponível para ${OS}-${ARCH}."
+echo "Você pode tentar compilar manualmente do código-fonte:"
+echo "1. git clone https://github.com/linuxtips/girus-cli.git"
+echo "2. cd girus-cli"
+echo "3. go build -o girus ."
+
 exit 1
 fi
 
-echo "Go ${LATEST_GO_VERSION} instalado com sucesso!"
+# Dar permissão de execução (exceto no Windows)
+if [ "$OS" != "windows" ]; then
+chmod +x "$binary_name"
+fi
+
+echo "Girus CLI baixado com sucesso."
+}
+
+# Verificar se Kind está instalado
+check_and_install_kind() {
+if ! command -v kind &> /dev/null; then
+echo "Kind não está instalado."
+read -p "Deseja instalar Kind automaticamente? (S/n): " INSTALL_KIND
+INSTALL_KIND=${INSTALL_KIND:-S}
+
+if [[ "$INSTALL_KIND" =~ ^[Ss]$ ]]; then
+install_kind
+else
+echo "Aviso: Kind não está instalado. É necessário para criar clusters."
+echo "Visite: https://kind.sigs.k8s.io/docs/user/quick-start/#installation"
+fi
+else
+echo "✅ Kind encontrado."
+fi
 }
 
 # Função para instalar Kind
@@ -95,6 +122,24 @@ exit 1
 fi
 
 echo "Kind instalado com sucesso!"
+}
+
+# Verificar se Kubectl está instalado
+check_and_install_kubectl() {
+if ! command -v kubectl &> /dev/null; then
+echo "Kubectl não está instalado."
+read -p "Deseja instalar Kubectl automaticamente? (S/n): " INSTALL_KUBECTL
+INSTALL_KUBECTL=${INSTALL_KUBECTL:-S}
+
+if [[ "$INSTALL_KUBECTL" =~ ^[Ss]$ ]]; then
+install_kubectl
+else
+echo "Aviso: Kubectl não está instalado. É necessário para gerenciar clusters."
+echo "Visite: https://kubernetes.io/docs/tasks/tools/install-kubectl/"
+fi
+else
+echo "✅ Kubectl encontrado."
+fi
 }
 
 # Função para instalar Kubectl
@@ -135,233 +180,12 @@ fi
 echo "Kubectl instalado com sucesso!"
 }
 
-# Verificar se Go está instalado
-if ! command -v go &> /dev/null; then
-echo "Go não está instalado."
-read -p "Deseja instalar Go automaticamente? (S/n): " INSTALL_GO
-INSTALL_GO=${INSTALL_GO:-S}
+# Baixar o binário do Girus CLI
+download_and_install
 
-if [[ "$INSTALL_GO" =~ ^[Ss]$ ]]; then
-install_go
-else
-echo "Erro: Go é necessário para compilar o Girus CLI."
-echo "Visite: https://golang.org/doc/install"
-exit 1
-fi
-else
-# Verificar versão do Go
-GO_VERSION=$(go version 2>/dev/null | awk '{print $3}' | sed 's/go//')
-
-# Verificar se conseguimos obter a versão
-if [ -z "$GO_VERSION" ]; then
-echo "⚠️ Aviso: Não foi possível determinar a versão do Go."
-echo "Vamos instalar uma versão atualizada do Go."
-install_go
-else
-# Verificar a versão do Go apenas se conseguimos extrair corretamente
-MAJOR_VERSION=$(echo $GO_VERSION | cut -d. -f1)
-MINOR_VERSION=$(echo $GO_VERSION | cut -d. -f2)
-
-if [[ "$MAJOR_VERSION" =~ ^[0-9]+$ ]] && [[ "$MINOR_VERSION" =~ ^[0-9]+$ ]]; then
-if [ "$MAJOR_VERSION" -lt 1 ] || ([ "$MAJOR_VERSION" -eq 1 ] && [ "$MINOR_VERSION" -lt 22 ]); then
-echo "Aviso: Versão do Go é $GO_VERSION, mas Go 1.22 ou superior é recomendado."
-read -p "Deseja continuar mesmo assim? (S/n): " CONTINUE_OLD_GO
-CONTINUE_OLD_GO=${CONTINUE_OLD_GO:-S}
-
-if [[ ! "$CONTINUE_OLD_GO" =~ ^[Ss]$ ]]; then
-echo "Instalação cancelada. Por favor, atualize o Go."
-exit 1
-fi
-else
-echo "✅ Go $GO_VERSION encontrado."
-fi
-else
-echo "⚠️ Aviso: Versão do Go não reconhecida: $GO_VERSION"
-echo "Continuando a instalação mesmo assim..."
-fi
-fi
-fi
-
-# Verificar e configurar o GOROOT
-# Primeiro, tentar obter GOROOT do comando go env
-if command -v go &> /dev/null; then
-DETECTED_GOROOT=$(go env GOROOT 2>/dev/null)
-if [ $? -eq 0 ] && [ -n "$DETECTED_GOROOT" ] && [ -d "$DETECTED_GOROOT" ]; then
-echo "✅ GOROOT detectado: $DETECTED_GOROOT"
-export GOROOT="$DETECTED_GOROOT"
-export PATH="$GOROOT/bin:$PATH"
-elif [ -d "/usr/local/go" ]; then
-echo "Configurando GOROOT para /usr/local/go"
-export GOROOT=/usr/local/go
-export PATH="$GOROOT/bin:$PATH"
-else
-# Procurar Go em diretórios comuns
-for dir in "/usr/lib/go" "/usr/local/go" "/opt/go" "$HOME/go"; do
-if [ -d "$dir" ] && [ -f "$dir/bin/go" ]; then
-echo "Configurando GOROOT para $dir"
-export GOROOT="$dir"
-export PATH="$GOROOT/bin:$PATH"
-break
-fi
-done
-fi
-fi
-
-# Verificar se Go está no PATH após ajustes
-if ! command -v go &> /dev/null; then
-echo "⚠️ Erro: Go não está disponível no PATH mesmo após configuração."
-echo "Vamos tentar instalar o Go novamente."
-install_go
-else
-# Verificar se go pode acessar o GOROOT
-if ! go version &> /dev/null; then
-echo "⚠️ Erro: Go instalado mas com problemas de configuração."
-echo "Vamos tentar instalar o Go novamente para corrigir."
-install_go
-fi
-fi
-
-# Armazenar o diretório atual antes de prosseguir
-ORIGINAL_DIR=$(pwd)
-
-# Verificar se Kind está instalado
-if ! command -v kind &> /dev/null; then
-echo "Kind não está instalado."
-read -p "Deseja instalar Kind automaticamente? (S/n): " INSTALL_KIND
-INSTALL_KIND=${INSTALL_KIND:-S}
-
-if [[ "$INSTALL_KIND" =~ ^[Ss]$ ]]; then
-install_kind
-else
-echo "Aviso: Kind não está instalado. É necessário para criar clusters."
-echo "Visite: https://kind.sigs.k8s.io/docs/user/quick-start/#installation"
-fi
-else
-echo "✅ Kind encontrado."
-fi
-
-# Verificar se Kubectl está instalado
-if ! command -v kubectl &> /dev/null; then
-echo "Kubectl não está instalado."
-read -p "Deseja instalar Kubectl automaticamente? (S/n): " INSTALL_KUBECTL
-INSTALL_KUBECTL=${INSTALL_KUBECTL:-S}
-
-if [[ "$INSTALL_KUBECTL" =~ ^[Ss]$ ]]; then
-install_kubectl
-else
-echo "Aviso: Kubectl não está instalado. É necessário para gerenciar clusters."
-echo "Visite: https://kubernetes.io/docs/tasks/tools/install-kubectl/"
-fi
-else
-echo "✅ Kubectl encontrado."
-fi
-
-# Baixar dependências
-echo "Baixando dependências..."
-# Verificar novamente se o Go está funcionando corretamente
-if ! go version &> /dev/null; then
-echo "⚠️ Erro: Go ainda não está configurado corretamente."
-echo "Vamos tentar uma última configuração..."
-
-# Última tentativa de configurar o Go
-if [ -d "/usr/local/go" ]; then
-export GOROOT=/usr/local/go
-export PATH="$GOROOT/bin:$PATH"
-echo "GOROOT configurado para /usr/local/go"
-fi
-
-# Verificar se o problema foi resolvido
-if ! go version &> /dev/null; then
-echo "❌ Erro: Não foi possível configurar o Go corretamente."
-echo "Por favor, execute manualmente os comandos:"
-echo "export GOROOT=/usr/local/go"
-echo "export PATH=\$GOROOT/bin:\$PATH"
-exit 1
-fi
-fi
-
-# Criar diretório temporário para baixar o código-fonte
-TEMP_DIR=$(mktemp -d)
-echo "Baixando código-fonte do Girus CLI..."
-
-# Verificar se git está instalado
-if ! command -v git &> /dev/null; then
-echo "⚠️ Git não encontrado. Tentando instalar..."
-if [ "$OS" == "darwin" ]; then
-if command -v brew &> /dev/null; then
-brew install git
-else
-echo "❌ Erro: Git é necessário. Por favor, instale o Git manualmente."
-exit 1
-fi
-elif [ "$OS" == "linux" ]; then
-if command -v apt-get &> /dev/null; then
-sudo apt-get update && sudo apt-get install -y git
-elif command -v yum &> /dev/null; then
-sudo yum install -y git
-else
-echo "❌ Erro: Git é necessário. Por favor, instale o Git manualmente."
-exit 1
-fi
-else
-echo "❌ Erro: Git é necessário. Por favor, instale o Git manualmente."
-exit 1
-fi
-fi
-
-# Clonar o repositório do Girus
-cd "$TEMP_DIR"
-git clone https://github.com/linuxtips/girus-cli.git . || {
-echo "❌ Erro: Falha ao clonar o repositório do Girus CLI."
-echo "Tentando método alternativo..."
-
-# Se o git falhar, tentar baixar usando curl/wget
-if command -v curl &> /dev/null; then
-curl -L -o "$TEMP_DIR/girus-cli.zip" "https://github.com/linuxtips/girus-cli/archive/refs/heads/main.zip" || {
-echo "❌ Erro: Falha ao baixar o código-fonte do Girus CLI."
-exit 1
-}
-elif command -v wget &> /dev/null; then
-wget -O "$TEMP_DIR/girus-cli.zip" "https://github.com/linuxtips/girus-cli/archive/refs/heads/main.zip" || {
-echo "❌ Erro: Falha ao baixar o código-fonte do Girus CLI."
-exit 1
-}
-else
-echo "❌ Erro: Não foi possível baixar o código-fonte do Girus CLI."
-exit 1
-fi
-
-# Extrair o zip
-if command -v unzip &> /dev/null; then
-unzip "$TEMP_DIR/girus-cli.zip" -d "$TEMP_DIR/extracted" || {
-echo "❌ Erro: Falha ao extrair o arquivo zip."
-exit 1
-}
-# Mover os arquivos extraídos para o diretório correto
-mv "$TEMP_DIR"/extracted/girus-cli-*/* "$TEMP_DIR/"
-rm -rf "$TEMP_DIR/extracted" "$TEMP_DIR/girus-cli.zip"
-else
-echo "❌ Erro: O comando unzip não está instalado. Por favor, instale-o e tente novamente."
-exit 1
-fi
-}
-
-# Agora estamos no diretório com o código-fonte
-
-# Agora podemos prosseguir com o download de dependências
-go mod tidy
-
-# Compilar o projeto
-echo "Compilando o Girus CLI..."
-go build -o girus .
-
-# Verificar se a compilação foi bem-sucedida
-if [ ! -f "./girus" ]; then
-echo "Erro: A compilação falhou."
-exit 1
-fi
-
-echo "Girus CLI compilado com sucesso."
+# Verificar as dependências necessárias
+check_and_install_kind
+check_and_install_kubectl
 
 # Perguntar se o usuário deseja instalar o girus no PATH
 if [ "$OS" != "windows" ]; then
@@ -380,13 +204,16 @@ echo "Você pode movê-lo manualmente para um diretório no PATH quando desejar.
 fi
 else
 # Copiar para o diretório original de onde o script foi executado
-cp "./girus" "$ORIGINAL_DIR/"
-echo "O binário está disponível em $ORIGINAL_DIR/girus"
+cp "./girus.exe" "$ORIGINAL_DIR/"
+echo "O binário está disponível em $ORIGINAL_DIR/girus.exe"
 echo "No Windows, recomendamos mover o arquivo para uma pasta no seu PATH manualmente."
 fi
 
 # Voltar para o diretório original
 cd "$ORIGINAL_DIR"
+
+# Limpar diretório temporário
+rm -rf "$TEMP_DIR"
 
 # Verificar se Docker está instalado e em execução
 if ! command -v docker &> /dev/null; then
