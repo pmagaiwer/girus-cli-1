@@ -1,10 +1,5 @@
+![LINUXtips Logo](LINUXtips-logo.png)
 # Girus CLI
-
-![Girus Logo](https://raw.githubusercontent.com/linuxtips/girus/main/web/public/girus-logo.svg)
-
-[![Build Status](https://github.com/linuxtips/girus/actions/workflows/build.yml/badge.svg)](https://github.com/linuxtips/girus/actions/workflows/build.yml)
-[![Docker Status](https://github.com/linuxtips/girus/actions/workflows/docker.yml/badge.svg)](https://github.com/linuxtips/girus/actions/workflows/docker.yml)
-[![Test Status](https://github.com/linuxtips/girus/actions/workflows/test.yml/badge.svg)](https://github.com/linuxtips/girus/actions/workflows/test.yml)
 
 ## Sobre o Girus CLI
 
