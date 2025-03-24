@@ -37,7 +37,7 @@ curl -fsSL https://girus.linuxtips.io | bash
 Ou usando o repositório diretamente:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/linuxtips/girus/main/girus-cli/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/badtuxx/girus-cli/main/install.sh | bash
 ```
 
 O script verifica e instala automaticamente:
@@ -50,7 +50,7 @@ O script verifica e instala automaticamente:
 
 1. Clone o repositório:
    ```bash
-   git clone https://github.com/linuxtips/girus.git
+   git clone https://github.com/badtuxx/girus-cli.git
    ```
 
 2. Acesse o diretório do CLI:
