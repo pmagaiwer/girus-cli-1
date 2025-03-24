@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -24,6 +25,147 @@ var (
 	skipPortForward bool
 	skipBrowser     bool
 )
+
+// Conteúdo do template básico do Linux
+const basicLinuxTemplate = `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: basic-linux-lab
+  namespace: girus
+  labels:
+    app: girus-lab-template
+data:
+  lab.yaml: |
+    name: linux-basics
+    title: "Introdução ao Linux"
+    description: "Laboratório básico para praticar comandos Linux essenciais e conceitos fundamentais"
+    duration: 30m
+    tasks:
+      - name: "Preparação do ambiente"
+        description: "Atualize os pacotes e instale as ferramentas necessárias"
+        steps:
+          - "Atualize a lista de pacotes disponíveis:"
+          - "` + "`" + `apt update` + "`" + `"
+          - "Instale o editor de texto nano:"
+          - "` + "`" + `apt install -y nano` + "`" + `"
+        tips:
+          - type: "info"
+            title: "Sobre o nano"
+            content: "Nano é um editor de texto simples para terminais. Ele é mais fácil de usar que outros editores como vim ou emacs, e é perfeito para iniciantes."
+        validation:
+          - command: "which nano && echo 'ok'"
+            expectedOutput: "ok"
+            errorMessage: "Nano não foi instalado corretamente"
+
+      - name: "Navegação básica"
+        description: "Aprenda os comandos essenciais para navegar no sistema de arquivos Linux"
+        steps:
+          - "Comece verificando qual é seu diretório atual com o comando:"
+          - "` + "`" + `pwd` + "`" + `"
+          - "Liste todos os arquivos (incluindo ocultos) do diretório atual:"
+          - "` + "`" + `ls -la` + "`" + `"
+          - "Crie um novo diretório para praticar:"
+          - "` + "`" + `mkdir lab-practice` + "`" + `"
+          - "Entre no diretório criado:"
+          - "` + "`" + `cd lab-practice` + "`" + `"
+          - "Crie alguns arquivos para praticar:"
+          - "` + "`" + `touch file1.txt file2.txt file3.txt` + "`" + `"
+        tips:
+          - type: "info"
+            title: "Dica: Atalhos úteis"
+            content: "Use cd .. para voltar um diretório acima, e cd ~ para ir direto para seu diretório home. O comando ls tem muitas opções úteis: ls -l (formato detalhado), ls -a (mostra arquivos ocultos), ls -h (tamanhos legíveis por humanos)."
+        validation:
+          - command: "test -d lab-practice && echo 'ok'"
+            expectedOutput: "ok"
+            errorMessage: "Diretório 'lab-practice' não foi criado"
+          - command: "test -f lab-practice/file1.txt && echo 'ok'"
+            expectedOutput: "ok"
+            errorMessage: "Arquivos de teste não foram criados"
+
+      - name: "Manipulação de arquivos"
+        description: "Aprenda a criar, editar e gerenciar arquivos no Linux"
+        steps:
+          - "Crie um arquivo de texto usando o editor nano:"
+          - "` + "`" + `nano notes.txt` + "`" + `"
+          - "Adicione algumas linhas de texto e salve com Ctrl+O e saia com Ctrl+X"
+          - "Visualize o conteúdo do arquivo:"
+          - "` + "`" + `cat notes.txt` + "`" + `"
+          - "Copie um arquivo para outro nome:"
+          - "` + "`" + `cp notes.txt notes_backup.txt` + "`" + `"
+          - "Compare os dois arquivos:"
+          - "` + "`" + `diff notes.txt notes_backup.txt` + "`" + `"
+          - "Adicione mais conteúdo ao arquivo original:"
+          - "` + "`" + `echo 'Nova linha adicionada!' >> notes.txt` + "`" + `"
+          - "Compare novamente os arquivos:"
+          - "` + "`" + `diff notes.txt notes_backup.txt` + "`" + `"
+        tips:
+          - type: "warning"
+            title: "Atenção: Redirecionamentos"
+            content: "O símbolo > redireciona a saída e sobrescreve o arquivo existente, enquanto >> adiciona ao final do arquivo sem apagar o conteúdo anterior."
+        validation:
+          - command: "test -f lab-practice/notes.txt && echo 'ok'"
+            expectedOutput: "ok"
+            errorMessage: "Arquivo notes.txt não foi criado"
+          - command: "test -f lab-practice/notes_backup.txt && echo 'ok'"
+            expectedOutput: "ok"
+            errorMessage: "Arquivo de backup não foi criado"
+
+      - name: "Permissões de arquivos"
+        description: "Aprenda a gerenciar permissões de arquivos e diretórios"
+        steps:
+          - "Verifique as permissões atuais dos arquivos:"
+          - "` + "`" + `ls -l` + "`" + `"
+          - "Crie um script shell simples:"
+          - "` + "`" + `nano script.sh` + "`" + `"
+          - "Adicione o seguinte conteúdo ao script:"
+          - |
+            ` + "```bash" + `
+            #!/bin/bash
+            echo "Olá, este é meu primeiro script!"
+            echo "Data atual: $(date)"
+            echo "Usuário atual: $(whoami)"
+            ` + "```" + `
+          - "Salve o arquivo (Ctrl+O, Enter, Ctrl+X)"
+          - "Tente executar o script:"
+          - "` + "`" + `./script.sh` + "`" + `"
+          - "Você receberá um erro de permissão. Adicione permissão de execução:"
+          - "` + "`" + `chmod +x script.sh` + "`" + `"
+          - "Agora execute novamente:"
+          - "` + "`" + `./script.sh` + "`" + `"
+        tips:
+          - type: "info"
+            title: "Sobre permissões Linux"
+            content: "As permissões no Linux são representadas por r (leitura), w (escrita) e x (execução) para três grupos: proprietário, grupo e outros. O comando chmod +x adiciona permissão de execução para todos os grupos."
+          - type: "tip"
+            title: "Modo octal"
+            content: "Você também pode usar o modo octal para definir permissões: chmod 755 arquivo (rwx para o dono, rx para grupo e outros)"
+        validation:
+          - command: "test -f lab-practice/script.sh && ls -l lab-practice/script.sh | grep -q x && echo 'ok'"
+            expectedOutput: "ok"
+            errorMessage: "Script não foi criado ou não tem permissão de execução"
+
+      - name: "Processos e monitoramento"
+        description: "Aprenda a monitorar e gerenciar processos no Linux"
+        steps:
+          - "Veja os processos em execução:"
+          - "` + "`" + `ps aux` + "`" + `"
+          - "Monitore os processos e recursos em tempo real:"
+          - "` + "`" + `top` + "`" + `"
+          - "Pressione 'q' para sair do top"
+          - "Execute um processo em segundo plano:"
+          - "` + "`" + `sleep 300 &` + "`" + `"
+          - "Veja o processo em execução:"
+          - "` + "`" + `ps aux | grep sleep` + "`" + `"
+          - "Termine o processo sleep:"
+          - "` + "`" + `pkill sleep` + "`" + `"
+        tips:
+          - type: "tip"
+            title: "Alternativa ao top"
+            content: "O comando htop é uma versão melhorada do top com interface colorida e interativa. Instale-o com 'apt install htop' em sistemas Debian/Ubuntu."
+        validation:
+          - command: "ps aux | grep -v grep | grep -q sleep || echo 'ok'"
+            expectedOutput: "ok"
+            errorMessage: "O processo sleep não foi encerrado corretamente"`
 
 // defaultDeployment contém o YAML de deployment padrão do Girus
 const defaultDeployment = `apiVersion: v1
@@ -122,130 +264,6 @@ data:
         SHELL: "/bin/bash"
         privileged: false
     # Outras configurações podem ser adicionadas aqui
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: basic-linux-lab
-  namespace: girus
-  labels:
-    app: girus-lab-template
-data:
-  lab.yaml: |
-    name: linux-basics
-    title: "Introdução ao Linux"
-    description: "Laboratório básico para praticar comandos Linux essenciais e conceitos fundamentais"
-    duration: 30m
-    tasks:
-      - name: "Navegação básica"
-        description: "Aprenda os comandos essenciais para navegar no sistema de arquivos Linux"
-        steps:
-          - "Comece verificando qual é seu diretório atual com o comando:"
-          - "\`pwd\`"
-          - "Liste todos os arquivos (incluindo ocultos) do diretório atual:"
-          - "\`ls -la\`"
-          - "Crie um novo diretório para praticar:"
-          - "\`mkdir lab-practice\`"
-          - "Entre no diretório criado:"
-          - "\`cd lab-practice\`"
-          - "Crie alguns arquivos para praticar:"
-          - "\`touch file1.txt file2.txt file3.txt\`"
-        tips:
-          - type: "info"
-            title: "Dica: Atalhos úteis"
-            content: "Use cd .. para voltar um diretório acima, e cd ~ para ir direto para seu diretório home. O comando ls tem muitas opções úteis: ls -l (formato detalhado), ls -a (mostra arquivos ocultos), ls -h (tamanhos legíveis por humanos)."
-        validation:
-          - command: "test -d lab-practice && echo 'ok'"
-            expectedOutput: "ok"
-            errorMessage: "Diretório 'lab-practice' não foi criado"
-          - command: "test -f lab-practice/file1.txt && echo 'ok'"
-            expectedOutput: "ok"
-            errorMessage: "Arquivos de teste não foram criados"
-
-      - name: "Manipulação de arquivos"
-        description: "Aprenda a criar, editar e gerenciar arquivos no Linux"
-        steps:
-          - "Crie um arquivo de texto usando o editor nano:"
-          - "\`nano notes.txt\`"
-          - "Adicione algumas linhas de texto e salve com Ctrl+O e saia com Ctrl+X"
-          - "Visualize o conteúdo do arquivo:"
-          - "\`cat notes.txt\`"
-          - "Copie um arquivo para outro nome:"
-          - "\`cp notes.txt notes_backup.txt\`"
-          - "Compare os dois arquivos:"
-          - "\`diff notes.txt notes_backup.txt\`"
-          - "Adicione mais conteúdo ao arquivo original:"
-          - "\`echo 'Nova linha adicionada!' >> notes.txt\`"
-          - "Compare novamente os arquivos:"
-          - "\`diff notes.txt notes_backup.txt\`"
-        tips:
-          - type: "warning"
-            title: "Atenção: Redirecionamentos"
-            content: "O símbolo > redireciona a saída e sobrescreve o arquivo existente, enquanto >> adiciona ao final do arquivo sem apagar o conteúdo anterior."
-        validation:
-          - command: "test -f lab-practice/notes.txt && echo 'ok'"
-            expectedOutput: "ok"
-            errorMessage: "Arquivo notes.txt não foi criado"
-          - command: "test -f lab-practice/notes_backup.txt && echo 'ok'"
-            expectedOutput: "ok"
-            errorMessage: "Arquivo de backup não foi criado"
-
-      - name: "Permissões de arquivos"
-        description: "Aprenda a gerenciar permissões de arquivos e diretórios"
-        steps:
-          - "Verifique as permissões atuais dos arquivos:"
-          - "\`ls -l\`"
-          - "Crie um script shell simples:"
-          - "\`nano script.sh\`"
-          - "Adicione o seguinte conteúdo ao script:"
-          - |
-            \`\`\`bash
-            #!/bin/bash
-            echo "Olá, este é meu primeiro script!"
-            echo "Data atual: $(date)"
-            echo "Usuário atual: $(whoami)"
-            \`\`\`
-          - "Salve o arquivo (Ctrl+O, Enter, Ctrl+X)"
-          - "Tente executar o script:"
-          - "\`./script.sh\`"
-          - "Você receberá um erro de permissão. Adicione permissão de execução:"
-          - "\`chmod +x script.sh\`"
-          - "Agora execute novamente:"
-          - "\`./script.sh\`"
-        tips:
-          - type: "info"
-            title: "Sobre permissões Linux"
-            content: "As permissões no Linux são representadas por r (leitura), w (escrita) e x (execução) para três grupos: proprietário, grupo e outros. O comando chmod +x adiciona permissão de execução para todos os grupos."
-          - type: "tip"
-            title: "Modo octal"
-            content: "Você também pode usar o modo octal para definir permissões: chmod 755 arquivo (rwx para o dono, rx para grupo e outros)"
-        validation:
-          - command: "test -f lab-practice/script.sh && ls -l lab-practice/script.sh | grep -q x && echo 'ok'"
-            expectedOutput: "ok"
-            errorMessage: "Script não foi criado ou não tem permissão de execução"
-
-      - name: "Processos e monitoramento"
-        description: "Aprenda a monitorar e gerenciar processos no Linux"
-        steps:
-          - "Veja os processos em execução:"
-          - "\`ps aux\`"
-          - "Monitore os processos e recursos em tempo real:"
-          - "\`top\`"
-          - "Pressione 'q' para sair do top"
-          - "Execute um processo em segundo plano:"
-          - "\`sleep 300 &\`"
-          - "Veja o processo em execução:"
-          - "\`ps aux | grep sleep\`"
-          - "Termine o processo sleep:"
-          - "\`pkill sleep\`"
-        tips:
-          - type: "tip"
-            title: "Alternativa ao top"
-            content: "O comando htop é uma versão melhorada do top com interface colorida e interativa. Instale-o com 'apt install htop' em sistemas Debian/Ubuntu."
-        validation:
-          - command: "ps aux | grep -v grep | grep -q sleep || echo 'ok'"
-            expectedOutput: "ok"
-            errorMessage: "O processo sleep não foi encerrado corretamente"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -607,9 +625,7 @@ func setupPortForward(namespace string) error {
 	}
 	
 	// Salvar PID do processo de backend
-	if err := os.WriteFile(backendPidFile, []byte(fmt.Sprintf("%d", backendCmd.Process.Pid)), 0644); err != nil {
-		fmt.Fprintf(os.Stderr, "Aviso: não foi possível salvar o PID do backend: %v\n", err)
-	}
+	ioutil.WriteFile(backendPidFile, []byte(fmt.Sprintf("%d", backendCmd.Process.Pid)), 0644)
 	
 	// Verificar se o backend está acessível
 	time.Sleep(2 * time.Second) // Dar tempo para o port-forward inicializar
@@ -638,9 +654,7 @@ func setupPortForward(namespace string) error {
 	}
 	
 	// Salvar PID do processo de frontend
-	if err := os.WriteFile(frontendPidFile, []byte(fmt.Sprintf("%d", frontendCmd.Process.Pid)), 0644); err != nil {
-		fmt.Fprintf(os.Stderr, "Aviso: não foi possível salvar o PID do frontend: %v\n", err)
-	}
+	ioutil.WriteFile(frontendPidFile, []byte(fmt.Sprintf("%d", frontendCmd.Process.Pid)), 0644)
 	
 	// Verificar se o frontend está acessível
 	time.Sleep(2 * time.Second) // Dar tempo para o port-forward inicializar
@@ -891,97 +905,259 @@ Por padrão, o deployment embutido no binário é utilizado.`,
 		// Aplicar o manifesto de deployment do Girus
 		fmt.Println("\n📦 Implantando o Girus no cluster...")
 
-		// Determinar se vamos usar o arquivo externo ou o deployment embutido
-		deployContent := defaultDeployment
-		if useExternalFile {
-			// Verificar se o arquivo de deploy existe
-			if _, err := os.Stat(deployFile); os.IsNotExist(err) {
-				fmt.Fprintf(os.Stderr, "❌ Erro: arquivo de deployment '%s' não encontrado\n", deployFile)
-				os.Exit(1)
+		// Verificar se existe o arquivo girus-kind-deploy.yaml
+		deployYamlPath := "girus-kind-deploy.yaml"
+		foundDeployFile := false
+		
+		// Verificar em diferentes locais possíveis
+		possiblePaths := []string{
+			deployYamlPath,                    // No diretório atual
+			filepath.Join("..", deployYamlPath), // Um nível acima
+			filepath.Join(os.Getenv("HOME"), "REPOS", "strigus", deployYamlPath), // Caminho comum
+		}
+		
+		for _, path := range possiblePaths {
+			if _, err := os.Stat(path); err == nil {
+				deployFile = path
+				foundDeployFile = true
+				break
+			}
+		}
+		
+		if foundDeployFile {
+			fmt.Printf("🔍 Usando arquivo de deployment: %s\n", deployFile)
+			
+			// Aplicar arquivo de deployment completo (já contém o template do lab)
+			if verboseMode {
+				// Executar normalmente mostrando o output
+				applyCmd := exec.Command("kubectl", "apply", "-f", deployFile)
+				applyCmd.Stdout = os.Stdout
+				applyCmd.Stderr = os.Stderr
+
+				if err := applyCmd.Run(); err != nil {
+					fmt.Fprintf(os.Stderr, "❌ Erro ao aplicar o manifesto do Girus: %v\n", err)
+					os.Exit(1)
+				}
+			} else {
+				// Usar barra de progresso
+				bar := progressbar.NewOptions(100,
+					progressbar.OptionSetDescription("Implantando Girus..."),
+					progressbar.OptionSetWidth(50),
+					progressbar.OptionShowBytes(false),
+					progressbar.OptionSetPredictTime(false),
+					progressbar.OptionThrottle(65*time.Millisecond),
+					progressbar.OptionShowCount(),
+					progressbar.OptionSpinnerType(14),
+					progressbar.OptionFullWidth(),
+				)
+
+				// Executar comando sem mostrar saída
+				applyCmd := exec.Command("kubectl", "apply", "-f", deployFile)
+				var stderr bytes.Buffer
+				applyCmd.Stderr = &stderr
+				
+				// Iniciar o comando
+				err := applyCmd.Start()
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "❌ Erro ao iniciar o comando: %v\n", err)
+					os.Exit(1)
+				}
+
+				// Atualizar a barra de progresso enquanto o comando está em execução
+				done := make(chan struct{})
+				go func() {
+					for {
+						select {
+						case <-done:
+							return
+						default:
+							bar.Add(1)
+							time.Sleep(100 * time.Millisecond)
+						}
+					}
+				}()
+
+				// Aguardar o final do comando
+				err = applyCmd.Wait()
+				close(done)
+				bar.Finish()
+
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "❌ Erro ao aplicar o manifesto do Girus: %v\n", err)
+					fmt.Println("   Detalhes técnicos:", stderr.String())
+					os.Exit(1)
+				}
 			}
 			
-			// Ler o conteúdo do arquivo
-			content, err := os.ReadFile(deployFile)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "❌ Erro ao ler arquivo de deployment: %v\n", err)
-				os.Exit(1)
-			}
-			deployContent = string(content)
-		}
-
-		// Criar um arquivo temporário para o deployment
-		tempFile, err := os.CreateTemp("", "girus-deploy-*.yaml")
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "❌ Erro ao criar arquivo temporário: %v\n", err)
-			os.Exit(1)
-		}
-		defer os.Remove(tempFile.Name()) // Limpar o arquivo temporário ao finalizar
-
-		// Escrever o conteúdo no arquivo temporário
-		if _, err := tempFile.WriteString(deployContent); err != nil {
-			fmt.Fprintf(os.Stderr, "❌ Erro ao escrever no arquivo temporário: %v\n", err)
-			os.Exit(1)
-		}
-		tempFile.Close()
-
-		if verboseMode {
-			// Executar normalmente mostrando o output
-			applyCmd := exec.Command("kubectl", "apply", "-f", tempFile.Name())
-			applyCmd.Stdout = os.Stdout
-			applyCmd.Stderr = os.Stderr
-
-			if err := applyCmd.Run(); err != nil {
-				fmt.Fprintf(os.Stderr, "❌ Erro ao aplicar o manifesto do Girus: %v\n", err)
-				os.Exit(1)
-			}
+			fmt.Println("✅ Infraestrutura e template de laboratório aplicados com sucesso!")
 		} else {
-			// Usar barra de progresso para o deploy (padrão)
-			bar := progressbar.NewOptions(100,
-				progressbar.OptionSetDescription("Implantando Girus..."),
-				progressbar.OptionSetWidth(50),
-				progressbar.OptionShowBytes(false),
-				progressbar.OptionSetPredictTime(false),
-				progressbar.OptionThrottle(65*time.Millisecond),
-				progressbar.OptionShowCount(),
-				progressbar.OptionSpinnerType(14),
-				progressbar.OptionFullWidth(),
-			)
-
-			// Executar comando sem mostrar saída
-			applyCmd := exec.Command("kubectl", "apply", "-f", tempFile.Name())
-			var stderr bytes.Buffer
-			applyCmd.Stderr = &stderr
+			// Usar o deployment embutido como fallback
+			// fmt.Println("⚠️  Arquivo girus-kind-deploy.yaml não encontrado, usando deployment embutido.")
 			
-			// Iniciar o comando
-			err := applyCmd.Start()
+			// Criar um arquivo temporário para o deployment principal
+			tempFile, err := os.CreateTemp("", "girus-deploy-*.yaml")
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "❌ Erro ao iniciar o comando: %v\n", err)
+				fmt.Fprintf(os.Stderr, "❌ Erro ao criar arquivo temporário: %v\n", err)
 				os.Exit(1)
 			}
+			defer os.Remove(tempFile.Name()) // Limpar o arquivo temporário ao finalizar
 
-			// Atualizar a barra de progresso enquanto o comando está em execução
-			done := make(chan struct{})
-			go func() {
-				for {
-					select {
-					case <-done:
-						return
-					default:
-						bar.Add(1)
-						time.Sleep(100 * time.Millisecond)
+			// Escrever o conteúdo no arquivo temporário
+			if _, err := tempFile.WriteString(defaultDeployment); err != nil {
+				fmt.Fprintf(os.Stderr, "❌ Erro ao escrever no arquivo temporário: %v\n", err)
+				os.Exit(1)
+			}
+			tempFile.Close()
+
+			// Aplicar o deployment principal
+			if verboseMode {
+				// Executar normalmente mostrando o output
+				applyCmd := exec.Command("kubectl", "apply", "-f", tempFile.Name())
+				applyCmd.Stdout = os.Stdout
+				applyCmd.Stderr = os.Stderr
+
+				if err := applyCmd.Run(); err != nil {
+					fmt.Fprintf(os.Stderr, "❌ Erro ao aplicar o manifesto do Girus: %v\n", err)
+					os.Exit(1)
+				}
+			} else {
+				// Usar barra de progresso para o deploy (padrão)
+				bar := progressbar.NewOptions(100,
+					progressbar.OptionSetDescription("Implantando infraestrutura..."),
+					progressbar.OptionSetWidth(50),
+					progressbar.OptionShowBytes(false),
+					progressbar.OptionSetPredictTime(false),
+					progressbar.OptionThrottle(65*time.Millisecond),
+					progressbar.OptionShowCount(),
+					progressbar.OptionSpinnerType(14),
+					progressbar.OptionFullWidth(),
+				)
+
+				// Executar comando sem mostrar saída
+				applyCmd := exec.Command("kubectl", "apply", "-f", tempFile.Name())
+				var stderr bytes.Buffer
+				applyCmd.Stderr = &stderr
+				
+				// Iniciar o comando
+				err := applyCmd.Start()
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "❌ Erro ao iniciar o comando: %v\n", err)
+					os.Exit(1)
+				}
+
+				// Atualizar a barra de progresso enquanto o comando está em execução
+				done := make(chan struct{})
+				go func() {
+					for {
+						select {
+						case <-done:
+							return
+						default:
+							bar.Add(1)
+							time.Sleep(100 * time.Millisecond)
+						}
+					}
+				}()
+
+				// Aguardar o final do comando
+				err = applyCmd.Wait()
+				close(done)
+				bar.Finish()
+
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "❌ Erro ao aplicar o manifesto do Girus: %v\n", err)
+					fmt.Println("   Detalhes técnicos:", stderr.String())
+					os.Exit(1)
+				}
+			}
+			
+			fmt.Println("✅ Infraestrutura básica aplicada com sucesso!")
+			
+			// Agora vamos aplicar o template de laboratório que está embutido no binário
+			fmt.Println("\n🔬 Aplicando template de laboratório Linux...")
+			
+			// Criar um arquivo temporário para o template do laboratório
+			labTempFile, err := os.CreateTemp("", "basic-linux-*.yaml")
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "❌ Erro ao criar arquivo temporário para o template: %v\n", err)
+				fmt.Println("   A infraestrutura básica foi aplicada, mas sem o template de laboratório.")
+				return
+			}
+			defer os.Remove(labTempFile.Name()) // Limpar o arquivo temporário ao finalizar
+
+			// Escrever o conteúdo do template no arquivo temporário
+			if _, err := labTempFile.WriteString(basicLinuxTemplate); err != nil {
+				fmt.Fprintf(os.Stderr, "❌ Erro ao escrever template no arquivo temporário: %v\n", err)
+				fmt.Println("   A infraestrutura básica foi aplicada, mas sem o template de laboratório.")
+				return
+			}
+			labTempFile.Close()
+			
+			// Aplicar o template de laboratório
+			if verboseMode {
+				// Executar normalmente mostrando o output
+				applyLabCmd := exec.Command("kubectl", "apply", "-f", labTempFile.Name())
+				applyLabCmd.Stdout = os.Stdout
+				applyLabCmd.Stderr = os.Stderr
+
+				if err := applyLabCmd.Run(); err != nil {
+					fmt.Fprintf(os.Stderr, "❌ Erro ao aplicar o template de laboratório: %v\n", err)
+					fmt.Println("   A infraestrutura básica foi aplicada, mas sem o template de laboratório.")
+				} else {
+					fmt.Println("✅ Template de laboratório inicial Linux Básico aplicado com sucesso!")
+				}
+			} else {
+				// Usar barra de progresso para o template
+				bar := progressbar.NewOptions(100,
+					progressbar.OptionSetDescription("Aplicando template inicial Linux Básico..."),
+					progressbar.OptionSetWidth(50),
+					progressbar.OptionShowBytes(false),
+					progressbar.OptionSetPredictTime(false),
+					progressbar.OptionThrottle(65*time.Millisecond),
+					progressbar.OptionShowCount(),
+					progressbar.OptionSpinnerType(14),
+					progressbar.OptionFullWidth(),
+				)
+
+				// Executar comando sem mostrar saída
+				applyLabCmd := exec.Command("kubectl", "apply", "-f", labTempFile.Name())
+				var stderr bytes.Buffer
+				applyLabCmd.Stderr = &stderr
+				
+				// Iniciar o comando
+				err := applyLabCmd.Start()
+				if err != nil {
+					bar.Finish()
+					fmt.Fprintf(os.Stderr, "❌ Erro ao iniciar aplicação do template: %v\n", err)
+					fmt.Println("   A infraestrutura básica foi aplicada, mas sem o template de laboratório.")
+				} else {
+					// Atualizar a barra de progresso enquanto o comando está em execução
+					done := make(chan struct{})
+					go func() {
+						for {
+							select {
+							case <-done:
+								return
+							default:
+								bar.Add(1)
+								time.Sleep(50 * time.Millisecond)
+							}
+						}
+					}()
+
+					// Aguardar o final do comando
+					err = applyLabCmd.Wait()
+					close(done)
+					bar.Finish()
+
+					if err != nil {
+						fmt.Fprintf(os.Stderr, "❌ Erro ao aplicar o template de laboratório: %v\n", err)
+						fmt.Println("   Detalhes técnicos:", stderr.String())
+						fmt.Println("   A infraestrutura básica foi aplicada, mas sem o template de laboratório.")
+					} else {
+						fmt.Println("✅ Template de laboratório inicial Linux Básico aplicado com sucesso!")
 					}
 				}
-			}()
-
-			// Aguardar o final do comando
-			err = applyCmd.Wait()
-			close(done)
-			bar.Finish()
-
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "❌ Erro ao aplicar o manifesto do Girus: %v\n", err)
-				fmt.Println("   Detalhes técnicos:", stderr.String())
-				os.Exit(1)
 			}
 		}
 

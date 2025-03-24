@@ -107,6 +107,134 @@ data:
 #   kubectl apply -f ./labs/
 
 ---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: basic-linux-lab
+  namespace: girus
+  labels:
+    app: girus-lab-template
+data:
+  lab.yaml: |
+    name: linux-basics
+    title: "Introdução ao Linux"
+    description: "Laboratório básico para praticar comandos Linux essenciais e conceitos fundamentais"
+    duration: 30m
+    tasks:
+      - name: "Navegação básica"
+        description: "Aprenda os comandos essenciais para navegar no sistema de arquivos Linux"
+        steps:
+          - "Comece verificando qual é seu diretório atual com o comando:"
+          - "`pwd`"
+          - "Liste todos os arquivos (incluindo ocultos) do diretório atual:"
+          - "`ls -la`"
+          - "Crie um novo diretório para praticar:"
+          - "`mkdir lab-practice`"
+          - "Entre no diretório criado:"
+          - "`cd lab-practice`"
+          - "Crie alguns arquivos para praticar:"
+          - "`touch file1.txt file2.txt file3.txt`"
+        tips:
+          - type: "info"
+            title: "Dica: Atalhos úteis"
+            content: "Use cd .. para voltar um diretório acima, e cd ~ para ir direto para seu diretório home. O comando ls tem muitas opções úteis: ls -l (formato detalhado), ls -a (mostra arquivos ocultos), ls -h (tamanhos legíveis por humanos)."
+        validation:
+          - command: "test -d lab-practice && echo 'ok'"
+            expectedOutput: "ok"
+            errorMessage: "Diretório 'lab-practice' não foi criado"
+          - command: "test -f lab-practice/file1.txt && echo 'ok'"
+            expectedOutput: "ok"
+            errorMessage: "Arquivos de teste não foram criados"
+
+      - name: "Manipulação de arquivos"
+        description: "Aprenda a criar, editar e gerenciar arquivos no Linux"
+        steps:
+          - "Atualize a lista de pacotes disponíveis:"
+          - "`apt update`"
+          - "Instale o editor de texto nano:"
+          - "`apt install -y nano`"
+          - "Crie um arquivo de texto usando o editor nano:"
+          - "`nano notes.txt`"
+          - "Adicione algumas linhas de texto e salve com Ctrl+O e saia com Ctrl+X"
+          - "Visualize o conteúdo do arquivo:"
+          - "`cat notes.txt`"
+          - "Copie um arquivo para outro nome:"
+          - "`cp notes.txt notes_backup.txt`"
+          - "Compare os dois arquivos:"
+          - "`diff notes.txt notes_backup.txt`"
+          - "Adicione mais conteúdo ao arquivo original:"
+          - "`echo 'Nova linha adicionada!' >> notes.txt`"
+          - "Compare novamente os arquivos:"
+          - "`diff notes.txt notes_backup.txt`"
+        tips:
+          - type: "warning"
+            title: "Atenção: Redirecionamentos"
+            content: "O símbolo > redireciona a saída e sobrescreve o arquivo existente, enquanto >> adiciona ao final do arquivo sem apagar o conteúdo anterior."
+        validation:
+          - command: "test -f lab-practice/notes.txt && echo 'ok'"
+            expectedOutput: "ok"
+            errorMessage: "Arquivo notes.txt não foi criado"
+          - command: "test -f lab-practice/notes_backup.txt && echo 'ok'"
+            expectedOutput: "ok"
+            errorMessage: "Arquivo de backup não foi criado"
+
+      - name: "Permissões de arquivos"
+        description: "Aprenda a gerenciar permissões de arquivos e diretórios"
+        steps:
+          - "Verifique as permissões atuais dos arquivos:"
+          - "`ls -l`"
+          - "Crie um script shell simples:"
+          - "`nano script.sh`"
+          - "Adicione o seguinte conteúdo ao script:"
+          - |
+            ```bash
+            #!/bin/bash
+            echo "Olá, este é meu primeiro script!"
+            echo "Data atual: $(date)"
+            echo "Usuário atual: $(whoami)"
+            ```
+          - "Salve o arquivo (Ctrl+O, Enter, Ctrl+X)"
+          - "Tente executar o script:"
+          - "`./script.sh`"
+          - "Você receberá um erro de permissão. Adicione permissão de execução:"
+          - "`chmod +x script.sh`"
+          - "Agora execute novamente:"
+          - "`./script.sh`"
+        tips:
+          - type: "info"
+            title: "Sobre permissões Linux"
+            content: "As permissões no Linux são representadas por r (leitura), w (escrita) e x (execução) para três grupos: proprietário, grupo e outros. O comando chmod +x adiciona permissão de execução para todos os grupos."
+          - type: "tip"
+            title: "Modo octal"
+            content: "Você também pode usar o modo octal para definir permissões: chmod 755 arquivo (rwx para o dono, rx para grupo e outros)"
+        validation:
+          - command: "test -f lab-practice/script.sh && ls -l lab-practice/script.sh | grep -q x && echo 'ok'"
+            expectedOutput: "ok"
+            errorMessage: "Script não foi criado ou não tem permissão de execução"
+
+      - name: "Processos e monitoramento"
+        description: "Aprenda a monitorar e gerenciar processos no Linux"
+        steps:
+          - "Veja os processos em execução:"
+          - "`ps aux`"
+          - "Monitore os processos e recursos em tempo real:"
+          - "`top`"
+          - "Pressione 'q' para sair do top"
+          - "Execute um processo em segundo plano:"
+          - "`sleep 300 &`"
+          - "Veja o processo em execução:"
+          - "`ps aux | grep sleep`"
+          - "Termine o processo sleep:"
+          - "`pkill sleep`"
+        tips:
+          - type: "tip"
+            title: "Alternativa ao top"
+            content: "O comando htop é uma versão melhorada do top com interface colorida e interativa. Instale-o com 'apt install htop' em sistemas Debian/Ubuntu."
+        validation:
+          - command: "ps aux | grep -v grep | grep -q sleep || echo 'ok'"
+            expectedOutput: "ok"
+            errorMessage: "O processo sleep não foi encerrado corretamente"
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
