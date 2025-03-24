@@ -24,6 +24,9 @@ jobs:
       - name: Install dependencies
         run: go mod download
 
+      - name: Create dist directory
+        run: mkdir -p dist
+
       - name: Build for Linux
         run: GOOS=linux GOARCH=amd64 go build -v -o dist/girus-linux-amd64 -ldflags="-X 'github.com/linuxtips/girus/girus-cli/cmd.Version=${{ github.ref_name }}'" ./main.go
 
