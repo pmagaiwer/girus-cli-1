@@ -10,10 +10,16 @@ on:
 jobs:
   build:
     name: Build and Release
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v0.1.0
 
       - name: Set up Go
         uses: actions/setup-go@v5
