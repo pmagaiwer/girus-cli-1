@@ -16,16 +16,17 @@ echo "Sistema operacional detectado: $OS"
 
 # Função para instalar Go
 install_go() {
-    echo "Instalando Go 1.21..."
+    echo "Instalando Go (última versão estável)..."
     
-    GO_VERSION="1.21.0"
+    # Obter a última versão estável do Go
+    LATEST_GO_VERSION=$(curl -s https://golang.org/VERSION?m=text | head -n 1 | sed 's/go//')
     
     if [ "$OS" == "linux" ]; then
         # Linux
-        wget -q https://golang.org/dl/go${GO_VERSION}.linux-amd64.tar.gz
+        wget -q https://golang.org/dl/go${LATEST_GO_VERSION}.linux-amd64.tar.gz
         sudo rm -rf /usr/local/go
-        sudo tar -C /usr/local -xzf go${GO_VERSION}.linux-amd64.tar.gz
-        rm go${GO_VERSION}.linux-amd64.tar.gz
+        sudo tar -C /usr/local -xzf go${LATEST_GO_VERSION}.linux-amd64.tar.gz
+        rm go${LATEST_GO_VERSION}.linux-amd64.tar.gz
         
         # Adicionar ao PATH temporariamente
         export PATH=$PATH:/usr/local/go/bin
@@ -39,9 +40,9 @@ install_go() {
         if command -v brew &> /dev/null; then
             brew install go
         else
-            wget -q https://golang.org/dl/go${GO_VERSION}.darwin-amd64.pkg
-            sudo installer -pkg go${GO_VERSION}.darwin-amd64.pkg -target /
-            rm go${GO_VERSION}.darwin-amd64.pkg
+            wget -q https://golang.org/dl/go${LATEST_GO_VERSION}.darwin-amd64.pkg
+            sudo installer -pkg go${LATEST_GO_VERSION}.darwin-amd64.pkg -target /
+            rm go${LATEST_GO_VERSION}.darwin-amd64.pkg
             
             # Adicionar ao PATH temporariamente
             export PATH=$PATH:/usr/local/go/bin
@@ -65,7 +66,7 @@ install_go() {
         exit 1
     fi
     
-    echo "Go ${GO_VERSION} instalado com sucesso!"
+    echo "Go ${LATEST_GO_VERSION} instalado com sucesso!"
 }
 
 # Função para instalar Kind
@@ -153,8 +154,8 @@ else
     MAJOR_VERSION=$(echo $GO_VERSION | cut -d. -f1)
     MINOR_VERSION=$(echo $GO_VERSION | cut -d. -f2)
 
-    if [ "$MAJOR_VERSION" -lt 1 ] || ([ "$MAJOR_VERSION" -eq 1 ] && [ "$MINOR_VERSION" -lt 21 ]); then
-        echo "Aviso: Versão do Go é $GO_VERSION, mas Go 1.21 ou superior é recomendado."
+    if [ "$MAJOR_VERSION" -lt 1 ] || ([ "$MAJOR_VERSION" -eq 1 ] && [ "$MINOR_VERSION" -lt 22 ]); then
+        echo "Aviso: Versão do Go é $GO_VERSION, mas Go 1.22 ou superior é recomendado."
         read -p "Deseja continuar mesmo assim? (S/n): " CONTINUE_OLD_GO
         CONTINUE_OLD_GO=${CONTINUE_OLD_GO:-S}
         
