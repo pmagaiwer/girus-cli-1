@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -519,7 +518,9 @@ func setupPortForward(namespace string) error {
 	}
 	
 	// Salvar PID do processo de backend
-	ioutil.WriteFile(backendPidFile, []byte(fmt.Sprintf("%d", backendCmd.Process.Pid)), 0644)
+	if err := os.WriteFile(backendPidFile, []byte(fmt.Sprintf("%d", backendCmd.Process.Pid)), 0644); err != nil {
+		fmt.Fprintf(os.Stderr, "Aviso: não foi possível salvar o PID do backend: %v\n", err)
+	}
 	
 	// Verificar se o backend está acessível
 	time.Sleep(2 * time.Second) // Dar tempo para o port-forward inicializar
@@ -548,7 +549,9 @@ func setupPortForward(namespace string) error {
 	}
 	
 	// Salvar PID do processo de frontend
-	ioutil.WriteFile(frontendPidFile, []byte(fmt.Sprintf("%d", frontendCmd.Process.Pid)), 0644)
+	if err := os.WriteFile(frontendPidFile, []byte(fmt.Sprintf("%d", frontendCmd.Process.Pid)), 0644); err != nil {
+		fmt.Fprintf(os.Stderr, "Aviso: não foi possível salvar o PID do frontend: %v\n", err)
+	}
 	
 	// Verificar se o frontend está acessível
 	time.Sleep(2 * time.Second) // Dar tempo para o port-forward inicializar
