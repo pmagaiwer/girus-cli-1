@@ -1,6 +1,6 @@
-# Girus CLI
+![LINUXtips Logo](LINUXtips-logo.png)
 
-![Girus Logo](https://raw.githubusercontent.com/linuxtips/girus/main/web/public/girus-logo.svg)
+# Girus CLI
 
 ## Sobre o Girus CLI
 
