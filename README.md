@@ -37,7 +37,7 @@ curl -fsSL https://girus.linuxtips.io | bash
 Ou usando o repositório diretamente:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/badtuxx/girus-cli/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/badtuxx/girus-cli/refs/heads/main/install.sh | bash
 ```
 
 O script verifica e instala automaticamente:
