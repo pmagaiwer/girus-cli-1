@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="refresh"
+        content="0; url=https://raw.githubusercontent.com/badtuxx/girus-cli/refs/heads/main/install.sh">
+    <title>Redirecionando para o script de instalação Girus</title>
+    <script>
+        // Script para redirecionar preservando o conteúdo do texto puro
+        fetch('https://raw.githubusercontent.com/badtuxx/girus-cli/refs/heads/main/install.sh')
+            .then(response => response.text())
+            .then(data => {
+                document.open('text/plain');
+                document.write(data);
+                document.close();
+            });
+    </script>
+</head>
+
+<body>
+    Redirecionando para o script de instalação do Girus...
+</body>
+
+</html>
