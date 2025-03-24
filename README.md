@@ -1,12 +1,16 @@
-![LINUXtips Logo](LINUXtips-logo.png)
-
 # Girus CLI
+
+![Girus Logo](https://raw.githubusercontent.com/linuxtips/girus/main/web/public/girus-logo.svg)
+
+[![Build Status](https://github.com/linuxtips/girus/actions/workflows/build.yml/badge.svg)](https://github.com/linuxtips/girus/actions/workflows/build.yml)
+[![Docker Status](https://github.com/linuxtips/girus/actions/workflows/docker.yml/badge.svg)](https://github.com/linuxtips/girus/actions/workflows/docker.yml)
+[![Test Status](https://github.com/linuxtips/girus/actions/workflows/test.yml/badge.svg)](https://github.com/linuxtips/girus/actions/workflows/test.yml)
 
 ## Sobre o Girus CLI
 
 O Girus CLI é uma ferramenta de linha de comando que facilita a criação, gerenciamento e utilização da plataforma Girus - um ambiente de laboratórios interativos baseado em Kubernetes.
 
-Desenvolvido como parte do projeto Girus da LinuxTips, o CLI simplifica o processo de implantação da plataforma em ambientes locais, permitindo que instrutores e estudantes configurem rapidamente um ambiente de laboratório completo para treinamentos técnicos.
+Desenvolvido como parte do projeto Girus da LINUXtips, o CLI simplifica o processo de implantação da plataforma em ambientes locais, permitindo que instrutores e estudantes configurem rapidamente um ambiente de laboratório completo para treinamentos técnicos.
 
 ## Recursos Principais
 
@@ -15,10 +19,12 @@ Desenvolvido como parte do projeto Girus da LinuxTips, o CLI simplifica o proces
 - **Port-forwarding Automático**: Acesse facilmente os serviços através de portas locais
 - **Gerenciamento de Laboratórios**: Liste e exclua clusters existentes
 - **Compatível com Múltiplos SO**: Funciona em Linux, macOS e Windows
+- **Integração com Docker**: Suporte completo para contêineres e ambientes isolados
+- **Atualizações Automáticas**: Sistema de verificação e atualização de dependências
 
 ## Requisitos
 
-- **Go** (versão 1.21 ou superior)
+- **Go** (versão 1.22 ou superior)
 - **Docker** (em execução)
 - **kubectl**
 - **kind** (Kubernetes in Docker)
@@ -28,6 +34,12 @@ Desenvolvido como parte do projeto Girus da LinuxTips, o CLI simplifica o proces
 ### Instalação Automática (Linux/macOS)
 
 O script de instalação verifica automaticamente as dependências necessárias e instala o Girus CLI:
+
+```bash
+curl -fsSL https://girus.linuxtips.io | bash
+```
+
+Ou usando o repositório diretamente:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/linuxtips/girus/main/girus-cli/install.sh | bash
@@ -61,134 +73,132 @@ O script verifica e instala automaticamente:
    sudo mv girus /usr/local/bin/
    ```
 
-## Uso
+## Comandos
 
-### Criar um Cluster Girus
-
-Para criar um novo cluster com a plataforma Girus:
+### Criar Recursos (`create`)
 
 ```bash
-girus create
+# Criar um novo cluster Girus
+girus create cluster
+
+# Opções disponíveis:
+Cria um cluster Kind com o nome "girus" e implanta todos os componentes necessários.
+Por padrão, o deployment embutido no binário é utilizado.
+
+Usage:
+  girus create cluster
+
+Flags:
+   -f, --file string         Arquivo YAML para deployment do Girus (opcional)
+   -h, --help                help for cluster
+   --skip-browser        Não abrir o navegador automaticamente
+   --skip-port-forward   Não perguntar sobre configurar port-forwarding
+   -v, --verbose             Modo detalhado com output completo em vez da barra de progresso
 ```
 
-Opções disponíveis:
-- `--file`: Utilize um arquivo YAML personalizado para implantação
-- `--cluster-name`: Especifique um nome para o cluster (padrão: "girus")
-- `--verbose`: Exiba informações detalhadas durante a implantação
-- `--skip-port-forward`: Não configure port-forwarding automático
-- `--skip-browser`: Não abra o navegador automaticamente após a implantação
-
-### Listar Clusters Girus
-
-Para verificar os clusters Girus existentes:
+### Listar Recursos (`list`)
 
 ```bash
-girus list
+# Listar todos os clusters
+girus list clusters
+
+# Saída do comando list clusters:
+Obtendo lista de clusters Kind...
+
+Clusters Kind disponíveis:
+==========================
+✅ girus (cluster Girus)
+   Pods:
+   └─ girus-backend-5dc9b6679f-255z5    Running   true
+   └─ girus-frontend-5b8668554d-t552m   Running   true
 ```
 
-### Excluir um Cluster Girus
-
-Para remover um cluster existente:
+### Excluir Recursos (`delete`)
 
 ```bash
-girus delete
+# Excluir um cluster
+girus delete cluster
+
+# Opções disponíveis:
+  -f, --force    Força a exclusão sem confirmação
+  -v, --verbose  Modo detalhado com output completo
 ```
 
-Opções disponíveis:
-- `--cluster-name`: Especifique o nome do cluster a ser excluído (padrão: "girus")
+## Fluxo de Trabalho Típico
 
-## Fluxo de Implantação
-
-Ao executar `girus create`, o CLI realiza as seguintes ações:
-
-1. Verifica se o Docker está em execução
-2. Verifica a existência de clusters anteriores
-3. Cria um novo cluster Kind
-4. Implanta os componentes do Girus:
-   - Namespace dedicado
-   - Permissões e contas de serviço
-   - Backend (API REST)
-   - Frontend (interface web)
-5. Configura port-forwarding para acesso local:
-   - Backend: http://localhost:8080
-   - Frontend: http://localhost:8000
-6. Abre o navegador com a interface do Girus
-
-## Solução de Problemas
-
-### Verificar Status do Cluster
-
-Para verificar o status do cluster:
-
-```bash
-kubectl cluster-info --context kind-girus
-```
-
-### Verificar Status dos Pods
-
-Para verificar se todos os componentes estão em execução:
-
-```bash
-kubectl get pods -n girus
-```
-
-### Problemas Comuns
-
-1. **Docker não está em execução**:
+1. **Criar um novo ambiente**:
    ```bash
-   sudo systemctl start docker
+   girus create cluster
+   ```
+   Isso irá:
+   - Criar um cluster Kind
+   - Configurar o namespace Girus
+   - Implantar o backend e frontend
+   - Configurar port-forwarding (8080 para backend, 8000 para frontend)
+   - Abrir o navegador com a interface
+
+2. **Verificar laboratórios disponíveis**:
+   ```bash
+   girus list labs
    ```
 
-2. **Conflito de portas**:
-   O CLI verifica e tenta liberar as portas 8000 e 8080 automaticamente.
-
-3. **Problemas com Kind**:
+3. **Monitorar o ambiente**:
    ```bash
-   kind delete cluster --name girus
+   girus list clusters
    ```
-   Em seguida, tente criar novamente.
 
-## Personalização
-
-### Arquivo de Deployment Personalizado
-
-Você pode usar um arquivo YAML personalizado para configurações específicas:
-
-```bash
-girus create --file minha-configuracao.yaml
-```
-
-### Adicionar Laboratórios Personalizados
-
-Para adicionar laboratórios personalizados:
-
-```bash
-girus create --lab-file meu-laboratorio.yaml
-```
+4. **Limpar o ambiente**:
+   ```bash
+   girus delete cluster
+   ```
 
 ## Desenvolvimento
 
-Para contribuir com o desenvolvimento do Girus CLI:
+### Configuração do Ambiente
+1. Fork o repositório
+2. Clone localmente
+3. Instale as dependências:
+   ```bash
+   go mod download
+   ```
 
-1. Faça um fork do repositório no GitHub
-2. Clone seu fork localmente
-3. Crie uma branch para sua contribuição
-4. Faça suas alterações
-5. Execute testes locais
-6. Envie um Pull Request
+### Executando Testes
+```bash
+go test -v ./...
+```
 
-## Arquitetura
+### Linting
+```bash
+golangci-lint run
+```
 
-O Girus CLI é construído com:
+### Build Local
+```bash
+go build -v -o girus -ldflags="-X 'github.com/linuxtips/girus/girus-cli/cmd.Version=dev'" ./main.go
+```
 
-- [Cobra](https://github.com/spf13/cobra): Framework de linha de comando para Go
-- [Kind](https://kind.sigs.k8s.io/): Para criar clusters Kubernetes locais em contêineres Docker
-- [kubectl](https://kubernetes.io/docs/reference/kubectl/): Para interagir com o cluster Kubernetes
+## Contribuindo
+
+1. Fork o projeto
+2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
+3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
+4. Push para a branch (`git push origin feature/AmazingFeature`)
+5. Abra um Pull Request
 
 ## Licença
 
-Este projeto é distribuído sob a licença Apache 2.0. Veja o arquivo LICENSE para mais detalhes.
+Este projeto é distribuído sob a licença GPLv3. Veja o arquivo `LICENSE` para mais detalhes.
 
 ## Suporte
 
-Se encontrar problemas ou tiver dúvidas, abra uma issue no [repositório do GitHub](https://github.com/linuxtips/girus). 
+- **Issues**: Use o [GitHub Issues](https://github.com/badtuxx/girus-cli/issues)
+- **Discussões**: Participe das [Discussões no GitHub](https://github.com/badtuxx/girus-cli/discussions)
+- **Documentação**: Visite nossa [Wiki](https://github.com/badtuxx/girus-cli/wiki)
+
+## Mantenedores
+- Jeferson Fernando ([@badtuxx](https://github.com/badtuxx))
+- LINUXtips ([@linuxtips](https://github.com/linuxtips))
+
+---
+
+Feito com 💚 pela LINUXtips 
