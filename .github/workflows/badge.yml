@@ -1,0 +1,22 @@
+name: Build Status
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  badge:
+    name: Update Build Status Badge
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Generate Badge
+        uses: RubbaBoy/BYOB@v1.3.0
+        with:
+          NAME: build
+          LABEL: build
+          STATUS: ${{ job.status }}
+          COLOR: green
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
