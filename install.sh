@@ -1,5 +1,5 @@
 #!/bin/bash
-
+set -e
 # ASCII Art Banner para o Girus
 cat << "EOF"
    ██████╗ ██╗██████╗ ██╗   ██╗███████╗
