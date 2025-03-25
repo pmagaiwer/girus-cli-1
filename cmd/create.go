@@ -1478,6 +1478,71 @@ Por padrão, o deployment embutido no binário é utilizado.`,
 					
 					if linuxSuccess && k8sSuccess {
 						fmt.Println("✅ Todos os templates de laboratório aplicados com sucesso!")
+						
+						// Verificação de diagnóstico para confirmar que os templates estão visíveis
+						fmt.Println("\n🔍 Verificando templates de laboratório instalados:")
+						listLabsCmd := exec.Command("kubectl", "get", "configmap", "-n", "girus", "-l", "app=girus-lab-template", "-o", "custom-columns=NAME:.metadata.name")
+						
+						// Capturar output para apresentá-lo de forma mais organizada
+						var labsOutput bytes.Buffer
+						listLabsCmd.Stdout = &labsOutput
+						listLabsCmd.Stderr = &labsOutput
+						
+						if err := listLabsCmd.Run(); err == nil {
+							labs := strings.Split(strings.TrimSpace(labsOutput.String()), "\n")
+							if len(labs) > 1 { // Primeira linha é o cabeçalho "NAME"
+								fmt.Println("   Templates encontrados:")
+								for i, lab := range labs {
+									if i > 0 { // Pular o cabeçalho
+										fmt.Printf("   ✅ %s\n", strings.TrimSpace(lab))
+									}
+								}
+							} else {
+								fmt.Println("   ⚠️ Nenhum template de laboratório encontrado!")
+							}
+						} else {
+							fmt.Println("   ⚠️ Não foi possível verificar os templates instalados")
+						}
+						
+						// Reiniciar o backend para carregar os templates
+						fmt.Println("\n🔄 Reiniciando o backend para carregar os templates...")
+						restartCmd := exec.Command("kubectl", "rollout", "restart", "deployment/girus-backend", "-n", "girus")
+						restartCmd.Run()
+						
+						// Aguardar o reinício completar
+						fmt.Println("   Aguardando o reinício do backend completar...")
+						waitCmd := exec.Command("kubectl", "rollout", "status", "deployment/girus-backend", "-n", "girus", "--timeout=60s")
+						// Redirecionar saída para não exibir detalhes do rollout
+						var waitOutput bytes.Buffer
+						waitCmd.Stdout = &waitOutput
+						waitCmd.Stderr = &waitOutput
+						
+						// Iniciar indicador de progresso simples
+						spinChars := []string{"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"}
+						spinIdx := 0
+						done := make(chan struct{})
+						go func() {
+							for {
+								select {
+								case <-done:
+									return
+								default:
+									fmt.Printf("\r   %s Aguardando... ", spinChars[spinIdx])
+									spinIdx = (spinIdx + 1) % len(spinChars)
+									time.Sleep(100 * time.Millisecond)
+								}
+							}
+						}()
+						
+						// Executar e aguardar 
+						waitCmd.Run()
+						close(done)
+						fmt.Println("\r   ✅ Backend reiniciado com sucesso!            ")
+						
+						// Aguardar mais alguns segundos para o backend inicializar completamente
+						fmt.Println("   Aguardando inicialização completa...")
+						time.Sleep(5 * time.Second)
+						
 					} else if linuxSuccess {
 						fmt.Println("✅ Template de laboratório Linux aplicado com sucesso!")
 					} else if k8sSuccess {
@@ -1727,9 +1792,32 @@ func addLabFromFile(labFile string, verboseMode bool) {
 		// Aguardar o reinício completar
 		fmt.Println("   Aguardando o reinício do backend completar...")
 		waitCmd := exec.Command("kubectl", "rollout", "status", "deployment/girus-backend", "-n", "girus", "--timeout=60s")
-		waitCmd.Stdout = os.Stdout
-		waitCmd.Stderr = os.Stderr
+		// Redirecionar saída para não exibir detalhes do rollout
+		var waitOutput bytes.Buffer
+		waitCmd.Stdout = &waitOutput
+		waitCmd.Stderr = &waitOutput
+		
+		// Iniciar indicador de progresso simples
+		spinChars := []string{"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"}
+		spinIdx := 0
+		done := make(chan struct{})
+		go func() {
+			for {
+				select {
+				case <-done:
+					return
+				default:
+					fmt.Printf("\r   %s Aguardando... ", spinChars[spinIdx])
+					spinIdx = (spinIdx + 1) % len(spinChars)
+					time.Sleep(100 * time.Millisecond)
+				}
+			}
+		}()
+		
+		// Executar e aguardar 
 		waitCmd.Run()
+		close(done)
+		fmt.Println("\r   ✅ Backend reiniciado com sucesso!            ")
 	} else {
 		// Usar barra de progresso
 		bar := progressbar.NewOptions(100,
@@ -1761,8 +1849,13 @@ func addLabFromFile(labFile string, verboseMode bool) {
 			// Aguardar o reinício completar
 			waitCmd := exec.Command("kubectl", "rollout", "status", "deployment/girus-backend", "-n", "girus", "--timeout=60s")
 			
+			// Redirecionar saída para não exibir detalhes do rollout
+			var waitOutput bytes.Buffer
+			waitCmd.Stdout = &waitOutput
+			waitCmd.Stderr = &waitOutput
+			
 			// Iniciar o comando
-			err := waitCmd.Start()
+			err = waitCmd.Start()
 			if err != nil {
 				bar.Finish()
 				fmt.Fprintf(os.Stderr, "\n⚠️  Erro ao verificar status do reinício: %v\n", err)
@@ -1784,6 +1877,7 @@ func addLabFromFile(labFile string, verboseMode bool) {
 				// Aguardar o final do comando
 				waitCmd.Wait()
 				close(done)
+				fmt.Println("\r   ✅ Backend reiniciado com sucesso!            ")
 			}
 			bar.Finish()
 		}
