@@ -690,39 +690,24 @@ echo $!  # Retorna o PID
 		cmd.Stdout = devNull
 		cmd.Stderr = devNull
 		
-		// Iniciar em background
-		cmd.SysProcAttr = &syscall.SysProcAttr{
-			Setpgid: true,
-		}
+		// Iniciar em background - compatível com múltiplos sistemas operacionais
+		startBackgroundCmd(cmd)
 		
-		if err := cmd.Start(); err == nil {
-			// Registrar o PID para referência
-			if cmd.Process != nil {
-				homeDir, _ := os.UserHomeDir()
-				if homeDir != "" {
-					pidDir := filepath.Join(homeDir, ".girus")
-					os.MkdirAll(pidDir, 0755)
-					ioutil.WriteFile(filepath.Join(pidDir, "frontend.pid"), 
-						[]byte(fmt.Sprintf("%d", cmd.Process.Pid)), 0644)
-				}
-			}
+		// Verificar conectividade
+		time.Sleep(3 * time.Second)
+		for i := 0; i < 3; i++ {
+			checkCmd := exec.Command("curl", "-s", "--max-time", "2", "-o", "/dev/null", "-w", "%{http_code}", "http://localhost:8000")
+			var out bytes.Buffer
+			checkCmd.Stdout = &out
 			
-			// Verificar conectividade
-			time.Sleep(3 * time.Second)
-			for i := 0; i < 3; i++ {
-				checkCmd := exec.Command("curl", "-s", "--max-time", "2", "-o", "/dev/null", "-w", "%{http_code}", "http://localhost:8000")
-				var out bytes.Buffer
-				checkCmd.Stdout = &out
-				
-				if err := checkCmd.Run(); err == nil {
-					statusCode := strings.TrimSpace(out.String())
-					if statusCode == "200" || statusCode == "301" || statusCode == "302" {
-						frontendSuccess = true
-						break
-					}
+			if err := checkCmd.Run(); err == nil {
+				statusCode := strings.TrimSpace(out.String())
+				if statusCode == "200" || statusCode == "301" || statusCode == "302" {
+					frontendSuccess = true
+					break
 				}
-				time.Sleep(1 * time.Second)
 			}
+			time.Sleep(1 * time.Second)
 		}
 	}
 	
@@ -753,6 +738,39 @@ echo $!  # Retorna o PID
 	}
 	
 	fmt.Println("   ✅ Frontend conectado com sucesso!")
+	return nil
+}
+
+// startBackgroundCmd inicia um comando em segundo plano de forma compatível com múltiplos sistemas operacionais
+func startBackgroundCmd(cmd *exec.Cmd) error {
+	// Diferentes configurações para diferentes sistemas operacionais
+	if runtime.GOOS != "windows" {
+		// Linux/Unix/macOS - usar Setpgid
+		cmd.SysProcAttr = &syscall.SysProcAttr{
+			Setpgid: true,
+		}
+	} else {
+		// Windows - usar uma configuração mínima compatível
+		cmd.SysProcAttr = &syscall.SysProcAttr{}
+	}
+	
+	// Iniciar o processo
+	err := cmd.Start()
+	if err != nil {
+		return err
+	}
+	
+	// Registrar o PID para referência
+	if cmd.Process != nil {
+		homeDir, _ := os.UserHomeDir()
+		if homeDir != "" {
+			pidDir := filepath.Join(homeDir, ".girus")
+			os.MkdirAll(pidDir, 0755)
+			ioutil.WriteFile(filepath.Join(pidDir, "frontend.pid"), 
+				[]byte(fmt.Sprintf("%d", cmd.Process.Pid)), 0644)
+		}
+	}
+	
 	return nil
 }
 
