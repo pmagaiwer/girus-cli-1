@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/schollz/progressbar/v3"
@@ -587,99 +588,171 @@ func checkHealthEndpoint() (bool, error) {
 
 // setupPortForward configura port-forward para os serviços do Girus
 func setupPortForward(namespace string) error {
-	// Verificar se as portas já estão em uso
-	if portInUse(8000) {
-		// Se porta 8000 está em uso, verificar se é nosso port-forward
-		killProcess := exec.Command("sh", "-c", "lsof -ti:8000 | xargs -r kill -9")
-		killProcess.Run() // Ignorar erros aqui
-	}
+	// Matar todos os processos de port-forward relacionados ao Girus para começar limpo
+	fmt.Println("   Limpando port-forwards existentes...")
+	exec.Command("bash", "-c", "pkill -f 'kubectl.*port-forward.*girus' || true").Run()
+	time.Sleep(1 * time.Second)
 	
-	if portInUse(8080) {
-		// Se porta 8080 está em uso, verificar se é nosso port-forward
-		killProcess := exec.Command("sh", "-c", "lsof -ti:8080 | xargs -r kill -9")
-		killProcess.Run() // Ignorar erros aqui
-	}
-	
-	// Criar um arquivo para descartar saídas de erro
-	devNull, _ := os.Open(os.DevNull)
-	defer devNull.Close()
-	
-	// Criar um diretório para os arquivos PID se não existir
-	homeDir, err := os.UserHomeDir()
+	// Port-forward do backend em background
+	fmt.Println("   Configurando port-forward para o backend (8080)...")
+	backendCmd := fmt.Sprintf("kubectl port-forward -n %s svc/girus-backend 8080:8080 > /dev/null 2>&1 &", namespace)
+	err := exec.Command("bash", "-c", backendCmd).Run()
 	if err != nil {
-		homeDir = "/tmp"
-	}
-	pidDir := filepath.Join(homeDir, ".girus")
-	os.MkdirAll(pidDir, 0755) // Criar diretório se não existir
-	
-	// Arquivos para armazenar PIDs
-	backendPidFile := filepath.Join(pidDir, "backend.pid")
-	frontendPidFile := filepath.Join(pidDir, "frontend.pid")
-	
-	// Port-forward para o backend (8080) em background
-	backendCmd := exec.Command("kubectl", "port-forward", "-n", namespace, "svc/girus-backend", "8080:8080")
-	backendCmd.Stderr = devNull
-	backendCmd.Stdout = devNull
-	if err := backendCmd.Start(); err != nil {
-		return fmt.Errorf("erro ao configurar port-forward para o backend: %v", err)
+		return fmt.Errorf("erro ao iniciar port-forward do backend: %v", err)
 	}
 	
-	// Salvar PID do processo de backend
-	ioutil.WriteFile(backendPidFile, []byte(fmt.Sprintf("%d", backendCmd.Process.Pid)), 0644)
-	
-	// Verificar se o backend está acessível
-	time.Sleep(2 * time.Second) // Dar tempo para o port-forward inicializar
-	backendOk := false
-	for i := 0; i < 5; i++ { // Tentar algumas vezes
-		healthCmd := exec.Command("curl", "-s", "--max-time", "1", "http://localhost:8080/api/v1/health")
+	// Verificar conectividade do backend
+	fmt.Println("   Verificando conectividade do backend...")
+	backendOK := false
+	for i := 0; i < 5; i++ {
+		healthCmd := exec.Command("curl", "-s", "--max-time", "2", "http://localhost:8080/api/v1/health")
 		if healthCmd.Run() == nil {
-			backendOk = true
+			backendOK = true
 			break
 		}
-		time.Sleep(1 * time.Second)
+		if i < 4 {
+			fmt.Println("   Tentativa", i+1, "falhou, aguardando...")
+			time.Sleep(1 * time.Second)
+		}
 	}
 	
-	if !backendOk {
-		return fmt.Errorf("não foi possível conectar ao backend após configurar port-forward")
+	if !backendOK {
+		return fmt.Errorf("não foi possível conectar ao backend")
 	}
 	
-	// Port-forward para o frontend (8000) em background
-	frontendCmd := exec.Command("kubectl", "port-forward", "-n", namespace, "svc/girus-frontend", "8000:80")
-	frontendCmd.Stderr = devNull
-	frontendCmd.Stdout = devNull
-	if err := frontendCmd.Start(); err != nil {
-		// Se falhar, tentar matar o processo do backend antes de retornar
-		backendCmd.Process.Kill()
-		return fmt.Errorf("erro ao configurar port-forward para o frontend: %v", err)
+	fmt.Println("   ✅ Backend conectado com sucesso!")
+	
+	// ------------------------------------------------------------------------
+	// Port-forward do frontend - ABORDAGEM MAIS SIMPLES E DIRETA
+	// ------------------------------------------------------------------------
+	fmt.Println("   Configurando port-forward para o frontend (8000)...")
+	
+	// Método 1: Execução direta via bash para o frontend
+	frontendSuccess := false
+	
+	// Criar um script temporário para garantir execução correta
+	scriptContent := `#!/bin/bash
+# Mata qualquer processo existente na porta 8000
+kill $(lsof -t -i:8000) 2>/dev/null || true
+sleep 1
+# Inicia o port-forward
+nohup kubectl port-forward -n NAMESPACE svc/girus-frontend 8000:80 > /dev/null 2>&1 &
+echo $!  # Retorna o PID
+`
+	
+	// Substituir NAMESPACE pelo namespace real
+	scriptContent = strings.Replace(scriptContent, "NAMESPACE", namespace, 1)
+	
+	// Salvar em arquivo temporário
+	tmpFile := filepath.Join(os.TempDir(), "girus_frontend_portforward.sh")
+	os.WriteFile(tmpFile, []byte(scriptContent), 0755)
+	defer os.Remove(tmpFile)
+	
+	// Executar o script
+	fmt.Println("   Iniciando port-forward via script auxiliar...")
+	cmdOutput, err := exec.Command("bash", tmpFile).Output()
+	if err == nil {
+		pid := strings.TrimSpace(string(cmdOutput))
+		fmt.Println("   Port-forward iniciado com PID:", pid)
+		
+		// Aguardar o port-forward inicializar
+		time.Sleep(2 * time.Second)
+		
+		// Verificar conectividade
+		for i := 0; i < 5; i++ {
+			checkCmd := exec.Command("curl", "-s", "--max-time", "2", "-o", "/dev/null", "-w", "%{http_code}", "http://localhost:8000")
+			var out bytes.Buffer
+			checkCmd.Stdout = &out
+			
+			if err := checkCmd.Run(); err == nil {
+				statusCode := strings.TrimSpace(out.String())
+				if statusCode == "200" || statusCode == "301" || statusCode == "302" {
+					frontendSuccess = true
+					break
+				}
+			}
+			
+			fmt.Println("   Verificação", i+1, "falhou, aguardando...")
+			time.Sleep(2 * time.Second)
+		}
 	}
 	
-	// Salvar PID do processo de frontend
-	ioutil.WriteFile(frontendPidFile, []byte(fmt.Sprintf("%d", frontendCmd.Process.Pid)), 0644)
-	
-	// Verificar se o frontend está acessível
-	time.Sleep(2 * time.Second) // Dar tempo para o port-forward inicializar
-	frontendOk := false
-	for i := 0; i < 5; i++ { // Tentar algumas vezes
-		checkCmd := exec.Command("curl", "-s", "--max-time", "1", "-o", "/dev/null", "-w", "%{http_code}", "http://localhost:8000")
-		var out bytes.Buffer
-		checkCmd.Stdout = &out
-		if err := checkCmd.Run(); err == nil {
-			statusCode := strings.TrimSpace(out.String())
-			if statusCode == "200" || statusCode == "301" || statusCode == "302" {
-				frontendOk = true
-				break
+	// Se falhou, tentar um método alternativo como último recurso
+	if !frontendSuccess {
+		fmt.Println("   ⚠️ Tentando método alternativo direto...")
+		
+		// Método direto: executar o comando diretamente
+		cmd := exec.Command("kubectl", "port-forward", "-n", namespace, "svc/girus-frontend", "8000:80")
+		
+		// Redirecionar saída para /dev/null
+		devNull, _ := os.Open(os.DevNull)
+		defer devNull.Close()
+		cmd.Stdout = devNull
+		cmd.Stderr = devNull
+		
+		// Iniciar em background
+		cmd.SysProcAttr = &syscall.SysProcAttr{
+			Setpgid: true,
+		}
+		
+		if err := cmd.Start(); err == nil {
+			// Registrar o PID para referência
+			if cmd.Process != nil {
+				homeDir, _ := os.UserHomeDir()
+				if homeDir != "" {
+					pidDir := filepath.Join(homeDir, ".girus")
+					os.MkdirAll(pidDir, 0755)
+					ioutil.WriteFile(filepath.Join(pidDir, "frontend.pid"), 
+						[]byte(fmt.Sprintf("%d", cmd.Process.Pid)), 0644)
+				}
+			}
+			
+			// Verificar conectividade
+			time.Sleep(3 * time.Second)
+			for i := 0; i < 3; i++ {
+				checkCmd := exec.Command("curl", "-s", "--max-time", "2", "-o", "/dev/null", "-w", "%{http_code}", "http://localhost:8000")
+				var out bytes.Buffer
+				checkCmd.Stdout = &out
+				
+				if err := checkCmd.Run(); err == nil {
+					statusCode := strings.TrimSpace(out.String())
+					if statusCode == "200" || statusCode == "301" || statusCode == "302" {
+						frontendSuccess = true
+						break
+					}
+				}
+				time.Sleep(1 * time.Second)
 			}
 		}
-		time.Sleep(1 * time.Second)
 	}
 	
-	if !frontendOk {
-		// Se frontend falhar, matar o backend também
-		backendCmd.Process.Kill()
-		frontendCmd.Process.Kill()
-		return fmt.Errorf("não foi possível conectar ao frontend após configurar port-forward")
+	// Último recurso - método absolutamente direto com deployment em vez de service
+	if !frontendSuccess {
+		fmt.Println("   🔄 Último recurso: port-forward ao deployment...")
+		// Método com deployment em vez de service, que pode ser mais estável
+		finalCmd := fmt.Sprintf("kubectl port-forward -n %s deployment/girus-frontend 8000:80 > /dev/null 2>&1 &", namespace)
+		exec.Command("bash", "-c", finalCmd).Run()
+		
+		// Verificação final
+		time.Sleep(3 * time.Second)
+		checkCmd := exec.Command("curl", "-s", "--max-time", "2", "-o", "/dev/null", "-w", "%{http_code}", "http://localhost:8000")
+		var out bytes.Buffer
+		checkCmd.Stdout = &out
+		
+		if checkCmd.Run() == nil {
+			statusCode := strings.TrimSpace(out.String())
+			if statusCode == "200" || statusCode == "301" || statusCode == "302" {
+				frontendSuccess = true
+			}
+		}
 	}
 	
+	// Verificar status final e retornar
+	if !frontendSuccess {
+		return fmt.Errorf("não foi possível estabelecer port-forward para o frontend após múltiplas tentativas")
+	}
+	
+	fmt.Println("   ✅ Frontend conectado com sucesso!")
 	return nil
 }
 
@@ -1212,6 +1285,14 @@ Por padrão, o deployment embutido no binário é utilizado.`,
 		fmt.Println("📋 PRÓXIMOS PASSOS:")
 		fmt.Println("  • Acesse o Girus no navegador:")
 		fmt.Println("    http://localhost:8000")
+		
+		// Instruções para laboratórios
+		fmt.Println("\n  • Para aplicar mais templates de laboratórios com o Girus:")
+		fmt.Println("    girus create lab -f caminho/para/lab.yaml")
+		
+		fmt.Println("\n  • Para ver todos os laboratórios disponíveis:")
+		fmt.Println("    girus list labs")
+		
 		fmt.Println(strings.Repeat("─", 60))
 	},
 }
@@ -1462,52 +1543,39 @@ func addLabFromFile(labFile string, verboseMode bool) {
 	// Após reiniciar o backend, verificar se precisamos recriar o port-forward
 	portForwardStatus := checkPortForwardNeeded()
 	
-	// Se port-forward é necessário, configurá-lo silenciosamente sem perguntar ao usuário
+	// Se port-forward é necessário, configurá-lo corretamente
 	if portForwardStatus {
-		fmt.Print("🔌 Reconfigurando port-forward... ")
+		fmt.Println("\n🔌 Reconfigurando port-forwards após reinício do backend...")
 		
-		// Iniciar o port-forward em uma goroutine
-		errChan := make(chan error, 1)
-		go func() {
-			// Redirecionar saída do setupPortForward para evitar mensagens de erro no terminal
-			oldStdout := os.Stdout
-			oldStderr := os.Stderr
-			os.Stdout, _ = os.Open(os.DevNull)
-			os.Stderr, _ = os.Open(os.DevNull)
-			defer func() {
-				os.Stdout = oldStdout
-				os.Stderr = oldStderr
-			}()
-			
-			errChan <- setupPortForward("girus")
-		}()
-		
-		// Aguardar um pouco para o port-forward ser estabelecido
-		time.Sleep(2 * time.Second)
-		
-		// Verificar se houve erro (com timeout para não bloquear)
-		var pfSuccess bool = true
-		select {
-		case err := <-errChan:
-			if err != nil {
-				fmt.Println("⚠️  Não foi possível configurar automaticamente")
-				pfSuccess = false
-			} else {
-				fmt.Println("✅ Configurado!")
-			}
-		default:
-			// Timeout - assumimos que está ok
-			fmt.Println("✅ Configurado!")
+		// Usar a função setupPortForward para garantir que ambos os serviços estejam acessíveis
+		err := setupPortForward("girus")
+		if err != nil {
+			fmt.Println("⚠️ Aviso:", err)
+			fmt.Println("   Para configurar manualmente, execute:")
+			fmt.Println("   kubectl port-forward -n girus svc/girus-backend 8080:8080")
+			fmt.Println("   kubectl port-forward -n girus svc/girus-frontend 8000:80")
+		} else {
+			fmt.Println("✅ Port-forwards configurados com sucesso!")
+			fmt.Println("   🔹 Backend: http://localhost:8080")
+			fmt.Println("   🔹 Frontend: http://localhost:8000")
 		}
+	} else {
+		// Verificar conexão com o frontend mesmo que o port-forward não seja necessário
+		checkCmd := exec.Command("curl", "-s", "--max-time", "1", "-o", "/dev/null", "-w", "%{http_code}", "http://localhost:8000")
+		var out bytes.Buffer
+		checkCmd.Stdout = &out
 		
-		// Verificar se a conexão com o backend está funcionando
-		if pfSuccess {
-			healthCheck := exec.Command("curl", "-s", "--max-time", "2", "http://localhost:8080/api/v1/health")
-			if healthCheck.Run() != nil {
-				fmt.Println("⚠️  O backend parece não estar respondendo na porta 8080")
-				fmt.Println("   Se necessário, configure manualmente com:")
-				fmt.Println("   kubectl port-forward -n girus svc/girus-backend 8080:8080")
-				fmt.Println("   kubectl port-forward -n girus svc/girus-frontend 8000:80")
+		if checkCmd.Run() != nil || !strings.Contains(strings.TrimSpace(out.String()), "200") {
+			fmt.Println("\n⚠️ Detectado problema na conexão com o frontend.")
+			fmt.Println("   Reconfigurando port-forwards para garantir acesso...")
+			
+			// Forçar reconfiguração de port-forwards
+			err := setupPortForward("girus")
+			if err != nil {
+				fmt.Println("   ⚠️", err)
+				fmt.Println("   Configure manualmente: kubectl port-forward -n girus svc/girus-frontend 8000:80")
+			} else {
+				fmt.Println("   ✅ Port-forwards reconfigurados com sucesso!")
 			}
 		}
 	}
@@ -1526,7 +1594,10 @@ func addLabFromFile(labFile string, verboseMode bool) {
 	}
 
 	fmt.Println("\n📋 PRÓXIMOS PASSOS:")
-	fmt.Println("  • Para ver todos os laboratórios disponíveis:")
+	fmt.Println("  • Acesse o Girus no navegador para usar o novo laboratório:")
+	fmt.Println("    http://localhost:8000")
+	
+	fmt.Println("\n  • Para ver todos os laboratórios disponíveis via CLI:")
 	fmt.Println("    girus list labs")
 	
 	fmt.Println("\n  • Para verificar detalhes do template adicionado:")
@@ -1543,24 +1614,56 @@ func addLabFromFile(labFile string, verboseMode bool) {
 
 // checkPortForwardNeeded verifica se o port-forward para o backend precisa ser reconfigurado
 func checkPortForwardNeeded() bool {
-	// Verificar se a porta 8080 está em uso
-	portCheckCmd := exec.Command("lsof", "-i", ":8080")
-	if portCheckCmd.Run() != nil {
+	backendNeeded := false
+	frontendNeeded := false
+	
+	// Verificar se a porta 8080 (backend) está em uso
+	backendPortCmd := exec.Command("lsof", "-i", ":8080")
+	if backendPortCmd.Run() != nil {
 		// Porta 8080 não está em uso, precisamos de port-forward
-		return true
+		backendNeeded = true
+	} else {
+		// Porta está em uso, mas precisamos verificar se é o kubectl port-forward e se está funcional
+		// Verificar se o processo é kubectl port-forward
+		backendProcessCmd := exec.Command("sh", "-c", "ps -eo pid,cmd | grep 'kubectl port-forward' | grep '8080' | grep -v grep")
+		if backendProcessCmd.Run() != nil {
+			// Não encontrou processo de port-forward ativo ou válido
+			backendNeeded = true
+		} else {
+			// Verificar se a conexão com o backend está funcionando
+			backendHealthCmd := exec.Command("curl", "-s", "--head", "--max-time", "2", "http://localhost:8080/api/v1/health")
+			backendNeeded = backendHealthCmd.Run() != nil // Retorna true (precisa de port-forward) se o comando falhar
+		}
 	}
 	
-	// Porta está em uso, mas precisamos verificar se é o kubectl port-forward e se está funcional
-	// Verificar se o processo é kubectl port-forward
-	processCmd := exec.Command("sh", "-c", "ps -eo pid,cmd | grep 'kubectl port-forward' | grep '8080' | grep -v grep")
-	if processCmd.Run() != nil {
-		// Não encontrou processo de port-forward ativo ou válido
-		return true
+	// Verificar se a porta 8000 (frontend) está em uso
+	frontendPortCmd := exec.Command("lsof", "-i", ":8000")
+	if frontendPortCmd.Run() != nil {
+		// Porta 8000 não está em uso, precisamos de port-forward
+		frontendNeeded = true
+	} else {
+		// Porta está em uso, mas precisamos verificar se é o kubectl port-forward e se está funcional
+		// Verificar se o processo é kubectl port-forward
+		frontendProcessCmd := exec.Command("sh", "-c", "ps -eo pid,cmd | grep 'kubectl port-forward' | grep '8000' | grep -v grep")
+		if frontendProcessCmd.Run() != nil {
+			// Não encontrou processo de port-forward ativo ou válido
+			frontendNeeded = true
+		} else {
+			// Verificar se a conexão com o frontend está funcionando
+			frontendCheckCmd := exec.Command("curl", "-s", "--max-time", "2", "-o", "/dev/null", "-w", "%{http_code}", "http://localhost:8000")
+			var out bytes.Buffer
+			frontendCheckCmd.Stdout = &out
+			if frontendCheckCmd.Run() != nil {
+				frontendNeeded = true
+			} else {
+				statusCode := strings.TrimSpace(out.String())
+				frontendNeeded = !(statusCode == "200" || statusCode == "301" || statusCode == "302")
+			}
+		}
 	}
 	
-	// Verificar se a conexão com o backend está funcionando
-	healthCmd := exec.Command("curl", "-s", "--head", "--max-time", "2", "http://localhost:8080/api/v1/health")
-	return healthCmd.Run() != nil // Retorna true (precisa de port-forward) se o comando falhar
+	// Se qualquer um dos serviços precisar de port-forward, retorne true
+	return backendNeeded || frontendNeeded
 }
 
 func init() {
