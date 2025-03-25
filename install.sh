@@ -83,7 +83,16 @@ fi
 
 # Configurações e variáveis
 GIRUS_VERSION="v0.1.0"
-BINARY_URL="https://github.com/badtuxx/girus-cli/releases/download/$GIRUS_VERSION/girus-$OS-$ARCH"
+
+# Definir URL com base no sistema operacional e arquitetura
+if [ "$OS" == "windows" ]; then
+    BINARY_URL="https://github.com/badtuxx/girus-cli/releases/download/$GIRUS_VERSION/girus-$OS-$ARCH.exe"
+else
+    BINARY_URL="https://github.com/badtuxx/girus-cli/releases/download/$GIRUS_VERSION/girus-$OS-$ARCH"
+fi
+
+echo "URL de download: $BINARY_URL"
+
 ORIGINAL_DIR=$(pwd)
 TEMP_DIR=$(mktemp -d)
 trap 'rm -rf "$TEMP_DIR"' EXIT
@@ -287,11 +296,19 @@ download_and_install() {
     DOWNLOAD_TOOL=$(check_download_tool)
     
     if [ "$DOWNLOAD_TOOL" == "curl" ]; then
-        echo "Usando curl para download..."
-        curl -L --progress-bar "$BINARY_URL" -o girus
+        echo "Usando curl para download de: $BINARY_URL"
+        echo "Executando: curl -L --progress-bar \"$BINARY_URL\" -o girus"
+        if ! curl -L --progress-bar "$BINARY_URL" -o girus; then
+            echo "❌ Erro no curl. Tentando com opções de debug..."
+            curl -L -v "$BINARY_URL" -o girus
+        fi
     elif [ "$DOWNLOAD_TOOL" == "wget" ]; then
-        echo "Usando wget para download..."
-        wget --show-progress -q "$BINARY_URL" -O girus
+        echo "Usando wget para download de: $BINARY_URL"
+        echo "Executando: wget --show-progress -q \"$BINARY_URL\" -O girus"
+        if ! wget --show-progress -q "$BINARY_URL" -O girus; then
+            echo "❌ Erro no wget. Tentando com opções de debug..."
+            wget -v "$BINARY_URL" -O girus
+        fi
     else
         echo "❌ Erro: curl ou wget não encontrados. Por favor, instale um deles e tente novamente."
         exit 1
@@ -302,8 +319,8 @@ download_and_install() {
         echo "❌ Erro: Falha ao baixar o Girus CLI."
         echo "URL: $BINARY_URL"
         echo "Verifique sua conexão com a internet e se a versão $GIRUS_VERSION está disponível."
-        exit 1
-    fi
+            exit 1
+        fi
     
     # Tornar o binário executável
     chmod +x girus
@@ -441,7 +458,7 @@ if ! command -v kubectl &> /dev/null; then
     else
         echo "⚠️ Aviso: Kubectl é necessário para interagir com o cluster Kubernetes."
         echo "Você pode instalá-lo manualmente seguindo as instruções em: https://kubernetes.io/docs/tasks/tools/install-kubectl/"
-        exit 1
+    exit 1
     fi
 else
     echo "✅ Kubectl já está instalado."
