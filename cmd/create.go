@@ -1208,12 +1208,10 @@ Por padrão, o deployment embutido no binário é utilizado.`,
 		fmt.Println("✅ GIRUS PRONTO PARA USO!")
 		fmt.Println(strings.Repeat("─", 60))
 		
-		// Sugerir a adição de templates de laboratório
+		// Exibir acesso ao navegador como próximo passo
 		fmt.Println("📋 PRÓXIMOS PASSOS:")
-		fmt.Println("  • Para aplicar os templates de laboratório, execute:")
-		fmt.Println("    ./update-labs.sh")
-		fmt.Println("\n  • Ou aplique manualmente:")
-		fmt.Println("    kubectl apply -f ./labs/")
+		fmt.Println("  • Acesse o Girus no navegador:")
+		fmt.Println("    http://localhost:8000")
 		fmt.Println(strings.Repeat("─", 60))
 	},
 }
