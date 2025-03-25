@@ -1,22 +1,32 @@
 #!/bin/bash
-# Script de redirecionamento para garantir interatividade mesmo via curl|bash
-
-# Mostrar banner
+set -e
+# ASCII Art Banner para o Girus
 cat << "EOF" ██████╗ ██╗██████╗ ██╗ ██╗███████╗ ██╔════╝ ██║██╔══██╗██║ ██║██╔════╝ ██║ ███╗██║██████╔╝██║ ██║███████╗
     ██║ ██║██║██╔══██╗██║ ██║╚════██║ ╚██████╔╝██║██║ ██║╚██████╔╝███████║ ╚═════╝ ╚═╝╚═╝ ╚═╝ ╚═════╝ ╚══════╝ EOF echo
-    -e "\nInstalador do Girus - Versão 0.1.0\n" # Baixar o script para execução local (garantindo interatividade)
-    echo "👉 Baixando instalador interativo..." if command -v curl &> /dev/null; then
-    curl -sSL https://girus.linuxtips.io/install.sh -o /tmp/install_girus.sh
+    -e "\nScript de Instalação - Versão 0.1.0\n" # Verificar se o terminal é interativo IS_INTERACTIVE=0 if [ -t 0 ];
+    then IS_INTERACTIVE=1 fi # Função para pedir confirmação ao usuário (interativo) ou mostrar ação padrão
+    (não-interativo) ask_user() { local prompt="$1" local default="$2" local variable_name="$3" if [ $IS_INTERACTIVE -eq
+    1 ]; then # Modo interativo - perguntar ao usuário read -p "$prompt" response # Se resposta for vazia, usar o padrão
+    response=${response:-$default} else # Modo não-interativo - usar valor padrão response="$default"
+    echo "🔄 Modo automático: $prompt (usando resposta padrão: $default)" fi # Exportar a resposta para a variável
+    solicitada eval "$variable_name=\" $response\"" } # Verificar se o script está sendo executado como root (sudo) if
+    [ "$(id -u)" -eq 0 ]; then echo "❌ ERRO: Este script não deve ser executado como root ou com sudo."
+    echo "   Por favor, execute sem sudo. O script solicitará elevação quando necessário." exit 1 fi # Configuração de
+    variáveis e ambiente set -e # Detectar o sistema operacional case "$(uname -s)" in Linux*) OS="linux" ;; Darwin*)
+    OS="darwin" ;; CYGWIN*|MINGW*|MSYS*) OS="windows" ;; *) OS="unknown" ;; esac # Detectar a arquitetura
+    ARCH_RAW=$(uname -m) case "$ARCH_RAW" in x86_64) ARCH="amd64" ;; amd64) ARCH="amd64" ;; arm64) ARCH="arm64" ;;
+    aarch64) ARCH="arm64" ;; *) ARCH="unknown" ;; esac echo "Sistema operacional detectado: $OS"
+    echo "Arquitetura detectada: $ARCH" # Verificar se o sistema operacional é suportado if [ "$OS"=="unknown" ]; then
+    echo "❌ Sistema operacional não suportado: $(uname -s)" exit 1 fi # Verificar se a arquitetura é suportada if
+    [ "$ARCH"=="unknown" ]; then echo "❌ Arquitetura não suportada: $ARCH_RAW" exit 1 fi # Configurações e variáveis
+    GIRUS_VERSION="v0.1.0"
+    BINARY_URL="https://github.com/badtuxx/girus-cli/releases/download/$GIRUS_VERSION/girus-$OS-$ARCH"
+    ORIGINAL_DIR=$(pwd) TEMP_DIR=$(mktemp -d) trap 'rm -rf "$TEMP_DIR"' EXIT # Função para verificar se o comando curl
+    ou wget está disponível check_download_tool() { if command -v curl &> /dev/null; then
+    echo "curl"
     elif command -v wget &> /dev/null; then
-    wget -q -O /tmp/install_girus.sh https://girus.linuxtips.io/install.sh
+    echo "wget"
     else
-    echo "❌ Erro: curl ou wget não encontrados."
-    echo "Por favor, instale um deles e tente novamente."
-    exit 1
+    echo "none"
     fi
-
-    # Tornar executável e rodar
-    chmod +x /tmp/install_girus.sh
-    echo "🚀 Iniciando instalação interativa..."
-    echo "----------------------------------------"
-    exec bash /tmp/install_girus.sh
+    }
