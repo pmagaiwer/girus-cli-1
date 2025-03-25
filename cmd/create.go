@@ -117,14 +117,13 @@ data:
           - "` + "`" + `ls -l` + "`" + `"
           - "Crie um script shell simples:"
           - "` + "`" + `nano script.sh` + "`" + `"
-          - "Adicione o seguinte conteúdo ao script:"
-          - |
-            ` + "```bash" + `
-            #!/bin/bash
-            echo "Olá, este é meu primeiro script!"
-            echo "Data atual: $(date)"
-            echo "Usuário atual: $(whoami)"
-            ` + "```" + `
+          - "Adicione o seguinte conteúdo ao script (Copie as 4 linhas abaixo):"
+          - "#------------------------ INÍCIO DO SCRIPT ------------------------"
+          - "#!/bin/bash"
+          - "echo \"Olá, este é meu primeiro script!\""
+          - "echo \"Data atual: $(date)\""
+          - "echo \"Usuário atual: $(whoami)\""
+          - "#------------------------- FIM DO SCRIPT -------------------------"
           - "Salve o arquivo (Ctrl+O, Enter, Ctrl+X)"
           - "Tente executar o script:"
           - "` + "`" + `./script.sh` + "`" + `"
