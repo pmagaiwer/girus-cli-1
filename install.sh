@@ -83,7 +83,7 @@ fi
 
 # Configurações e variáveis
 GIRUS_VERSION="v0.1.0"
-BINARY_URL="https://github.com/grupo-girus/girus-cli/releases/download/$GIRUS_VERSION/girus-cli-$OS-$ARCH"
+BINARY_URL="https://github.com/badtuxx/girus-cli/releases/download/$GIRUS_VERSION/girus-cli-$OS-$ARCH"
 ORIGINAL_DIR=$(pwd)
 TEMP_DIR=$(mktemp -d)
 trap 'rm -rf "$TEMP_DIR"' EXIT
