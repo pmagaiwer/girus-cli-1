@@ -133,6 +133,187 @@ data:
             expectedOutput: "ok"
             errorMessage: "O processo sleep não foi encerrado corretamente"`
 
+// Conteúdo do template do Kubernetes
+const basicKubernetesTemplate = `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kubernetes-basics-lab
+  namespace: girus
+  labels:
+    app: girus-lab-template
+data:
+  lab.yaml: |
+    name: kubernetes-basics
+    title: "Fundamentos de Kubernetes"
+    description: "Aprenda comandos básicos do Kubernetes para gerenciar recursos em um cluster"
+    duration: 60m
+    tasks:
+      - name: "Explorando o Cluster"
+        description: "Aprenda a verificar os componentes básicos de um cluster Kubernetes"
+        steps:
+          - "Verifique os nós do cluster executando:"
+          - "` + "`" + `kubectl get nodes` + "`" + `"
+          - "Veja informações mais detalhadas sobre os nós:"
+          - "` + "`" + `kubectl get nodes -o wide` + "`" + `"
+          - "Verifique os namespaces disponíveis:"
+          - "` + "`" + `kubectl get namespaces` + "`" + `"
+          - "Veja os pods do namespace kube-system (componentes internos do K8s):"
+          - "` + "`" + `kubectl get pods -n kube-system` + "`" + `"
+          - "Examine os detalhes de um nó específico (substitua [nome-do-nó] pelo nome real):"
+          - "` + "`" + `kubectl describe node [nome-do-nó]` + "`" + `"
+        tips:
+          - type: "info"
+            title: "kubectl - Sua ferramenta principal"
+            content: "O kubectl é a ferramenta de linha de comando para interagir com o Kubernetes. Sempre que tiver dúvidas sobre um comando, use kubectl --help ou kubectl [comando] --help."
+          - type: "tip"
+            title: "Formatos de saída"
+            content: "Você pode mudar o formato de saída de qualquer comando kubectl usando -o yaml, -o json, -o wide. Para visualizações compactas, -o custom-columns é útil."
+        validation:
+          - command: "kubectl get nodes -o name | wc -l | tr -d ' '"
+            expectedOutput: "1"
+            errorMessage: "Não foi possível listar os nós do cluster"
+      
+      - name: "Criando um Pod"
+        description: "Aprenda a criar e gerenciar pods, que são a menor unidade executável no Kubernetes"
+        steps:
+          - "Crie um namespace para o exercício:"
+          - "` + "`" + `kubectl create namespace k8s-demo` + "`" + `"
+          - "Crie um arquivo pod.yaml com o seguinte conteúdo:"
+          - |
+            ` + "```yaml" + `
+            apiVersion: v1
+            kind: Pod
+            metadata:
+              name: nginx-pod
+              namespace: k8s-demo
+              labels:
+                app: nginx
+            spec:
+              containers:
+              - name: nginx
+                image: nginx:latest
+                ports:
+                - containerPort: 80
+            ` + "```" + `
+          - "Crie o pod executando:"
+          - "` + "`" + `kubectl apply -f pod.yaml` + "`" + `"
+          - "Verifique se o pod está rodando:"
+          - "` + "`" + `kubectl get pods -n k8s-demo` + "`" + `"
+          - "Verifique os logs do pod:"
+          - "` + "`" + `kubectl logs nginx-pod -n k8s-demo` + "`" + `"
+          - "Acesse o shell do pod:"
+          - "` + "`" + `kubectl exec -it nginx-pod -n k8s-demo -- /bin/bash` + "`" + `"
+          - "Dentro do container, verifique se o nginx está rodando:"
+          - "` + "`" + `curl localhost:80` + "`" + `"
+          - "Digite 'exit' para sair do container"
+        tips:
+          - type: "warning"
+            title: "Cuidado com imagens 'latest'"
+            content: "Em ambientes de produção, evite usar a tag 'latest' para imagens. Prefira versões específicas para garantir consistência e evitar surpresas em atualizações automáticas."
+          - type: "info"
+            title: "Namespaces"
+            content: "Os namespaces são uma forma de criar isolamento virtual dentro do cluster. Eles permitem separar recursos, definir cotas e gerenciar permissões para diferentes equipes ou aplicações."
+        validation:
+          - command: "kubectl get pod nginx-pod -n k8s-demo -o jsonpath='{.status.phase}' 2>/dev/null || echo ''"
+            expectedOutput: "Running"
+            errorMessage: "O Pod nginx-pod não está no estado Running"
+      
+      - name: "Usando ConfigMaps e Secrets"
+        description: "Aprenda a gerenciar configurações e dados sensíveis no Kubernetes"
+        steps:
+          - "Crie um arquivo configmap.yaml com o seguinte conteúdo:"
+          - |
+            ` + "```yaml" + `
+            apiVersion: v1
+            kind: ConfigMap
+            metadata:
+              name: app-config
+              namespace: k8s-demo
+            data:
+              app.properties: |
+                environment=development
+                log.level=info
+              database.properties: |
+                db.host=db.example.com
+                db.port=5432
+            ` + "```" + `
+          - "Crie o ConfigMap executando:"
+          - "` + "`" + `kubectl apply -f configmap.yaml` + "`" + `"
+          - "Veja o ConfigMap criado:"
+          - "` + "`" + `kubectl get configmap app-config -n k8s-demo -o yaml` + "`" + `"
+          - "Crie um arquivo secret.yaml com o seguinte conteúdo:"
+          - |
+            ` + "```yaml" + `
+            apiVersion: v1
+            kind: Secret
+            metadata:
+              name: app-secret
+              namespace: k8s-demo
+            type: Opaque
+            data:
+              db.user: YWRtaW4=  # admin em base64
+              db.password: cGFzc3dvcmQxMjM=  # password123 em base64
+            ` + "```" + `
+          - "Crie o Secret executando:"
+          - "` + "`" + `kubectl apply -f secret.yaml` + "`" + `"
+          - "Verifique o Secret criado (observe que o conteúdo aparece codificado):"
+          - "` + "`" + `kubectl get secret app-secret -n k8s-demo -o yaml` + "`" + `"
+          - "Para criar um pod que utilize esses recursos, crie um arquivo config-pod.yaml:"
+          - |
+            ` + "```yaml" + `
+            apiVersion: v1
+            kind: Pod
+            metadata:
+              name: config-pod
+              namespace: k8s-demo
+            spec:
+              containers:
+              - name: app
+                image: busybox
+                command: ['sh', '-c', 'echo The app is running! && sleep 3600']
+                env:
+                - name: DB_USER
+                  valueFrom:
+                    secretKeyRef:
+                      name: app-secret
+                      key: db.user
+                - name: LOG_LEVEL
+                  valueFrom:
+                    configMapKeyRef:
+                      name: app-config
+                      key: log.level
+                volumeMounts:
+                - name: config-volume
+                  mountPath: /config
+              volumes:
+              - name: config-volume
+                configMap:
+                  name: app-config
+            ` + "```" + `
+          - "Crie o pod executando:"
+          - "` + "`" + `kubectl apply -f config-pod.yaml` + "`" + `"
+          - "Verifique as variáveis de ambiente no pod:"
+          - "` + "`" + `kubectl exec -it config-pod -n k8s-demo -- env | grep -E 'DB_USER|LOG_LEVEL'` + "`" + `"
+          - "Verifique os arquivos montados do ConfigMap:"
+          - "` + "`" + `kubectl exec -it config-pod -n k8s-demo -- ls -la /config` + "`" + `"
+        tips:
+          - type: "warning"
+            title: "Secrets não são 100% seguros"
+            content: "Os Secrets no Kubernetes oferecem apenas codificação base64 por padrão, não criptografia. Para informações realmente sensíveis, considere usar soluções como Vault ou integrações com AWS Secrets Manager, Azure Key Vault, etc."
+          - type: "tip"
+            title: "Criação rápida de secrets"
+            content: "Você pode criar secrets diretamente com o comando kubectl: ` + "`" + `kubectl create secret generic app-secret --from-literal=db.user=admin --from-literal=db.password=password123 -n k8s-demo` + "`" + `"
+          - type: "info"
+            title: "Múltiplos usos"
+            content: "ConfigMaps e Secrets podem ser usados como variáveis de ambiente, volumes montados, ou em argumentos de comando. Escolha a melhor forma para o seu caso de uso."
+        validation:
+          - command: "kubectl get configmap app-config -n k8s-demo -o name 2>/dev/null || echo ''"
+            expectedOutput: "configmap/app-config"
+            errorMessage: "O ConfigMap app-config não foi criado corretamente"
+          - command: "kubectl get pod config-pod -n k8s-demo -o jsonpath='{.status.phase}' 2>/dev/null || echo ''"
+            expectedOutput: "Running"
+            errorMessage: "O Pod config-pod não está em execução"`
+
 // defaultDeployment contém o YAML de deployment padrão do Girus
 const defaultDeployment = `apiVersion: v1
 kind: Namespace
@@ -385,6 +566,35 @@ data:
             try_files $uri $uri/ /index.html;
         }
     }
+---
+# Criar o namespace para o usuário de teste
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: lab-test-user
+---
+# Criar a service account caso ela não exista
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: default
+  namespace: lab-test-user
+---
+# Conceder permissões de administrador para o usuário de teste
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: lab-test-user-admin-access
+  annotations:
+    description: "Permissões de administrador para ambiente educacional"
+subjects:
+  - kind: ServiceAccount
+    name: default
+    namespace: lab-test-user
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin
+  apiGroup: rbac.authorization.k8s.io
 `
 
 // waitForPodsReady espera até que os pods do Girus (backend e frontend) estejam prontos
@@ -394,11 +604,11 @@ func waitForPodsReady(namespace string, timeout time.Duration) error {
 	start := time.Now()
 	bar := progressbar.NewOptions(100,
 		progressbar.OptionSetDescription("Inicializando Girus..."),
-		progressbar.OptionSetWidth(50),
+		progressbar.OptionSetWidth(80),
 		progressbar.OptionShowBytes(false),
 		progressbar.OptionSetPredictTime(false),
 		progressbar.OptionThrottle(65*time.Millisecond),
-		progressbar.OptionShowCount(),
+		progressbar.OptionSetRenderBlankState(true),
 		progressbar.OptionSpinnerType(14),
 		progressbar.OptionFullWidth(),
 	)
@@ -829,11 +1039,11 @@ Por padrão, o deployment embutido no binário é utilizado.`,
 					// Usar barra de progresso
 					bar := progressbar.NewOptions(100,
 						progressbar.OptionSetDescription("Excluindo cluster existente..."),
-						progressbar.OptionSetWidth(50),
+						progressbar.OptionSetWidth(80),
 						progressbar.OptionShowBytes(false),
 						progressbar.OptionSetPredictTime(false),
 						progressbar.OptionThrottle(65*time.Millisecond),
-						progressbar.OptionShowCount(),
+						progressbar.OptionSetRenderBlankState(true),
 						progressbar.OptionSpinnerType(14),
 						progressbar.OptionFullWidth(),
 					)
@@ -900,11 +1110,11 @@ Por padrão, o deployment embutido no binário é utilizado.`,
 			// Usando barra de progresso (padrão)
 			bar := progressbar.NewOptions(100,
 				progressbar.OptionSetDescription("Criando cluster..."),
-				progressbar.OptionSetWidth(50),
+				progressbar.OptionSetWidth(80),
 				progressbar.OptionShowBytes(false),
 				progressbar.OptionSetPredictTime(false),
 				progressbar.OptionThrottle(65*time.Millisecond),
-				progressbar.OptionShowCount(),
+				progressbar.OptionSetRenderBlankState(true),
 				progressbar.OptionSpinnerType(14),
 				progressbar.OptionFullWidth(),
 			)
@@ -1004,11 +1214,11 @@ Por padrão, o deployment embutido no binário é utilizado.`,
 				// Usar barra de progresso
 				bar := progressbar.NewOptions(100,
 					progressbar.OptionSetDescription("Implantando Girus..."),
-					progressbar.OptionSetWidth(50),
+					progressbar.OptionSetWidth(80),
 					progressbar.OptionShowBytes(false),
 					progressbar.OptionSetPredictTime(false),
 					progressbar.OptionThrottle(65*time.Millisecond),
-					progressbar.OptionShowCount(),
+					progressbar.OptionSetRenderBlankState(true),
 					progressbar.OptionSpinnerType(14),
 					progressbar.OptionFullWidth(),
 				)
@@ -1086,11 +1296,11 @@ Por padrão, o deployment embutido no binário é utilizado.`,
 				// Usar barra de progresso para o deploy (padrão)
 				bar := progressbar.NewOptions(100,
 					progressbar.OptionSetDescription("Implantando infraestrutura..."),
-					progressbar.OptionSetWidth(50),
+					progressbar.OptionSetWidth(80),
 					progressbar.OptionShowBytes(false),
 					progressbar.OptionSetPredictTime(false),
 					progressbar.OptionThrottle(65*time.Millisecond),
-					progressbar.OptionShowCount(),
+					progressbar.OptionSetRenderBlankState(true),
 					progressbar.OptionSpinnerType(14),
 					progressbar.OptionFullWidth(),
 				)
@@ -1136,62 +1346,93 @@ Por padrão, o deployment embutido no binário é utilizado.`,
 			fmt.Println("✅ Infraestrutura básica aplicada com sucesso!")
 			
 			// Agora vamos aplicar o template de laboratório que está embutido no binário
-			fmt.Println("\n🔬 Aplicando template de laboratório Linux...")
+			fmt.Println("\n🔬 Aplicando templates de laboratório...")
 			
-			// Criar um arquivo temporário para o template do laboratório
+			// Criar um arquivo temporário para o template do laboratório Linux
 			labTempFile, err := os.CreateTemp("", "basic-linux-*.yaml")
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "❌ Erro ao criar arquivo temporário para o template: %v\n", err)
-				fmt.Println("   A infraestrutura básica foi aplicada, mas sem o template de laboratório.")
+				fmt.Fprintf(os.Stderr, "❌ Erro ao criar arquivo temporário para o template Linux: %v\n", err)
+				fmt.Println("   A infraestrutura básica foi aplicada, mas sem os templates de laboratório.")
 				return
 			}
 			defer os.Remove(labTempFile.Name()) // Limpar o arquivo temporário ao finalizar
 
-			// Escrever o conteúdo do template no arquivo temporário
+			// Escrever o conteúdo do template Linux no arquivo temporário
 			if _, err := labTempFile.WriteString(basicLinuxTemplate); err != nil {
-				fmt.Fprintf(os.Stderr, "❌ Erro ao escrever template no arquivo temporário: %v\n", err)
-				fmt.Println("   A infraestrutura básica foi aplicada, mas sem o template de laboratório.")
+				fmt.Fprintf(os.Stderr, "❌ Erro ao escrever template Linux no arquivo temporário: %v\n", err)
+				fmt.Println("   A infraestrutura básica foi aplicada, mas sem os templates de laboratório.")
 				return
 			}
 			labTempFile.Close()
 			
-			// Aplicar o template de laboratório
+			// Criar um arquivo temporário para o template do laboratório Kubernetes
+			k8sTempFile, err := os.CreateTemp("", "kubernetes-basics-*.yaml")
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "❌ Erro ao criar arquivo temporário para o template Kubernetes: %v\n", err)
+				fmt.Println("   A infraestrutura básica foi aplicada, mas sem o template de laboratório Kubernetes.")
+				return
+			}
+			defer os.Remove(k8sTempFile.Name()) // Limpar o arquivo temporário ao finalizar
+
+			// Escrever o conteúdo do template Kubernetes no arquivo temporário
+			if _, err := k8sTempFile.WriteString(basicKubernetesTemplate); err != nil {
+				fmt.Fprintf(os.Stderr, "❌ Erro ao escrever template Kubernetes no arquivo temporário: %v\n", err)
+				fmt.Println("   A infraestrutura básica foi aplicada, mas sem o template de laboratório Kubernetes.")
+				return
+			}
+			k8sTempFile.Close()
+			
+			// Aplicar o template de laboratório Linux
 			if verboseMode {
 				// Executar normalmente mostrando o output
+				fmt.Println("   Aplicando template de laboratório Linux...")
 				applyLabCmd := exec.Command("kubectl", "apply", "-f", labTempFile.Name())
 				applyLabCmd.Stdout = os.Stdout
 				applyLabCmd.Stderr = os.Stderr
 
 				if err := applyLabCmd.Run(); err != nil {
-					fmt.Fprintf(os.Stderr, "❌ Erro ao aplicar o template de laboratório: %v\n", err)
-					fmt.Println("   A infraestrutura básica foi aplicada, mas sem o template de laboratório.")
+					fmt.Fprintf(os.Stderr, "❌ Erro ao aplicar o template de laboratório Linux: %v\n", err)
+					fmt.Println("   A infraestrutura básica foi aplicada, mas sem o template de laboratório Linux.")
 				} else {
-					fmt.Println("✅ Template de laboratório inicial Linux Básico aplicado com sucesso!")
+					fmt.Println("   ✅ Template de laboratório Linux Básico aplicado com sucesso!")
+				}
+				
+				// Aplicar o template de laboratório Kubernetes
+				fmt.Println("   Aplicando template de laboratório Kubernetes...")
+				applyK8sCmd := exec.Command("kubectl", "apply", "-f", k8sTempFile.Name())
+				applyK8sCmd.Stdout = os.Stdout
+				applyK8sCmd.Stderr = os.Stderr
+
+				if err := applyK8sCmd.Run(); err != nil {
+					fmt.Fprintf(os.Stderr, "❌ Erro ao aplicar o template de laboratório Kubernetes: %v\n", err)
+					fmt.Println("   A infraestrutura básica e o template Linux foram aplicados, mas sem o template de laboratório Kubernetes.")
+				} else {
+					fmt.Println("   ✅ Template de laboratório Fundamentos de Kubernetes aplicado com sucesso!")
 				}
 			} else {
-				// Usar barra de progresso para o template
+				// Usar barra de progresso para os templates
 				bar := progressbar.NewOptions(100,
-					progressbar.OptionSetDescription("Aplicando template inicial Linux Básico..."),
-					progressbar.OptionSetWidth(50),
+					progressbar.OptionSetDescription("Aplicando templates de laboratório..."),
+					progressbar.OptionSetWidth(80),
 					progressbar.OptionShowBytes(false),
 					progressbar.OptionSetPredictTime(false),
 					progressbar.OptionThrottle(65*time.Millisecond),
-					progressbar.OptionShowCount(),
+					progressbar.OptionSetRenderBlankState(true),
 					progressbar.OptionSpinnerType(14),
 					progressbar.OptionFullWidth(),
 				)
 
-				// Executar comando sem mostrar saída
+				// Executar comando para aplicar o template Linux
 				applyLabCmd := exec.Command("kubectl", "apply", "-f", labTempFile.Name())
-				var stderr bytes.Buffer
-				applyLabCmd.Stderr = &stderr
+				var stderrLinux bytes.Buffer
+				applyLabCmd.Stderr = &stderrLinux
 				
 				// Iniciar o comando
 				err := applyLabCmd.Start()
 				if err != nil {
 					bar.Finish()
-					fmt.Fprintf(os.Stderr, "❌ Erro ao iniciar aplicação do template: %v\n", err)
-					fmt.Println("   A infraestrutura básica foi aplicada, mas sem o template de laboratório.")
+					fmt.Fprintf(os.Stderr, "❌ Erro ao iniciar aplicação do template Linux: %v\n", err)
+					fmt.Println("   A infraestrutura básica foi aplicada, mas sem os templates de laboratório.")
 				} else {
 					// Atualizar a barra de progresso enquanto o comando está em execução
 					done := make(chan struct{})
@@ -1210,14 +1451,37 @@ Por padrão, o deployment embutido no binário é utilizado.`,
 					// Aguardar o final do comando
 					err = applyLabCmd.Wait()
 					close(done)
+					
+					linuxSuccess := err == nil
+					
+					// Aplicar o template de Kubernetes
+					applyK8sCmd := exec.Command("kubectl", "apply", "-f", k8sTempFile.Name())
+					var stderrK8s bytes.Buffer
+					applyK8sCmd.Stderr = &stderrK8s
+					
+					err = applyK8sCmd.Run()
+					k8sSuccess := err == nil
+					
 					bar.Finish()
-
-					if err != nil {
-						fmt.Fprintf(os.Stderr, "❌ Erro ao aplicar o template de laboratório: %v\n", err)
-						fmt.Println("   Detalhes técnicos:", stderr.String())
-						fmt.Println("   A infraestrutura básica foi aplicada, mas sem o template de laboratório.")
-					} else {
-						fmt.Println("✅ Template de laboratório inicial Linux Básico aplicado com sucesso!")
+					
+					if !linuxSuccess {
+						fmt.Fprintf(os.Stderr, "❌ Erro ao aplicar o template de laboratório Linux: %v\n", err)
+						fmt.Println("   Detalhes técnicos:", stderrLinux.String())
+						fmt.Println("   A infraestrutura básica foi aplicada, mas sem o template de laboratório Linux.")
+					}
+					
+					if !k8sSuccess {
+						fmt.Fprintf(os.Stderr, "❌ Erro ao aplicar o template de laboratório Kubernetes: %v\n", err)
+						fmt.Println("   Detalhes técnicos:", stderrK8s.String())
+						fmt.Println("   A infraestrutura básica foi aplicada, mas sem o template de laboratório Kubernetes.")
+					}
+					
+					if linuxSuccess && k8sSuccess {
+						fmt.Println("✅ Todos os templates de laboratório aplicados com sucesso!")
+					} else if linuxSuccess {
+						fmt.Println("✅ Template de laboratório Linux aplicado com sucesso!")
+					} else if k8sSuccess {
+						fmt.Println("✅ Template de laboratório Kubernetes aplicado com sucesso!")
 					}
 				}
 			}
@@ -1370,11 +1634,11 @@ func addLabFromFile(labFile string, verboseMode bool) {
 		// Usar barra de progresso
 		bar := progressbar.NewOptions(100,
 			progressbar.OptionSetDescription("   Aplicando laboratório"),
-			progressbar.OptionSetWidth(50),
+			progressbar.OptionSetWidth(80),
 			progressbar.OptionShowBytes(false),
 			progressbar.OptionSetPredictTime(false),
 			progressbar.OptionThrottle(65*time.Millisecond),
-			progressbar.OptionShowCount(),
+			progressbar.OptionSetRenderBlankState(true),
 			progressbar.OptionSpinnerType(14),
 			progressbar.OptionFullWidth(),
 		)
@@ -1470,11 +1734,11 @@ func addLabFromFile(labFile string, verboseMode bool) {
 		// Usar barra de progresso
 		bar := progressbar.NewOptions(100,
 			progressbar.OptionSetDescription("   Reiniciando backend"),
-			progressbar.OptionSetWidth(50),
+			progressbar.OptionSetWidth(80),
 			progressbar.OptionShowBytes(false),
 			progressbar.OptionSetPredictTime(false),
 			progressbar.OptionThrottle(65*time.Millisecond),
-			progressbar.OptionShowCount(),
+			progressbar.OptionSetRenderBlankState(true),
 			progressbar.OptionSpinnerType(14),
 			progressbar.OptionFullWidth(),
 		)
