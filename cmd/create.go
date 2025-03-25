@@ -53,8 +53,8 @@ data:
             title: "Sobre o nano"
             content: "Nano é um editor de texto simples para terminais. Ele é mais fácil de usar que outros editores como vim ou emacs, e é perfeito para iniciantes."
         validation:
-          - command: "which nano && echo 'ok'"
-            expectedOutput: "ok"
+          - command: "which nano"
+            expectedOutput: "/usr/bin/nano"
             errorMessage: "Nano não foi instalado corretamente"
 
       - name: "Navegação básica"
