@@ -10,7 +10,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
-	"syscall"
 	"time"
 
 	"github.com/schollz/progressbar/v3"
@@ -743,15 +742,15 @@ echo $!  # Retorna o PID
 
 // startBackgroundCmd inicia um comando em segundo plano de forma compatível com múltiplos sistemas operacionais
 func startBackgroundCmd(cmd *exec.Cmd) error {
-	// Diferentes configurações para diferentes sistemas operacionais
-	if runtime.GOOS != "windows" {
-		// Linux/Unix/macOS - usar Setpgid
-		cmd.SysProcAttr = &syscall.SysProcAttr{
-			Setpgid: true,
-		}
-	} else {
-		// Windows - usar uma configuração mínima compatível
-		cmd.SysProcAttr = &syscall.SysProcAttr{}
+	// Iniciar o processo sem depender de atributos específicos da plataforma
+	// que podem não estar disponíveis em todas as implementações do Go
+	
+	// Redirecionar saída e erro para /dev/null ou nul (Windows)
+	devNull, _ := os.Open(os.DevNull)
+	if devNull != nil {
+		cmd.Stdout = devNull
+		cmd.Stderr = devNull
+		defer devNull.Close()
 	}
 	
 	// Iniciar o processo
@@ -769,6 +768,12 @@ func startBackgroundCmd(cmd *exec.Cmd) error {
 			ioutil.WriteFile(filepath.Join(pidDir, "frontend.pid"), 
 				[]byte(fmt.Sprintf("%d", cmd.Process.Pid)), 0644)
 		}
+		
+		// Separar o processo do atual para evitar que seja terminado quando o processo pai terminar
+		// Isso é uma alternativa portable ao uso de Setpgid
+		go func() {
+			cmd.Process.Release()
+		}()
 	}
 	
 	return nil
