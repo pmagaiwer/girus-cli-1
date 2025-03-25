@@ -17,22 +17,19 @@ if [ -t 0 ]; then
     IS_INTERACTIVE=1
 fi
 
+# Forçar modo interativo para o script completo
+IS_INTERACTIVE=1
+
 # Função para pedir confirmação ao usuário (interativo) ou mostrar ação padrão (não-interativo)
 ask_user() {
     local prompt="$1"
     local default="$2"
     local variable_name="$3"
     
-    if [ $IS_INTERACTIVE -eq 1 ]; then
-        # Modo interativo - perguntar ao usuário
-        read -p "$prompt" response
-        # Se resposta for vazia, usar o padrão
-        response=${response:-$default}
-    else
-        # Modo não-interativo - usar valor padrão
-        response="$default"
-        echo "🔄 Modo automático: $prompt (usando resposta padrão: $default)"
-    fi
+    # Modo sempre interativo - perguntar ao usuário
+    read -p "$prompt" response
+    # Se resposta for vazia, usar o padrão
+    response=${response:-$default}
     
     # Exportar a resposta para a variável solicitada
     eval "$variable_name=\"$response\""
