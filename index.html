@@ -11,6 +11,33 @@ cat << "EOF"
 EOF
 echo -e "\nScript de Instalação - Versão 0.1.0\n"
 
+# Verificar se o terminal é interativo
+IS_INTERACTIVE=0
+if [ -t 0 ]; then
+    IS_INTERACTIVE=1
+fi
+
+# Função para pedir confirmação ao usuário (interativo) ou mostrar ação padrão (não-interativo)
+ask_user() {
+    local prompt="$1"
+    local default="$2"
+    local variable_name="$3"
+    
+    if [ $IS_INTERACTIVE -eq 1 ]; then
+        # Modo interativo - perguntar ao usuário
+        read -p "$prompt" response
+        # Se resposta for vazia, usar o padrão
+        response=${response:-$default}
+    else
+        # Modo não-interativo - usar valor padrão
+        response="$default"
+        echo "🔄 Modo automático: $prompt (usando resposta padrão: $default)"
+    fi
+    
+    # Exportar a resposta para a variável solicitada
+    eval "$variable_name=\"$response\""
+}
+
 # Verificar se o script está sendo executado como root (sudo)
 if [ "$(id -u)" -eq 0 ]; then
     echo "❌ ERRO: Este script não deve ser executado como root ou com sudo."
@@ -226,8 +253,7 @@ check_previous_install() {
     
     # Se uma instalação anterior foi encontrada, perguntar sobre limpeza
     if [ "$previous_install_found" = true ]; then
-        read -p "Deseja remover a(s) instalação(ões) anterior(es)? (S/n): " CLEAN_INSTALL
-        CLEAN_INSTALL=${CLEAN_INSTALL:-S}
+        ask_user "Deseja remover a(s) instalação(ões) anterior(es)? (S/n): " "S" "CLEAN_INSTALL"
         
         if [[ "$CLEAN_INSTALL" =~ ^[Ss]$ ]]; then
             echo "🧹 Removendo instalações anteriores..."
@@ -284,8 +310,7 @@ download_and_install() {
     
     # Perguntar se o usuário deseja instalar no PATH
     echo "🔧 Girus CLI baixado com sucesso."
-    read -p "Deseja instalar o Girus CLI em /usr/local/bin? (S/n): " INSTALL_GLOBALLY
-    INSTALL_GLOBALLY=${INSTALL_GLOBALLY:-S}
+    ask_user "Deseja instalar o Girus CLI em /usr/local/bin? (S/n): " "S" "INSTALL_GLOBALLY"
     
     if [[ "$INSTALL_GLOBALLY" =~ ^[Ss]$ ]]; then
         echo "📋 Instalando o Girus CLI em /usr/local/bin/girus-cli..."
@@ -349,8 +374,7 @@ check_previous_install
 echo "=== ETAPA 1: Verificando Docker ==="
 if ! command -v docker &> /dev/null; then
     echo "Docker não está instalado."
-    read -p "Deseja instalar Docker automaticamente? (Linux apenas) (S/n): " INSTALL_DOCKER
-    INSTALL_DOCKER=${INSTALL_DOCKER:-S}
+    ask_user "Deseja instalar Docker automaticamente? (Linux apenas) (S/n): " "S" "INSTALL_DOCKER"
     
     if [[ "$INSTALL_DOCKER" =~ ^[Ss]$ ]]; then
         install_docker
@@ -366,8 +390,7 @@ else
     # Verificar se o Docker está em execução
     if ! docker info &> /dev/null; then
         echo "⚠️ Aviso: Docker está instalado, mas não está em execução."
-        read -p "Deseja tentar iniciar o Docker? (S/n): " START_DOCKER
-        START_DOCKER=${START_DOCKER:-S}
+        ask_user "Deseja tentar iniciar o Docker? (S/n): " "S" "START_DOCKER"
         
         if [[ "$START_DOCKER" =~ ^[Ss]$ ]]; then
             echo "Tentando iniciar o Docker..."
@@ -394,8 +417,7 @@ fi
 echo "=== ETAPA 2: Verificando Kind ==="
 if ! command -v kind &> /dev/null; then
     echo "Kind não está instalado."
-    read -p "Deseja instalar Kind automaticamente? (S/n): " INSTALL_KIND
-    INSTALL_KIND=${INSTALL_KIND:-S}
+    ask_user "Deseja instalar Kind automaticamente? (S/n): " "S" "INSTALL_KIND"
     
     if [[ "$INSTALL_KIND" =~ ^[Ss]$ ]]; then
         install_kind
@@ -412,8 +434,7 @@ fi
 echo "=== ETAPA 3: Verificando Kubectl ==="
 if ! command -v kubectl &> /dev/null; then
     echo "Kubectl não está instalado."
-    read -p "Deseja instalar Kubectl automaticamente? (S/n): " INSTALL_KUBECTL
-    INSTALL_KUBECTL=${INSTALL_KUBECTL:-S}
+    ask_user "Deseja instalar Kubectl automaticamente? (S/n): " "S" "INSTALL_KUBECTL"
     
     if [[ "$INSTALL_KUBECTL" =~ ^[Ss]$ ]]; then
         install_kubectl
@@ -447,7 +468,7 @@ cat << EOF
 📝 PRÓXIMOS PASSOS:
 
 1. Para criar um novo cluster Kubernetes e instalar o Girus:
-   $ girus create cluster
+   $ girus-cli create cluster
 
 2. Após a criação do cluster, acesse o Girus no navegador:
    http://localhost:8000
