@@ -226,7 +226,7 @@ check_docker_running() {
 
 # Verificar se o Girus CLI está no PATH
 check_girus_in_path() {
-    if command -v girus-cli &> /dev/null; then
+    if command -v girus &> /dev/null; then
         return 0
     else
         return 1
@@ -237,10 +237,10 @@ check_girus_in_path() {
 check_previous_install() {
     local previous_install_found=false
     local install_locations=(
-        "/usr/local/bin/girus-cli"
-        "/usr/bin/girus-cli"
-        "$HOME/.local/bin/girus-cli"
-        "./girus-cli"
+        "/usr/local/bin/girus"
+        "/usr/bin/girus"
+        "$HOME/.local/bin/girus"
+        "./girus"
     )
     
     # Verificar instalações anteriores
@@ -261,7 +261,7 @@ check_previous_install() {
             for location in "${install_locations[@]}"; do
                 if [ -f "$location" ]; then
                     echo "Removendo $location"
-                    if [[ "$location" == "/usr/local/bin/girus-cli" || "$location" == "/usr/bin/girus-cli" ]]; then
+                    if [[ "$location" == "/usr/local/bin/girus" || "$location" == "/usr/bin/girus" ]]; then
                         sudo rm -f "$location"
                     else
                         rm -f "$location"
@@ -288,17 +288,17 @@ download_and_install() {
     
     if [ "$DOWNLOAD_TOOL" == "curl" ]; then
         echo "Usando curl para download..."
-        curl -L --progress-bar "$BINARY_URL" -o girus-cli
+        curl -L --progress-bar "$BINARY_URL" -o girus
     elif [ "$DOWNLOAD_TOOL" == "wget" ]; then
         echo "Usando wget para download..."
-        wget --show-progress -q "$BINARY_URL" -O girus-cli
+        wget --show-progress -q "$BINARY_URL" -O girus
     else
         echo "❌ Erro: curl ou wget não encontrados. Por favor, instale um deles e tente novamente."
         exit 1
     fi
     
     # Verificar se o download foi bem-sucedido
-    if [ ! -f girus-cli ] || [ ! -s girus-cli ]; then
+    if [ ! -f girus ] || [ ! -s girus ]; then
         echo "❌ Erro: Falha ao baixar o Girus CLI."
         echo "URL: $BINARY_URL"
         echo "Verifique sua conexão com a internet e se a versão $GIRUS_VERSION está disponível."
@@ -306,22 +306,22 @@ download_and_install() {
     fi
     
     # Tornar o binário executável
-    chmod +x girus-cli
+    chmod +x girus
     
     # Perguntar se o usuário deseja instalar no PATH
     echo "🔧 Girus CLI baixado com sucesso."
     ask_user "Deseja instalar o Girus CLI em /usr/local/bin? (S/n): " "S" "INSTALL_GLOBALLY"
     
     if [[ "$INSTALL_GLOBALLY" =~ ^[Ss]$ ]]; then
-        echo "📋 Instalando o Girus CLI em /usr/local/bin/girus-cli..."
-        sudo mv girus-cli /usr/local/bin/
-        echo "✅ Girus CLI instalado com sucesso em /usr/local/bin/girus-cli"
-        echo "   Você pode executá-lo de qualquer lugar com o comando 'girus-cli'"
+        echo "📋 Instalando o Girus CLI em /usr/local/bin/girus..."
+        sudo mv girus /usr/local/bin/
+        echo "✅ Girus CLI instalado com sucesso em /usr/local/bin/girus"
+        echo "   Você pode executá-lo de qualquer lugar com o comando 'girus'"
     else
         # Copiar para o diretório original
-        cp girus-cli "$ORIGINAL_DIR/"
-        echo "✅ Girus CLI copiado para o diretório atual: $(realpath "$ORIGINAL_DIR/girus-cli")"
-        echo "   Você pode executá-lo com: './girus-cli'"
+        cp girus "$ORIGINAL_DIR/"
+        echo "✅ Girus CLI copiado para o diretório atual: $(realpath "$ORIGINAL_DIR/girus")"
+        echo "   Você pode executá-lo com: './girus'"
     fi
 }
 
@@ -468,7 +468,7 @@ cat << EOF
 📝 PRÓXIMOS PASSOS:
 
 1. Para criar um novo cluster Kubernetes e instalar o Girus:
-   $ girus-cli create cluster
+   $ girus create cluster
 
 2. Após a criação do cluster, acesse o Girus no navegador:
    http://localhost:8000
