@@ -314,6 +314,89 @@ data:
             expectedOutput: "Running"
             errorMessage: "O Pod config-pod não está em execução"`
 
+// Conteúdo do template do Docker
+const basicDockerTemplate = `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: docker-basics-lab
+  namespace: girus
+  labels:
+    app: girus-lab-template
+data:
+  lab.yaml: |
+    name: docker-basics
+    title: "Fundamentos de Docker"
+    description: "Aprenda comandos básicos do Docker para criar, gerenciar e executar containers"
+    duration: 60m
+    youtubeVideo: "https://www.youtube.com/watch?v=0cDj7citEjE"
+    tasks:
+      - name: "Explorando o Ambiente Docker"
+        description: "Aprenda a verificar o ambiente Docker e seus componentes básicos"
+        steps:
+          - "Vamos começar instalando o comando curl:"
+          - "` + "`" + `apt update` + "`" + `"
+          - "` + "`" + `apt install -y curl` + "`" + `"
+          - "Faça a instalação do Docker:"
+          - "` + "`" + `curl -fsSL https://get.docker.com | bash` + "`" + `"
+          - "Verifique a versão do Docker instalada:"
+          - "` + "`" + `docker --version` + "`" + `"
+          - "Verifique informações detalhadas sobre a instalação do Docker:"
+          - "` + "`" + `docker info` + "`" + `"
+          - "Liste as imagens disponíveis localmente:"
+          - "` + "`" + `docker images` + "`" + `"
+          - "Liste todos os containers (incluindo os parados):"
+          - "` + "`" + `docker ps -a` + "`" + `"
+          - "Verifique o status do serviço Docker:"
+          - "` + "`" + `systemctl status docker` + "`" + `"
+          - "Verifique as redes Docker disponíveis:"
+          - "` + "`" + `docker network ls` + "`" + `"
+        tips:
+          - type: "info"
+            title: "Docker CLI - Sua ferramenta principal"
+            content: "O comando docker é a ferramenta de linha de comando para interagir com o Docker. Sempre que tiver dúvidas sobre um comando, use docker --help ou docker [comando] --help."
+          - type: "tip"
+            title: "Formatos de saída"
+            content: "Você pode mudar o formato de saída de qualquer comando docker usando --format. Por exemplo: docker ps --format '{{.Names}} {{.Status}}'"
+        validation:
+          - command: "docker info &>/dev/null && echo 'success' || echo 'error'"
+            expectedOutput: "success"
+            errorMessage: "Não foi possível acessar o daemon Docker. Verifique se o serviço está em execução."
+      
+      - name: "Executando Containers"
+        description: "Aprenda a executar e gerenciar containers Docker"
+        steps:
+          - "Execute um container hello-world para testar o ambiente:"
+          - "` + "`" + `docker run hello-world` + "`" + `"
+          - "Execute um container nginx em modo detached (background):"
+          - "` + "`" + `docker run -d --name meu-nginx -p 8080:80 nginx` + "`" + `"
+          - "Verifique se o container está em execução:"
+          - "` + "`" + `docker ps` + "`" + `"
+          - "Acesse o nginx através do navegador ou usando curl:"
+          - "` + "`" + `curl localhost:8080` + "`" + `"
+          - "Veja os logs do container:"
+          - "` + "`" + `docker logs meu-nginx` + "`" + `"
+          - "Pare o container:"
+          - "` + "`" + `docker stop meu-nginx` + "`" + `"
+          - "Inicie o container novamente:"
+          - "` + "`" + `docker start meu-nginx` + "`" + `"
+          - "Execute um container interativo (e descartável) do Ubuntu:"
+          - "` + "`" + `docker run -it --rm ubuntu bash` + "`" + `"
+          - "No terminal do container, execute alguns comandos:"
+          - "` + "`" + `ls -la` + "`" + `"
+          - "` + "`" + `cat /etc/os-release` + "`" + `"
+          - "Digite 'exit' para sair do container"
+        tips:
+          - type: "warning"
+            title: "Portas expostas"
+            content: "Lembre-se que para acessar serviços dentro de um container a partir do host, você precisa mapear as portas com a flag -p. Exemplo: -p [porta-host]:[porta-container]"
+          - type: "info"
+            title: "Modos de execução"
+            content: "O Docker permite executar containers em modo detached (-d), interativo (-it) ou com uma combinação de flags. Use --rm para remover automaticamente o container quando ele for finalizado."
+        validation:
+          - command: "docker ps -a --format '{{.Names}}' | grep -w meu-nginx || echo ''"
+            expectedOutput: "meu-nginx"
+            errorMessage: "O container meu-nginx não foi criado"`
+
 // defaultDeployment contém o YAML de deployment padrão do Girus
 const defaultDeployment = `apiVersion: v1
 kind: Namespace
@@ -1382,6 +1465,23 @@ Por padrão, o deployment embutido no binário é utilizado.`,
 			}
 			k8sTempFile.Close()
 			
+			// Criar um arquivo temporário para o template do laboratório Docker
+			dockerTempFile, err := os.CreateTemp("", "docker-basics-*.yaml")
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "❌ Erro ao criar arquivo temporário para o template Docker: %v\n", err)
+				fmt.Println("   A infraestrutura básica foi aplicada, mas sem o template de laboratório Docker.")
+				return
+			}
+			defer os.Remove(dockerTempFile.Name()) // Limpar o arquivo temporário ao finalizar
+
+			// Escrever o conteúdo do template Docker no arquivo temporário
+			if _, err := dockerTempFile.WriteString(basicDockerTemplate); err != nil {
+				fmt.Fprintf(os.Stderr, "❌ Erro ao escrever template Docker no arquivo temporário: %v\n", err)
+				fmt.Println("   A infraestrutura básica foi aplicada, mas sem o template de laboratório Docker.")
+				return
+			}
+			dockerTempFile.Close()
+			
 			// Aplicar o template de laboratório Linux
 			if verboseMode {
 				// Executar normalmente mostrando o output
@@ -1408,6 +1508,19 @@ Por padrão, o deployment embutido no binário é utilizado.`,
 					fmt.Println("   A infraestrutura básica e o template Linux foram aplicados, mas sem o template de laboratório Kubernetes.")
 				} else {
 					fmt.Println("   ✅ Template de laboratório Fundamentos de Kubernetes aplicado com sucesso!")
+				}
+				
+				// Aplicar o template de laboratório Docker
+				fmt.Println("   Aplicando template de laboratório Docker...")
+				applyDockerCmd := exec.Command("kubectl", "apply", "-f", dockerTempFile.Name())
+				applyDockerCmd.Stdout = os.Stdout
+				applyDockerCmd.Stderr = os.Stderr
+
+				if err := applyDockerCmd.Run(); err != nil {
+					fmt.Fprintf(os.Stderr, "❌ Erro ao aplicar o template de laboratório Docker: %v\n", err)
+					fmt.Println("   A infraestrutura básica e os outros templates foram aplicados, mas sem o template de laboratório Docker.")
+				} else {
+					fmt.Println("   ✅ Template de laboratório Fundamentos de Docker aplicado com sucesso!")
 				}
 			} else {
 				// Usar barra de progresso para os templates
@@ -1462,6 +1575,14 @@ Por padrão, o deployment embutido no binário é utilizado.`,
 					err = applyK8sCmd.Run()
 					k8sSuccess := err == nil
 					
+					// Aplicar o template de Docker
+					applyDockerCmd := exec.Command("kubectl", "apply", "-f", dockerTempFile.Name())
+					var stderrDocker bytes.Buffer
+					applyDockerCmd.Stderr = &stderrDocker
+					
+					err = applyDockerCmd.Run()
+					dockerSuccess := err == nil
+					
 					bar.Finish()
 					
 					if !linuxSuccess {
@@ -1476,7 +1597,13 @@ Por padrão, o deployment embutido no binário é utilizado.`,
 						fmt.Println("   A infraestrutura básica foi aplicada, mas sem o template de laboratório Kubernetes.")
 					}
 					
-					if linuxSuccess && k8sSuccess {
+					if !dockerSuccess {
+						fmt.Fprintf(os.Stderr, "❌ Erro ao aplicar o template de laboratório Docker: %v\n", err)
+						fmt.Println("   Detalhes técnicos:", stderrDocker.String())
+						fmt.Println("   A infraestrutura básica foi aplicada, mas sem o template de laboratório Docker.")
+					}
+					
+					if linuxSuccess && k8sSuccess && dockerSuccess {
 						fmt.Println("✅ Todos os templates de laboratório aplicados com sucesso!")
 						
 						// Verificação de diagnóstico para confirmar que os templates estão visíveis
@@ -1547,6 +1674,8 @@ Por padrão, o deployment embutido no binário é utilizado.`,
 						fmt.Println("✅ Template de laboratório Linux aplicado com sucesso!")
 					} else if k8sSuccess {
 						fmt.Println("✅ Template de laboratório Kubernetes aplicado com sucesso!")
+					} else if dockerSuccess {
+						fmt.Println("✅ Template de laboratório Docker aplicado com sucesso!")
 					}
 				}
 			}
