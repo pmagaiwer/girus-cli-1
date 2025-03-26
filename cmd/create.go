@@ -770,7 +770,7 @@ func setupPortForward(namespace string) error {
 	
 	// Port-forward do backend em background
 	fmt.Println("   Configurando port-forward para o backend (8080)...")
-	backendCmd := fmt.Sprintf("kubectl port-forward -n %s svc/girus-backend 8080:8080 > /dev/null 2>&1 &", namespace)
+	backendCmd := fmt.Sprintf("kubectl port-forward -n %s svc/girus-backend 8080:8080 --address 0.0.0.0 > /dev/null 2>&1 &", namespace)
 	err := exec.Command("bash", "-c", backendCmd).Run()
 	if err != nil {
 		return fmt.Errorf("erro ao iniciar port-forward do backend: %v", err)
@@ -811,7 +811,7 @@ func setupPortForward(namespace string) error {
 kill $(lsof -t -i:8000) 2>/dev/null || true
 sleep 1
 # Inicia o port-forward
-nohup kubectl port-forward -n NAMESPACE svc/girus-frontend 8000:80 > /dev/null 2>&1 &
+nohup kubectl port-forward -n NAMESPACE svc/girus-frontend 8000:80 --address 0.0.0.0 > /dev/null 2>&1 &
 echo $!  # Retorna o PID
 `
 	
@@ -857,7 +857,7 @@ echo $!  # Retorna o PID
 		fmt.Println("   ⚠️ Tentando método alternativo direto...")
 		
 		// Método direto: executar o comando diretamente
-		cmd := exec.Command("kubectl", "port-forward", "-n", namespace, "svc/girus-frontend", "8000:80")
+		cmd := exec.Command("kubectl", "port-forward", "-n", namespace, "svc/girus-frontend", "8000:80", "--address", "0.0.0.0")
 		
 		// Redirecionar saída para /dev/null
 		devNull, _ := os.Open(os.DevNull)
@@ -890,7 +890,7 @@ echo $!  # Retorna o PID
 	if !frontendSuccess {
 		fmt.Println("   🔄 Último recurso: port-forward ao deployment...")
 		// Método com deployment em vez de service, que pode ser mais estável
-		finalCmd := fmt.Sprintf("kubectl port-forward -n %s deployment/girus-frontend 8000:80 > /dev/null 2>&1 &", namespace)
+		finalCmd := fmt.Sprintf("kubectl port-forward -n %s deployment/girus-frontend 8000:80 --address 0.0.0.0 > /dev/null 2>&1 &", namespace)
 		exec.Command("bash", "-c", finalCmd).Run()
 		
 		// Verificação final
@@ -1570,8 +1570,8 @@ Por padrão, o deployment embutido no binário é utilizado.`,
 				fmt.Println("⚠️")
 				fmt.Printf("Não foi possível configurar o acesso automático: %v\n", err)
 				fmt.Println("\nVocê pode tentar configurar manualmente com os comandos:")
-				fmt.Println("kubectl port-forward -n girus svc/girus-backend 8080:8080")
-				fmt.Println("kubectl port-forward -n girus svc/girus-frontend 8000:80")
+				fmt.Println("kubectl port-forward -n girus svc/girus-backend 8080:8080 --address 0.0.0.0")
+				fmt.Println("kubectl port-forward -n girus svc/girus-frontend 8000:80 --address 0.0.0.0")
 			} else {
 				fmt.Println("✅")
 				fmt.Println("Acesso configurado com sucesso!")
@@ -1590,8 +1590,8 @@ Por padrão, o deployment embutido no binário é utilizado.`,
 		} else {
 			fmt.Println("\n⏩ Port-forward ignorado conforme solicitado")
 			fmt.Println("\nPara acessar o Girus posteriormente, execute:")
-			fmt.Println("kubectl port-forward -n girus svc/girus-backend 8080:8080")
-			fmt.Println("kubectl port-forward -n girus svc/girus-frontend 8000:80")
+			fmt.Println("kubectl port-forward -n girus svc/girus-backend 8080:8080 --address 0.0.0.0")
+			fmt.Println("kubectl port-forward -n girus svc/girus-frontend 8000:80 --address 0.0.0.0")
 		}
 		
 		// Exibir mensagem de conclusão
@@ -1899,8 +1899,8 @@ func addLabFromFile(labFile string, verboseMode bool) {
 		if err != nil {
 			fmt.Println("⚠️ Aviso:", err)
 			fmt.Println("   Para configurar manualmente, execute:")
-			fmt.Println("   kubectl port-forward -n girus svc/girus-backend 8080:8080")
-			fmt.Println("   kubectl port-forward -n girus svc/girus-frontend 8000:80")
+			fmt.Println("   kubectl port-forward -n girus svc/girus-backend 8080:8080 --address 0.0.0.0")
+			fmt.Println("   kubectl port-forward -n girus svc/girus-frontend 8000:80 --address 0.0.0.0")
 		} else {
 			fmt.Println("✅ Port-forwards configurados com sucesso!")
 			fmt.Println("   🔹 Backend: http://localhost:8080")
@@ -1920,7 +1920,7 @@ func addLabFromFile(labFile string, verboseMode bool) {
 			err := setupPortForward("girus")
 			if err != nil {
 				fmt.Println("   ⚠️", err)
-				fmt.Println("   Configure manualmente: kubectl port-forward -n girus svc/girus-frontend 8000:80")
+				fmt.Println("   Configure manualmente: kubectl port-forward -n girus svc/girus-frontend 8000:80 --address 0.0.0.0")
 			} else {
 				fmt.Println("   ✅ Port-forwards reconfigurados com sucesso!")
 			}
