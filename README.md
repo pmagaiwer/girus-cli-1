@@ -339,7 +339,7 @@ O GIRUS é um projeto open-source que depende da contribuição da comunidade pa
 O projeto GIRUS tem um plano de desenvolvimento contínuo com os seguintes objetivos:
 
 ### Curto Prazo (3-6 meses)
-- Expansão da biblioteca de laboratórios
+- Expansão da biblioteca de laboratórios com o Girus Hub
 - Melhorias na interface do usuário
 - Suporte a múltiplos idiomas
 - Integração com sistemas de badges/conquistas
@@ -349,12 +349,6 @@ O projeto GIRUS tem um plano de desenvolvimento contínuo com os seguintes objet
 - Sistema de competições e desafios
 - Métricas avançadas de progresso
 - Suporte a plugins de extensão
-
-### Longo Prazo (12+ meses)
-- Plataforma para compartilhamento de laboratórios personalizados
-- Marketplace para criadores de conteúdo
-- Integração com ferramentas de IA para assistência personalizada
-- Suporte a clusters remotos e implantação enterprise
 
 ## Suporte e Contato
 
