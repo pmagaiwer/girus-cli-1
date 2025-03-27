@@ -2,6 +2,8 @@
 
 # GIRUS: Plataforma de Laboratórios Interativos
 
+Versão 0.1.0 Codename: "Maracatu" - Março de 2025
+
 ## Visão Geral
 
 GIRUS é uma plataforma open-source de laboratórios interativos que permite a criação, gerenciamento e execução de ambientes de aprendizado prático para tecnologias como Linux, Docker, Kubernetes, Terraform e outras ferramentas essenciais para profissionais de DevOps, SRE e Platform Engineering.
