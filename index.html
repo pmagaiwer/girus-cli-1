@@ -29,7 +29,9 @@ ask_user() {
     local variable_name="$3"
     
     # Modo sempre interativo - perguntar ao usuário
-    read -p "$prompt" response
+    echo -n "$prompt: "
+    read response
+
     # Se resposta for vazia, usar o padrão
     response=${response:-$default}
     
@@ -239,7 +241,7 @@ check_docker_running() {
 # Função para verificar a versão do GLIBC
 check_glibc_version() {
     if command -v ldd &> /dev/null; then
-        GLIBC_VERSION=$(ldd --version | head -n 1 | grep -oP '\d+\.\d+')
+        GLIBC_VERSION=$(ldd --version | head -n 1 | grep -oP '\d+\.\d+' | head -n 1)
         if [ -z "$GLIBC_VERSION" ]; then
             echo "❌ Não foi possível detectar a versão do GLIBC."
             return 1
