@@ -399,4 +399,4 @@ A: Execute o mesmo script de instalação novamente ou use `girus update` (dispo
 A: Sim, após o download inicial das imagens, o GIRUS opera localmente sem necessidade de conexão externa.
 
 **Q: Posso contribuir com novos laboratórios para o projeto?**  
-A: Definitivamente! Contribuições são bem-vindas e valorizadas. Consulte a seção "Contribuição e Comunidade" para detalhes.
+A: Definitivamente! Contribuições são bem-vindas e valorizadas. Consulte a seção ["Contribuição e Comunidade"](#contribui%C3%A7%C3%A3o-e-comunidade) para detalhes.
