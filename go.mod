@@ -1,4 +1,4 @@
-module github.com/linuxtips/girus/girus-cli
+module github.com/badtuxx/girus-cli
 
 go 1.22
 

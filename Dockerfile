@@ -11,7 +11,7 @@ COPY . .
 
 # Build the application
 ARG VERSION=dev
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o girus -ldflags="-X 'github.com/linuxtips/girus/girus-cli/cmd.Version=${VERSION}'" ./main.go
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o girus -ldflags="-X 'github.com/badtuxx/girus-cli/cmd.Version=${VERSION}'" ./main.go
 
 # Use a minimal alpine image for the final container
 FROM alpine:3.21

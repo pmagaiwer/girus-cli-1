@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/linuxtips/girus/girus-cli/cmd"
+	"github.com/badtuxx/girus-cli/cmd"
 )
 
 func main() {
