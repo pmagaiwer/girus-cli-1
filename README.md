@@ -231,7 +231,7 @@ O GIRUS oferece uma variedade de laboratórios em diferentes áreas tecnológica
 
 2. **Clone o Repositório**:
    ```bash
-   git clone https://github.com/linuxtips/girus.git
+   git clone https://github.com/badtuxx/girus-cli.git
    cd girus/girus-cli
    ```
 
