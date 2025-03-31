@@ -240,6 +240,11 @@ check_docker_running() {
 
 # Função para verificar a versão do GLIBC
 check_glibc_version() {
+    # Skip GLIBC check on non-Linux systems
+    if [ "$OS" != "linux" ]; then
+        return 0
+    fi
+
     if command -v ldd &> /dev/null; then
         GLIBC_VERSION=$(ldd --version | head -n 1 | grep -oP '\d+\.\d+' | head -n 1)
         if [ -z "$GLIBC_VERSION" ]; then
@@ -248,54 +253,17 @@ check_glibc_version() {
         fi
 
         # Converter versão para número para comparação
-        GLIBC_MAJOR=$(echo $GLIBC_VERSION | cut -d. -f1)
-        GLIBC_MINOR=$(echo $GLIBC_VERSION | cut -d. -f2)
+        GLIBC_VERSION_NUM=$(echo $GLIBC_VERSION | awk -F. '{printf "%d.%02d", $1, $2}')
+        MIN_GLIBC_VERSION_NUM=2.17
 
-        # Versão mínima requerida (2.34)
-        REQUIRED_MAJOR=2
-        REQUIRED_MINOR=34
-
-        if [ "$GLIBC_MAJOR" -lt "$REQUIRED_MAJOR" ] || \
-        ([ "$GLIBC_MAJOR" -eq "$REQUIRED_MAJOR" ] && [ "$GLIBC_MINOR" -lt "$REQUIRED_MINOR" ]); then
-            echo "❌ Versão do GLIBC incompatível detectada: $GLIBC_VERSION"
-            echo " Versão mínima requerida: $REQUIRED_MAJOR.$REQUIRED_MINOR"
-            echo ""
-            echo "Para resolver este problema, você tem as seguintes opções:"
-            echo ""
-            echo "1. Atualizar seu sistema operacional para uma versão mais recente:"
-            echo " - Ubuntu: sudo apt update && sudo apt upgrade"
-            echo " - Debian: sudo apt update && sudo apt upgrade"
-            echo " - Fedora: sudo dnf upgrade"
-            echo ""
-            echo "2. Se estiver usando uma distribuição mais antiga, considere migrar para uma versão mais recente:"
-            echo " - Ubuntu 22.04 LTS ou superior"
-            echo " - Debian 12 ou superior"
-            echo " - Fedora 37 ou superior"
-            echo ""
-            echo "3. Alternativamente, você pode baixar uma versão mais antiga do Girus CLI que seja compatível"
-            echo " com sua versão do GLIBC em: https://github.com/badtuxx/girus-cli/releases"
-            echo ""
-            echo "4. Compilar o Girus CLI a partir do código fonte:"
-            echo " # Instalar dependências necessárias"
-            echo " sudo apt install golang-go git build-essential"
-            echo ""
-            echo " # Clonar o repositório"
-            echo " git clone https://github.com/badtuxx/girus-cli.git"
-            echo " cd girus-cli"
-            echo ""
-            echo " # Compilar para sua versão do GLIBC"
-            echo " GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o girus cmd/girus/main.go"
-            echo ""
-            echo " # Instalar o binário compilado"
-            echo " sudo mv girus /usr/local/bin/"
-            echo ""
-            echo " NOTA: Ao compilar localmente, o binário será compatível com sua versão do GLIBC."
-            echo ""
-            echo "Após atualizar seu sistema, baixar uma versão compatível ou compilar localmente, execute este script novamente."
+        if (( $(echo "$GLIBC_VERSION_NUM >= $MIN_GLIBC_VERSION_NUM" | bc -l) )); then
+            echo "✅ GLIBC versão $GLIBC_VERSION detectada (mínimo requerido: 2.17)"
+            return 0
+        else
+            echo "❌ GLIBC versão $GLIBC_VERSION detectada (mínimo requerido: 2.17)"
+            echo "Por favor, atualize o GLIBC para uma versão mais recente."
             return 1
         fi
-        echo "✅ Versão do GLIBC compatível: $GLIBC_VERSION"
-        return 0
     else
         echo "❌ Comando ldd não encontrado. Não foi possível verificar a versão do GLIBC."
         return 1
