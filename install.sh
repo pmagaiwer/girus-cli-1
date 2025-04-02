@@ -57,6 +57,14 @@ case "$(uname -s)" in
     *) OS="unknown" ;;
 esac
 
+# Verificar distribuição
+if [ "$OS" == "linux" ]; then
+    DISTRO=""
+	if [ -r /etc/os-release ]; then
+		DISTRO="$(. /etc/os-release && echo "$ID")"
+	fi
+fi
+
 # Detectar a arquitetura
 ARCH_RAW=$(uname -m)
 case "$ARCH_RAW" in
@@ -117,7 +125,7 @@ check_download_tool() {
 install_docker() {
     echo "Instalando Docker..."
 
-    if [ "$OS" == "linux" ]; then
+    if [[ "$OS" == "linux" && "$DISTRO" != "rocky" ]]; then
         # Linux (script de conveniência do Docker)
         echo "Baixando o script de instalação do Docker..."
         curl -fsSL https://get.docker.com -o get-docker.sh
@@ -134,6 +142,21 @@ install_docker() {
 
         # Limpar arquivo de instalação
         rm get-docker.sh
+
+    elif [[ "$OS" == "linux" && "$DISTRO" == "rocky" ]]; then
+        # instalando docker no rocky linux (padrão podman)
+        echo "Instalando o docker (será solicitada senha de administrador)..."
+        echo "Adicionando repositório do docker..."
+        sudo dnf config-manager --add-repo https://download.docker.com/linux/rhel/docker-ce.repo
+        sudo dnf -y install docker-ce docker-ce-cli containerd.io docker-compose-plugin
+
+        # Adicionar usuário atual ao grupo docker
+        echo "Adicionando usuário atual ao grupo docker..."
+        sudo usermod -aG docker $USER
+
+        # Iniciar o serviço
+        echo "Iniciando o serviço Docker..."
+        sudo systemctl enable --now docker
 
     elif [ "$OS" == "darwin" ]; then
         # MacOS
@@ -393,7 +416,7 @@ verify_all_dependencies() {
     if command -v docker &> /dev/null && check_docker_running; then
         echo "✅ Docker está instalado e em execução."
     else
-        echo "❌ Docker não está instalado ou não está em execução."
+        echo "❌ Docker não está instalado, não está em execução ou logout/login pendente."
         all_deps_ok=false
     fi
 
