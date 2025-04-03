@@ -148,7 +148,7 @@ install_docker() {
         echo "Instalando o docker (será solicitada senha de administrador)..."
         echo "Adicionando repositório do docker..."
         sudo dnf config-manager --add-repo https://download.docker.com/linux/rhel/docker-ce.repo
-        sudo dnf -y install docker-ce docker-ce-cli containerd.io docker-compose-plugin
+        sudo dnf -yq install docker-ce docker-ce-cli containerd.io docker-compose-plugin
 
         # Adicionar usuário atual ao grupo docker
         echo "Adicionando usuário atual ao grupo docker..."
