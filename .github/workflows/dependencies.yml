@@ -5,16 +5,24 @@ on:
     - cron: '0 8 * * 1'  # Run every Monday at 8:00 UTC
   workflow_dispatch:  # Allow manual triggering
 
+permissions: {}
+
 jobs:
   dependencies:
     name: Check Dependencies
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: write  # Required to create issues and PRs
+      issues: write  # Required to create issues
+      pull-requests: write  # Required to create PRs
+
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@0aaccfd150d50ccaeb58ebd88d36e91967a5f35b # v5.4.0
         with:
           go-version: '1.22'
           check-latest: true
@@ -28,7 +36,7 @@ jobs:
 
       - name: Create issue for outdated dependencies
         if: steps.outdated.outputs.count > 3  # Only create issue if there are dependencies to update
-        uses: peter-evans/create-issue-from-file@v5
+        uses: peter-evans/create-issue-from-file@e8ef132d6df98ed982188e460ebb3b5d4ef3a9cd # v5.0.1
         with:
           title: "📦 Outdated Dependencies"
           content-filepath: ./outdated.md
@@ -40,7 +48,7 @@ jobs:
           # Update Go modules
           go get -u ./...
           go mod tidy
-          
+
           # Check if there are changes
           if ! git diff --exit-code go.mod go.sum; then
             git config --global user.name "GitHub Actions"
@@ -56,4 +64,4 @@ jobs:
             echo "::set-output name=created::false"
           fi
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

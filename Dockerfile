@@ -34,4 +34,4 @@ COPY --from=builder /app/girus /usr/local/bin/girus
 ENTRYPOINT ["/usr/local/bin/girus"]
 
 # Default command
-CMD ["help"] 
+CMD ["help"]
