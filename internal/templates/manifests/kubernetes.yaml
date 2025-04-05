@@ -17,17 +17,17 @@ data:
         description: "Aprenda a verificar os componentes básicos de um cluster Kubernetes"
         steps:
           - "Verifique se o kubectl está instalado:"
-          - "` + "`" + `kubectl version` + "`" + `"
+          - "`kubectl version`"
           - "Verifique os nós do cluster executando:"
-          - "` + "`" + `kubectl get nodes` + "`" + `"
+          - "`kubectl get nodes`"
           - "Veja informações mais detalhadas sobre os nós:"
-          - "` + "`" + `kubectl get nodes -o wide` + "`" + `"
+          - "`kubectl get nodes -o wide`"
           - "Verifique os namespaces disponíveis:"
-          - "` + "`" + `kubectl get namespaces` + "`" + `"
+          - "`kubectl get namespaces`"
           - "Veja os pods do namespace kube-system (componentes internos do K8s):"
-          - "` + "`" + `kubectl get pods -n kube-system` + "`" + `"
+          - "`kubectl get pods -n kube-system`"
           - "Examine os detalhes de um nó específico (substitua [nome-do-nó] pelo nome real):"
-          - "` + "`" + `kubectl describe node [nome-do-nó]` + "`" + `"
+          - "`kubectl describe node [nome-do-nó]`"
         tips:
           - type: "info"
             title: "kubectl - Sua ferramenta principal"
@@ -44,10 +44,10 @@ data:
         description: "Aprenda a criar e gerenciar pods, que são a menor unidade executável no Kubernetes"
         steps:
           - "Crie um namespace para o exercício:"
-          - "` + "`" + `kubectl create namespace k8s-demo` + "`" + `"
+          - "`kubectl create namespace k8s-demo`"
           - "Crie um arquivo pod.yaml com o seguinte conteúdo:"
           - |
-            ` + "```yaml" + `
+            ```yaml
             apiVersion: v1
             kind: Pod
             metadata:
@@ -61,17 +61,17 @@ data:
                 image: nginx:latest
                 ports:
                 - containerPort: 80
-            ` + "```" + `
+            ```
           - "Crie o pod executando:"
-          - "` + "`" + `kubectl apply -f pod.yaml` + "`" + `"
+          - "`kubectl apply -f pod.yaml`"
           - "Verifique se o pod está rodando:"
-          - "` + "`" + `kubectl get pods -n k8s-demo` + "`" + `"
+          - "`kubectl get pods -n k8s-demo`"
           - "Verifique os logs do pod:"
-          - "` + "`" + `kubectl logs nginx-pod -n k8s-demo` + "`" + `"
+          - "`kubectl logs nginx-pod -n k8s-demo`"
           - "Acesse o shell do pod:"
-          - "` + "`" + `kubectl exec -it nginx-pod -n k8s-demo -- /bin/bash` + "`" + `"
+          - "`kubectl exec -it nginx-pod -n k8s-demo -- /bin/bash`"
           - "Dentro do container, verifique se o nginx está rodando:"
-          - "` + "`" + `curl localhost:80` + "`" + `"
+          - "`curl localhost:80`"
           - "Digite 'exit' para sair do container"
         tips:
           - type: "warning"
