@@ -1,0 +1,113 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: linux-shell-script-lab
+  namespace: girus
+  labels:
+    app: girus-lab-template
+data:
+  lab.yaml: |
+    name: linux-shell-script
+    title: "Introdução ao Shell Script Bash"
+    description: "Crie seus primeiros scripts Bash, aprendendo sobre variáveis, loops e condicionais."
+    duration: 25m
+    image: "linuxtips/girus-devops:0.1"
+    tasks:
+      - name: "Criando e Executando um Script Simples"
+        description: "Aprenda a estrutura básica de um script Bash e como torná-lo executável."
+        steps:
+          - "Crie um arquivo chamado 'meu_script.sh':"
+          - |
+            ```
+            #!/bin/bash
+            # Este é um comentário
+
+            echo "Olá, Girus!"
+            echo "O diretório atual é: $(pwd)"
+            ```
+          - "Salve o conteúdo acima no arquivo 'meu_script.sh' (pode usar 'cat > meu_script.sh', colar o texto e pressionar Ctrl+D)."
+          - "Torne o script executável:"
+          - "`chmod +x meu_script.sh`"
+          - "Execute o script:"
+          - "`./meu_script.sh`"
+        tips:
+          - type: "info"
+            title: "Shebang (#! /bin/bash)"
+            content: "A primeira linha `#!/bin/bash` indica ao sistema qual interpretador usar para executar o script."
+          - type: "tip"
+            title: "Permissão de Execução"
+            content: "Arquivos de script precisam da permissão de execução ('x') para serem rodados diretamente com `./nome_script.sh`. Use `chmod +x` para adicioná-la."
+        validation:
+          - command: "./meu_script.sh | grep 'Olá, Girus!'"
+            expectedOutput: "Olá, Girus!"
+            errorMessage: "O script não produziu a saída esperada 'Olá, Girus!'."
+
+      - name: "Usando Variáveis e Argumentos"
+        description: "Declare variáveis e acesse argumentos passados para o script."
+        steps:
+          - "Modifique 'meu_script.sh' para usar variáveis e argumentos:"
+          - |
+            ```bash
+            #!/bin/bash
+
+            NOME="Aluno Girus" # Declaração de variável
+            echo "Olá, $NOME!" # Usando a variável
+
+            echo "O script foi chamado com $# argumento(s)."
+            echo "O primeiro argumento foi: $1"
+            echo "Todos os argumentos: $@"
+            ```
+          - "Salve as alterações no script."
+          - "Execute o script sem argumentos:"
+          - "`./meu_script.sh`"
+          - "Execute o script com argumentos:"
+          - "`./meu_script.sh arg1 'argumento 2'`"
+        tips:
+          - type: "info"
+            title: "Variáveis Especiais"
+            content: "$# (número de argumentos), $1, $2... (argumentos posicionais), $@ (todos argumentos como palavras separadas), $* (todos argumentos como uma única palavra), $? (status de saída do último comando)."
+        validation:
+          - command: "./meu_script.sh teste | grep 'O primeiro argumento foi: teste'"
+            expectedOutput: "O primeiro argumento foi: teste"
+            errorMessage: "O script não parece estar processando o primeiro argumento corretamente."
+
+      - name: "Estruturas de Controle: Loop For e If"
+        description: "Use loops 'for' para iterar e condicionais 'if' para tomar decisões."
+        steps:
+          - "Modifique 'meu_script.sh' para incluir um loop e um condicional:"
+          - |
+            ```bash
+            #!/bin/bash
+
+            echo "Iniciando loop for:"
+            for i in 1 2 3; do
+              echo "Item: $i"
+            done
+
+            echo "Verificando argumento:"
+            if [ "$1" == "teste" ]; then
+              echo "O primeiro argumento é 'teste'!"
+            elif [ -z "$1" ]; then
+              echo "Nenhum argumento foi fornecido."
+            else
+              echo "O primeiro argumento NÃO é 'teste'."
+            fi
+            ```
+          - "Salve as alterações."
+          - "Execute o script sem argumentos:"
+          - "`./meu_script.sh`"
+          - "Execute o script com o argumento 'teste':"
+          - "`./meu_script.sh teste`"
+          - "Execute o script com outro argumento:"
+          - "`./meu_script.sh outro`"
+        tips:
+          - type: "tip"
+            title: "Sintaxe do If"
+            content: "Use `[ condição ]` ou `[[ condição ]]` para testes. Operadores comuns: -eq (igual numérico), == (igual string), != (diferente), -z (string vazia), -n (string não vazia), -f (arquivo existe), -d (diretório existe)."
+          - type: "warning"
+            title: "Aspas em Variáveis"
+            content: "É uma boa prática colocar variáveis entre aspas duplas (ex: \"$1\") dentro de testes `[ ]` ou `[[ ]]` para evitar erros se a variável estiver vazia ou contiver espaços."
+        validation:
+          - command: "./meu_script.sh teste | grep \"O primeiro argumento é 'teste'!\""
+            expectedOutput: "O primeiro argumento é 'teste'!"
+            errorMessage: "A estrutura condicional 'if' não funcionou como esperado para o argumento 'teste'." 

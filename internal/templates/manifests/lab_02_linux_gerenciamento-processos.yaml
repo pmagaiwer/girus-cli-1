@@ -1,0 +1,88 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: linux-gerenciamento-processos-lab
+  namespace: girus
+  labels:
+    app: girus-lab-template
+data:
+  lab.yaml: |
+    name: linux-gerenciamento-processos
+    title: "Gerenciamento de Processos no Linux"
+    description: "Monitore, controle e encerre processos no sistema Linux usando ps, top, kill e pgrep."
+    duration: 20m
+    image: "linuxtips/girus-devops:0.1"
+    tasks:
+      - name: "Visualizando Processos (ps e top)"
+        description: "Use ps para listar processos e top para visualização dinâmica."
+        steps:
+          - "Liste todos os processos em execução no formato completo:"
+          - "`ps aux`"
+          - "Liste os processos em formato de árvore (mostra relações pai/filho):"
+          - "`ps auxf`"
+          - "Visualize os processos em tempo real com top (pressione 'q' para sair):"
+          - "`top`"
+          - "Execute top em modo batch (não interativo) para capturar a saída:"
+          - "`top -bn1 | head -n 15`" # -b: batch mode, -n1: uma iteração
+        tips:
+          - type: "info"
+            title: "Entendendo a saída do ps"
+            content: "A saída do 'ps aux' mostra: USER (usuário), PID (ID do processo), %CPU, %MEM, VSZ (mem virtual), RSS (mem física), TTY (terminal), STAT (estado), START (hora início), TIME (tempo CPU), COMMAND (comando)."
+          - type: "tip"
+            title: "Comandos úteis no top"
+            content: "Dentro do top interativo: 'P' ordena por CPU, 'M' ordena por Memória, 'k' envia sinal para um processo, 'h' mostra ajuda, 'q' sai."
+        validation:
+          - command: "ps aux | grep $$ | grep bash &> /dev/null && echo 'ok'" # Verifica se o processo do shell atual (bash) é listado
+            expectedOutput: "ok"
+            errorMessage: "O comando 'ps aux' não parece estar listando o processo do shell atual."
+
+      - name: "Encontrando Processos (pgrep)"
+        description: "Use pgrep para encontrar PIDs (Process IDs) baseados no nome do processo."
+        steps:
+          - "Inicie um processo em background para teste:"
+          - "`sleep 300 &`"
+          - "Liste todos os PIDs do comando 'sleep':"
+          - "`pgrep sleep`"
+          - "Liste o PID do comando 'sleep' mostrando também o comando (-f):"
+          - "`pgrep -f sleep`"
+          - "Liste o PID do comando 'sleep' pertencente ao seu usuário atual (-u $USER):"
+          - "`pgrep -u $USER sleep`"
+        tips:
+          - type: "tip"
+            title: "pgrep vs ps | grep"
+            content: "Usar 'pgrep' é geralmente mais seguro e eficiente do que 'ps aux | grep nome_processo', pois evita encontrar o próprio comando grep na lista."
+        validation:
+          - command: "pgrep sleep &> /dev/null && echo 'found'"
+            expectedOutput: "found"
+            errorMessage: "Não foi possível encontrar o processo 'sleep' usando pgrep. Certifique-se de que ele está em execução."
+
+      - name: "Enviando Sinais (kill)"
+        description: "Use kill para enviar sinais a processos (ex: terminar, recarregar configuração)."
+        steps:
+          - "Verifique se o processo 'sleep' ainda está rodando (deve estar):"
+          - "`pgrep sleep`"
+          - "Obtenha o PID do processo 'sleep' (se houver mais de um, pegue o primeiro):"
+          - "`PID_SLEEP=$(pgrep sleep | head -n 1)`"
+          - "Envie o sinal TERM (15, terminação graciosa, padrão do kill) para o processo:"
+          - "`kill $PID_SLEEP`"
+          - "Verifique se o processo terminou (pode levar um instante):"
+          - "`sleep 1; pgrep sleep || echo 'terminated'`"
+          - "Inicie outro processo 'sleep':"
+          - "`sleep 300 &`"
+          - "Obtenha o novo PID:"
+          - "`PID_SLEEP=$(pgrep sleep | head -n 1)`"
+          - "Envie o sinal KILL (9, terminação forçada):"
+          - "`kill -9 $PID_SLEEP`"
+          - "Verifique imediatamente se o processo terminou:"
+          - "`pgrep sleep || echo 'killed'`"
+        tips:
+          - type: "warning"
+            title: "Cuidado com kill -9"
+            content: "O sinal KILL (-9) força a terminação imediata do processo, sem chance de salvar dados ou limpar recursos. Use como último recurso."
+          - type: "info"
+            title: "Outros sinais úteis"
+            content: "HUP (1): Frequentemente usado para recarregar configurações. INT (2): Interrupção (Ctrl+C). STOP (19): Pausa a execução. CONT (18): Continua a execução."
+        validation:
+          - command: "pgrep sleep || echo 'killed'"
+            expectedOutput: "killed"
+            errorMessage: "O processo 'sleep' não foi encerrado corretamente com 'kill -9'." 

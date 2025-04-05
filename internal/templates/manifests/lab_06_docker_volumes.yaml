@@ -1,0 +1,88 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: docker-volumes-lab
+  namespace: girus
+  labels:
+    app: girus-lab-template
+data:
+  lab.yaml: |
+    name: docker-volumes
+    title: "Persistência de Dados com Docker Volumes"
+    description: "Aprenda a persistir dados de containers usando bind mounts e named volumes."
+    duration: 20m
+    image: "linuxtips/girus-devops:0.1"
+    privileged: true # Acesso ao Docker daemon
+    tasks:
+      - name: "Usando Bind Mounts"
+        description: "Mapeie um diretório do host para dentro de um container."
+        steps:
+          - "Crie um diretório no host:"
+          - "`mkdir dados_host`"
+          - "Crie um arquivo dentro deste diretório:"
+          - "`echo 'Dados do Host!' > dados_host/arquivo_host.txt`"
+          - "Execute um container Alpine montando 'dados_host' em '/app/data' dentro do container:"
+          - "`docker run --rm -v $(pwd)/dados_host:/app/data alpine ls /app/data`"
+          - "Leia o conteúdo do arquivo de dentro do container:"
+          - "`docker run --rm -v $(pwd)/dados_host:/app/data alpine cat /app/data/arquivo_host.txt`"
+          - "Modifique o arquivo de dentro de outro container:"
+          - "`docker run --rm -v $(pwd)/dados_host:/app/data alpine sh -c 'echo \"Modificado pelo container\" > /app/data/arquivo_host.txt'`"
+          - "Verifique a modificação no host:"
+          - "`cat dados_host/arquivo_host.txt`"
+          - "Limpeza:"
+          - "`rm -rf dados_host`"
+        tips:
+          - type: "warning"
+            title: "Bind Mounts e Permissões"
+            content: "Bind mounts refletem diretamente o filesystem do host. Tenha cuidado com permissões e possíveis modificações indesejadas em arquivos do host."
+          - type: "info"
+            title: "Caminho Absoluto"
+            content: "É recomendado usar caminhos absolutos para o diretório do host em bind mounts, como `$(pwd)/dados_host` que resolve para o caminho absoluto do diretório atual."
+        validation:
+          - command: "cat dados_host/arquivo_host.txt 2>/dev/null || echo 'cleaned'" # Verifica se foi limpo
+            expectedOutput: "cleaned"
+            errorMessage: "O diretório 'dados_host' ou seu conteúdo não foi removido corretamente."
+
+      - name: "Usando Named Volumes"
+        description: "Crie e gerencie volumes gerenciados pelo Docker para persistência."
+        steps:
+          - "Crie um volume nomeado gerenciado pelo Docker:"
+          - "`docker volume create meu_volume`"
+          - "Liste os volumes Docker:"
+          - "`docker volume ls`"
+          - "Inspecione o volume criado:"
+          - "`docker volume inspect meu_volume`"
+          - "Execute um container e escreva dados no volume montado em '/data':"
+          - "`docker run --rm -v meu_volume:/data alpine sh -c 'echo \"Dados persistidos no volume\" > /data/dados.txt'`"
+          - "Execute outro container e leia os dados do mesmo volume:"
+          - "`docker run --rm -v meu_volume:/data alpine cat /data/dados.txt`"
+        tips:
+          - type: "tip"
+            title: "Vantagens dos Named Volumes"
+            content: "Named volumes são gerenciados pelo Docker, independentes do filesystem do host, mais portáveis e geralmente a forma preferida de persistir dados de containers."
+        validation:
+          - command: "docker run --rm -v meu_volume:/data alpine cat /data/dados.txt"
+            expectedOutput: "Dados persistidos no volume"
+            errorMessage: "Não foi possível ler os dados escritos no named volume 'meu_volume'."
+
+      - name: "Gerenciando Named Volumes"
+        description: "Aprenda a listar, inspecionar e remover volumes."
+        steps:
+          - "Verifique se 'meu_volume' existe:"
+          - "`docker volume ls | grep meu_volume`"
+          - "Remova o volume:"
+          - "`docker volume rm meu_volume`"
+          - "Verifique se o volume foi removido:"
+          - "`docker volume ls | grep meu_volume || echo 'Volume removido'`"
+          - "Tente remover um volume que não existe (deve dar erro):"
+          - "`docker volume rm volume_inexistente || echo 'Erro esperado'`"
+          - "Remova volumes não utilizados (dangling):"
+          - "`docker volume prune -f`" # -f para não pedir confirmação
+        tips:
+          - type: "warning"
+            title: "Remoção de Volumes"
+            content: "Remover um volume apaga permanentemente todos os dados armazenados nele. Tenha certeza antes de executar `docker volume rm` ou `docker volume prune`."
+        validation:
+          - command: "docker volume ls | grep meu_volume || echo 'Volume removido'"
+            expectedOutput: "Volume removido"
+            errorMessage: "O volume 'meu_volume' não foi removido corretamente." 

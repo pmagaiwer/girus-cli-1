@@ -1,0 +1,81 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: linux-processamento-texto-lab
+  namespace: girus
+  labels:
+    app: girus-lab-template
+data:
+  lab.yaml: |
+    name: linux-processamento-texto
+    title: "Processamento de Texto no Linux (grep, sed, awk)"
+    description: "Aprenda a buscar, filtrar e manipular texto na linha de comando Linux usando ferramentas essenciais."
+    duration: 15m
+    image: "linuxtips/girus-devops:0.1"
+    tasks:
+      - name: "Buscando Padrões com grep"
+        description: "Use o grep para encontrar linhas que correspondem a um padrão em arquivos."
+        steps:
+          - "Crie um arquivo de exemplo:"
+          - "cat > arquivo_exemplo.txt << EOL
+Linha 1 com a palavra linux
+Linha 2 sem a palavra
+Linha 3 com linux novamente
+LINHA 4 COM LINUX
+EOL"
+          - "Use grep para encontrar linhas contendo 'linux':"
+          - "`grep 'linux' arquivo_exemplo.txt`"
+          - "Use grep para encontrar linhas ignorando maiúsculas/minúsculas (-i):"
+          - "`grep -i 'linux' arquivo_exemplo.txt`"
+          - "Conte quantas linhas contêm 'linux' (-c):"
+          - "`grep -c -i 'linux' arquivo_exemplo.txt`"
+        tips:
+          - type: "info"
+            title: "O poder do grep"
+            content: "grep é extremamente útil para buscar informações em logs, arquivos de configuração e saídas de outros comandos. Explore opções como -r (recursivo), -v (inverter busca), -n (número da linha)."
+        validation:
+          - command: "grep -c -i 'linux' arquivo_exemplo.txt"
+            expectedOutput: "3"
+            errorMessage: "O comando grep -c -i não retornou o número esperado de linhas."
+
+      - name: "Editando Fluxos com sed"
+        description: "Use o sed (Stream Editor) para realizar substituições básicas em texto."
+        steps:
+          - "Substitua a primeira ocorrência de 'linux' por 'GIRUS' em cada linha:"
+          - "`sed 's/linux/GIRUS/' arquivo_exemplo.txt`"
+          - "Substitua TODAS as ocorrências de 'linux' (case-insensitive) por 'GIRUS':"
+          - "`sed 's/linux/GIRUS/gi' arquivo_exemplo.txt`"
+          - "Delete linhas que contêm a palavra 'sem':"
+          - "`sed '/sem/d' arquivo_exemplo.txt`"
+        tips:
+          - type: "tip"
+            title: "Sintaxe do sed"
+            content: "A sintaxe básica para substituição é 's/padrão/substituição/flags'. Flags comuns: g (global, todas ocorrências), i (case-insensitive)."
+        validation:
+          - command: "sed 's/linux/GIRUS/gi' arquivo_exemplo.txt | grep -c 'GIRUS'"
+            expectedOutput: "3"
+            errorMessage: "A substituição com sed não parece ter funcionado corretamente."
+
+      - name: "Processando Colunas com awk"
+        description: "Use o awk para processar texto baseado em colunas ou campos."
+        steps:
+          - "Crie um arquivo com colunas:"
+          - "cat > arquivo_colunas.txt << EOL
+col1 col2 col3
+val1 val2 val3
+xyz abc 123
+EOL"
+          - "Imprima apenas a primeira coluna de cada linha:"
+          - "`awk '{print $1}' arquivo_colunas.txt`"
+          - "Imprima a última coluna de cada linha ($NF):"
+          - "`awk '{print $NF}' arquivo_colunas.txt`"
+          - "Imprima linhas onde a terceira coluna é 'val3':"
+          - "`awk '$3 == \"val3\" {print $0}' arquivo_colunas.txt`" # $0 imprime a linha inteira
+        tips:
+          - type: "info"
+            title: "awk para dados tabulares"
+            content: "awk é poderoso para processar arquivos CSV ou qualquer dado delimitado por espaços/tabs. Ele trata cada linha como um registro e cada palavra como um campo ($1, $2, ... $NF)."
+        validation:
+          - command: "awk '{print $1}' arquivo_colunas.txt | head -n 1"
+            expectedOutput: "col1"
+            errorMessage: "O awk não parece estar imprimindo a primeira coluna corretamente." 

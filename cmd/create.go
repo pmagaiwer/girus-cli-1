@@ -464,459 +464,193 @@ Por padrão, o deployment embutido no binário é utilizado.`,
 			// Agora vamos aplicar o template de laboratório que está embutido no binário
 			fmt.Println("\n🔬 Aplicando templates de laboratório...")
 
-			// Criar um arquivo temporário para o template do laboratório Linux
-			labTempFile, err := os.CreateTemp("", "basic-linux-*.yaml")
+			// Listar todos os arquivos YAML dentro de manifests/
+			manifestFiles, err := templates.ListManifests()
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "❌ Erro ao criar arquivo temporário para o template Linux: %v\n", err)
+				fmt.Fprintf(os.Stderr, "❌ Erro ao listar templates embutidos: %v\n", err)
 				fmt.Println("   A infraestrutura básica foi aplicada, mas sem os templates de laboratório.")
-				return
-			}
-			defer os.Remove(labTempFile.Name()) // Limpar o arquivo temporário ao finalizar
-
-			basicLinuxTemplate, err := templates.GetManifest("linux.yaml")
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "Erro ao carregar o template: %v\n", err)
-				return
-			}
-
-			// Escrever o conteúdo do template Linux no arquivo temporário
-			if _, err := labTempFile.WriteString(string(basicLinuxTemplate)); err != nil {
-				fmt.Fprintf(os.Stderr, "❌ Erro ao escrever template Linux no arquivo temporário: %v\n", err)
-				fmt.Println("   A infraestrutura básica foi aplicada, mas sem os templates de laboratório.")
-				return
-			}
-			labTempFile.Close()
-
-			// Criar um arquivo temporário para o template do laboratório Kubernetes
-			k8sTempFile, err := os.CreateTemp("", "kubernetes-basics-*.yaml")
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "❌ Erro ao criar arquivo temporário para o template Kubernetes: %v\n", err)
-				fmt.Println("   A infraestrutura básica foi aplicada, mas sem o template de laboratório Kubernetes.")
-				return
-			}
-			defer os.Remove(k8sTempFile.Name()) // Limpar o arquivo temporário ao finalizar
-
-			basicKubernetesTemplate, err := templates.GetManifest("kubernetes.yaml")
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "Erro ao carregar o template: %v\n", err)
-				return
-			}
-
-			// Escrever o conteúdo do template Kubernetes no arquivo temporário
-			if _, err := k8sTempFile.WriteString(string(basicKubernetesTemplate)); err != nil {
-				fmt.Fprintf(os.Stderr, "❌ Erro ao escrever template Kubernetes no arquivo temporário: %v\n", err)
-				fmt.Println("   A infraestrutura básica foi aplicada, mas sem o template de laboratório Kubernetes.")
-				return
-			}
-			k8sTempFile.Close()
-
-			// Criar um arquivo temporário para o template do laboratório Docker
-			dockerTempFile, err := os.CreateTemp("", "docker-basics-*.yaml")
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "❌ Erro ao criar arquivo temporário para o template Docker: %v\n", err)
-				fmt.Println("   A infraestrutura básica foi aplicada, mas sem o template de laboratório Docker.")
-				return
-			}
-			defer os.Remove(dockerTempFile.Name()) // Limpar o arquivo temporário ao finalizar
-
-			basicDockerTemplate, err := templates.GetManifest("docker.yaml")
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "Erro ao carregar o template: %v\n", err)
-				return
-			}
-			// Escrever o conteúdo do template Docker no arquivo temporário
-			if _, err := dockerTempFile.WriteString(string(basicDockerTemplate)); err != nil {
-				fmt.Fprintf(os.Stderr, "❌ Erro ao escrever template Docker no arquivo temporário: %v\n", err)
-				fmt.Println("   A infraestrutura básica foi aplicada, mas sem o template de laboratório Docker.")
-				return
-			}
-			dockerTempFile.Close()
-
-			// Criar um arquivo temporário para o template de Administração de Usuários Linux
-			linuxUsersTempFile, err := os.CreateTemp("", "linux-users-*.yaml")
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "❌ Erro ao criar arquivo temporário para o template de Usuários Linux: %v\n", err)
-				fmt.Println("   A infraestrutura básica foi aplicada, mas sem o template de Usuários Linux.")
-				return
-			}
-			defer os.Remove(linuxUsersTempFile.Name()) // Limpar o arquivo temporário ao finalizar
-
-			linuxUsersTemplate, err := templates.GetManifest("linux-users.yaml")
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "Erro ao carregar o template: %v\n", err)
-				return
-			}
-			// Escrever o conteúdo do template de Usuários Linux no arquivo temporário
-			if _, err := linuxUsersTempFile.WriteString(string(linuxUsersTemplate)); err != nil {
-				fmt.Fprintf(os.Stderr, "❌ Erro ao escrever template de Usuários Linux no arquivo temporário: %v\n", err)
-				fmt.Println("   A infraestrutura básica foi aplicada, mas sem o template de Usuários Linux.")
-				return
-			}
-			linuxUsersTempFile.Close()
-
-			// Criar um arquivo temporário para o template de Permissões de Arquivos Linux
-			linuxPermsTempFile, err := os.CreateTemp("", "linux-perms-*.yaml")
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "❌ Erro ao criar arquivo temporário para o template de Permissões Linux: %v\n", err)
-				fmt.Println("   A infraestrutura básica foi aplicada, mas sem o template de Permissões Linux.")
-				return
-			}
-			defer os.Remove(linuxPermsTempFile.Name()) // Limpar o arquivo temporário ao finalizar
-
-			linuxPermsTemplate, err := templates.GetManifest("linux-permissions.yaml")
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "Erro ao carregar o template: %v\n", err)
-				return
-			}
-			// Escrever o conteúdo do template de Permissões Linux no arquivo temporário
-			if _, err := linuxPermsTempFile.WriteString(string(linuxPermsTemplate)); err != nil {
-				fmt.Fprintf(os.Stderr, "❌ Erro ao escrever template de Permissões Linux no arquivo temporário: %v\n", err)
-				fmt.Println("   A infraestrutura básica foi aplicada, mas sem o template de Permissões Linux.")
-				return
-			}
-			linuxPermsTempFile.Close()
-
-			// Criar um arquivo temporário para o template de Gerenciamento de Containers Docker
-			dockerContainersTempFile, err := os.CreateTemp("", "docker-containers-*.yaml")
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "❌ Erro ao criar arquivo temporário para o template de Containers Docker: %v\n", err)
-				fmt.Println("   A infraestrutura básica foi aplicada, mas sem o template de Containers Docker.")
-				return
-			}
-			defer os.Remove(dockerContainersTempFile.Name()) // Limpar o arquivo temporário ao finalizar
-
-			dockerContainersTemplate, err := templates.GetManifest("containers.yaml")
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "Erro ao carregar o template: %v\n", err)
-				return
-			}
-
-			// Escrever o conteúdo do template de Containers Docker no arquivo temporário
-			if _, err := dockerContainersTempFile.WriteString(string(dockerContainersTemplate)); err != nil {
-				fmt.Fprintf(os.Stderr, "❌ Erro ao escrever template de Containers Docker no arquivo temporário: %v\n", err)
-				fmt.Println("   A infraestrutura básica foi aplicada, mas sem o template de Containers Docker.")
-				return
-			}
-			dockerContainersTempFile.Close()
-
-			// Criar um arquivo temporário para o template de Deployment Kubernetes
-			k8sDeploymentTempFile, err := os.CreateTemp("", "k8s-deployment-*.yaml")
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "❌ Erro ao criar arquivo temporário para o template de Deployment Kubernetes: %v\n", err)
-				fmt.Println("   A infraestrutura básica foi aplicada, mas sem o template de Deployment Kubernetes.")
-				return
-			}
-			defer os.Remove(k8sDeploymentTempFile.Name()) // Limpar o arquivo temporário ao finalizar
-
-			k8sDeploymentTemplate, err := templates.GetManifest("deployment.yaml")
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "Erro ao carregar o template: %v\n", err)
-				return
-			}
-
-			// Escrever o conteúdo do template de Deployment Kubernetes no arquivo temporário
-			if _, err := k8sDeploymentTempFile.WriteString(string(k8sDeploymentTemplate)); err != nil {
-				fmt.Fprintf(os.Stderr, "❌ Erro ao escrever template de Deployment Kubernetes no arquivo temporário: %v\n", err)
-				fmt.Println("   A infraestrutura básica foi aplicada, mas sem o template de Deployment Kubernetes.")
-				return
-			}
-			k8sDeploymentTempFile.Close()
-
-			// Aplicar o template de laboratório Linux
-			if verboseMode {
-				// Executar normalmente mostrando o output
-				fmt.Println("   Aplicando template de laboratório Linux...")
-				applyLabCmd := exec.Command("kubectl", "apply", "-f", labTempFile.Name())
-				applyLabCmd.Stdout = os.Stdout
-				applyLabCmd.Stderr = os.Stderr
-
-				if err := applyLabCmd.Run(); err != nil {
-					fmt.Fprintf(os.Stderr, "❌ Erro ao aplicar o template de laboratório Linux: %v\n", err)
-					fmt.Println("   A infraestrutura básica foi aplicada, mas sem o template de laboratório Linux.")
-				} else {
-					fmt.Println("   ✅ Template de laboratório Linux Básico aplicado com sucesso!")
-				}
-
-				// Aplicar o template de laboratório Kubernetes
-				fmt.Println("   Aplicando template de laboratório Kubernetes...")
-				applyK8sCmd := exec.Command("kubectl", "apply", "-f", k8sTempFile.Name())
-				applyK8sCmd.Stdout = os.Stdout
-				applyK8sCmd.Stderr = os.Stderr
-
-				if err := applyK8sCmd.Run(); err != nil {
-					fmt.Fprintf(os.Stderr, "❌ Erro ao aplicar o template de laboratório Kubernetes: %v\n", err)
-					fmt.Println("   A infraestrutura básica e o template Linux foram aplicados, mas sem o template de laboratório Kubernetes.")
-				} else {
-					fmt.Println("   ✅ Template de laboratório Fundamentos de Kubernetes aplicado com sucesso!")
-				}
-
-				// Aplicar o template de laboratório Docker
-				fmt.Println("   Aplicando template de laboratório Docker...")
-				applyDockerCmd := exec.Command("kubectl", "apply", "-f", dockerTempFile.Name())
-				applyDockerCmd.Stdout = os.Stdout
-				applyDockerCmd.Stderr = os.Stderr
-
-				if err := applyDockerCmd.Run(); err != nil {
-					fmt.Fprintf(os.Stderr, "❌ Erro ao aplicar o template de laboratório Docker: %v\n", err)
-					fmt.Println("   A infraestrutura básica e os outros templates foram aplicados, mas sem o template de laboratório Docker.")
-				} else {
-					fmt.Println("   ✅ Template de laboratório Fundamentos de Docker aplicado com sucesso!")
-				}
-
-				// Aplicar o template de Usuários Linux
-				fmt.Println("   Aplicando template de Administração de Usuários Linux...")
-				applyLinuxUsersCmd := exec.Command("kubectl", "apply", "-f", linuxUsersTempFile.Name())
-				applyLinuxUsersCmd.Stdout = os.Stdout
-				applyLinuxUsersCmd.Stderr = os.Stderr
-
-				if err := applyLinuxUsersCmd.Run(); err != nil {
-					fmt.Fprintf(os.Stderr, "❌ Erro ao aplicar o template de Usuários Linux: %v\n", err)
-				} else {
-					fmt.Println("   ✅ Template de Administração de Usuários Linux aplicado com sucesso!")
-				}
-
-				// Aplicar o template de Permissões Linux
-				fmt.Println("   Aplicando template de Permissões de Arquivos Linux...")
-				applyLinuxPermsCmd := exec.Command("kubectl", "apply", "-f", linuxPermsTempFile.Name())
-				applyLinuxPermsCmd.Stdout = os.Stdout
-				applyLinuxPermsCmd.Stderr = os.Stderr
-
-				if err := applyLinuxPermsCmd.Run(); err != nil {
-					fmt.Fprintf(os.Stderr, "❌ Erro ao aplicar o template de Permissões Linux: %v\n", err)
-				} else {
-					fmt.Println("   ✅ Template de Permissões de Arquivos Linux aplicado com sucesso!")
-				}
-
-				// Aplicar o template de Containers Docker
-				fmt.Println("   Aplicando template de Gerenciamento de Containers Docker...")
-				applyDockerContainersCmd := exec.Command("kubectl", "apply", "-f", dockerContainersTempFile.Name())
-				applyDockerContainersCmd.Stdout = os.Stdout
-				applyDockerContainersCmd.Stderr = os.Stderr
-
-				if err := applyDockerContainersCmd.Run(); err != nil {
-					fmt.Fprintf(os.Stderr, "❌ Erro ao aplicar o template de Containers Docker: %v\n", err)
-				} else {
-					fmt.Println("   ✅ Template de Gerenciamento de Containers Docker aplicado com sucesso!")
-				}
-
-				// Aplicar o template de Deployment Kubernetes
-				fmt.Println("   Aplicando template de Deployment Nginx Kubernetes...")
-				applyK8sDeploymentCmd := exec.Command("kubectl", "apply", "-f", k8sDeploymentTempFile.Name())
-				applyK8sDeploymentCmd.Stdout = os.Stdout
-				applyK8sDeploymentCmd.Stderr = os.Stderr
-
-				if err := applyK8sDeploymentCmd.Run(); err != nil {
-					fmt.Fprintf(os.Stderr, "❌ Erro ao aplicar o template de Deployment Kubernetes: %v\n", err)
-				} else {
-					fmt.Println("   ✅ Template de Deployment Nginx Kubernetes aplicado com sucesso!")
-				}
+			} else if len(manifestFiles) == 0 {
+				fmt.Println("   ⚠️ Nenhum template de laboratório embutido encontrado.")
 			} else {
-				// Usar barra de progresso para os templates
-				bar := progressbar.NewOptions(100,
-					progressbar.OptionSetDescription("Aplicando templates de laboratório..."),
-					progressbar.OptionSetWidth(80),
-					progressbar.OptionShowBytes(false),
-					progressbar.OptionSetPredictTime(false),
-					progressbar.OptionThrottle(65*time.Millisecond),
-					progressbar.OptionSetRenderBlankState(true),
-					progressbar.OptionSpinnerType(14),
-					progressbar.OptionFullWidth(),
-				)
-
-				// Executar comando para aplicar o template Linux
-				applyLabCmd := exec.Command("kubectl", "apply", "-f", labTempFile.Name())
-				var stderrLinux bytes.Buffer
-				applyLabCmd.Stderr = &stderrLinux
-
-				// Iniciar o comando
-				err := applyLabCmd.Start()
-				if err != nil {
-					bar.Finish()
-					fmt.Fprintf(os.Stderr, "❌ Erro ao iniciar aplicação do template Linux: %v\n", err)
-					fmt.Println("   A infraestrutura básica foi aplicada, mas sem os templates de laboratório.")
-				} else {
-					// Atualizar a barra de progresso enquanto o comando está em execução
-					done := make(chan struct{})
-					go func() {
-						for {
-							select {
-							case <-done:
-								return
-							default:
-								bar.Add(1)
-								time.Sleep(50 * time.Millisecond)
-							}
+				// Temos templates para aplicar
+				if verboseMode {
+					// Modo detalhado: Aplicar cada template individualmente mostrando logs
+					fmt.Printf("   Encontrados %d templates para aplicar:\n", len(manifestFiles))
+					allTemplatesApplied := true
+					for _, manifestName := range manifestFiles {
+						fmt.Printf("   - Aplicando %s...\n", manifestName)
+						// Ler o conteúdo do manifesto
+						manifestContent, err := templates.GetManifest(manifestName)
+						if err != nil {
+							fmt.Fprintf(os.Stderr, "     ❌ Erro ao carregar o template %s: %v\n", manifestName, err)
+							allTemplatesApplied = false
+							continue
 						}
-					}()
 
-					// Aguardar o final do comando
-					err = applyLabCmd.Wait()
-					close(done)
+						// Criar arquivo temporário
+						tempLabFile, err := os.CreateTemp("", "girus-template-*.yaml")
+						if err != nil {
+							fmt.Fprintf(os.Stderr, "     ❌ Erro ao criar arquivo temporário para %s: %v\n", manifestName, err)
+							allTemplatesApplied = false
+							continue
+						}
+						tempPath := tempLabFile.Name() // Guardar o path antes de fechar
 
-					linuxSuccess := err == nil
+						// Escrever e fechar arquivo temporário
+						if _, err := tempLabFile.Write(manifestContent); err != nil {
+							fmt.Fprintf(os.Stderr, "     ❌ Erro ao escrever template %s no arquivo temporário: %v\n", manifestName, err)
+							tempLabFile.Close()        // Fechar mesmo em caso de erro
+							os.Remove(tempPath)        // Remover o temporário
+							allTemplatesApplied = false
+							continue
+						}
+						tempLabFile.Close()
 
-					// Aplicar o template de Kubernetes
-					applyK8sCmd := exec.Command("kubectl", "apply", "-f", k8sTempFile.Name())
-					var stderrK8s bytes.Buffer
-					applyK8sCmd.Stderr = &stderrK8s
+						// Aplicar com kubectl
+						applyCmd := exec.Command("kubectl", "apply", "-f", tempPath)
+						applyCmd.Stdout = os.Stdout
+						applyCmd.Stderr = os.Stderr
+						if err := applyCmd.Run(); err != nil {
+							fmt.Fprintf(os.Stderr, "     ❌ Erro ao aplicar o template %s: %v\n", manifestName, err)
+							allTemplatesApplied = false
+						} else {
+							fmt.Printf("     ✅ Template %s aplicado com sucesso!\n", manifestName)
+						}
+						os.Remove(tempPath) // Remover o temporário após o uso
+					}
 
-					err = applyK8sCmd.Run()
-					k8sSuccess := err == nil
+					if allTemplatesApplied {
+						fmt.Println("✅ Todos os templates de laboratório embutidos aplicados com sucesso!")
+					} else {
+						fmt.Println("⚠️ Alguns templates de laboratório não puderam ser aplicados.")
+					}
 
-					// Aplicar o template de Docker
-					applyDockerCmd := exec.Command("kubectl", "apply", "-f", dockerTempFile.Name())
-					var stderrDocker bytes.Buffer
-					applyDockerCmd.Stderr = &stderrDocker
+				} else {
+					// Modo com barra de progresso: Aplicar cada template individualmente
+					bar := progressbar.NewOptions(len(manifestFiles),
+						progressbar.OptionSetDescription("Aplicando templates de laboratório..."),
+						progressbar.OptionSetWidth(80),
+						progressbar.OptionShowCount(),
+						progressbar.OptionSetPredictTime(false),
+						progressbar.OptionThrottle(65*time.Millisecond),
+						progressbar.OptionSetRenderBlankState(true),
+						progressbar.OptionSpinnerType(14),
+						progressbar.OptionFullWidth(),
+					)
 
-					err = applyDockerCmd.Run()
-					dockerSuccess := err == nil
+					allSuccess := true
+					for _, manifestName := range manifestFiles {
+						// Ler o conteúdo do manifesto
+						manifestContent, err := templates.GetManifest(manifestName)
+						if err != nil {
+							bar.Add(1) // Incrementar a barra mesmo com erro
+							allSuccess = false
+							continue
+						}
 
-					// Aplicar os novos templates
-					applyLinuxUsersCmd := exec.Command("kubectl", "apply", "-f", linuxUsersTempFile.Name())
-					var stderrLinuxUsers bytes.Buffer
-					applyLinuxUsersCmd.Stderr = &stderrLinuxUsers
+						// Criar arquivo temporário
+						tempLabFile, err := os.CreateTemp("", "girus-template-*.yaml")
+						if err != nil {
+							bar.Add(1) // Incrementar a barra mesmo com erro
+							allSuccess = false
+							continue
+						}
+						tempPath := tempLabFile.Name()
 
-					err = applyLinuxUsersCmd.Run()
-					linuxUsersSuccess := err == nil
+						// Escrever e fechar arquivo temporário
+						if _, err := tempLabFile.Write(manifestContent); err != nil {
+							tempLabFile.Close()
+							os.Remove(tempPath)
+							bar.Add(1) // Incrementar a barra mesmo com erro
+							allSuccess = false
+							continue
+						}
+						tempLabFile.Close()
 
-					applyLinuxPermsCmd := exec.Command("kubectl", "apply", "-f", linuxPermsTempFile.Name())
-					var stderrLinuxPerms bytes.Buffer
-					applyLinuxPermsCmd.Stderr = &stderrLinuxPerms
+						// Aplicar com kubectl
+						applyCmd := exec.Command("kubectl", "apply", "-f", tempPath)
+						var stderr bytes.Buffer
+						applyCmd.Stderr = &stderr
+						if err := applyCmd.Run(); err != nil {
+							os.Remove(tempPath)
+							bar.Add(1) // Incrementar a barra mesmo com erro
+							allSuccess = false
+							continue
+						}
 
-					err = applyLinuxPermsCmd.Run()
-					linuxPermsSuccess := err == nil
-
-					applyDockerContainersCmd := exec.Command("kubectl", "apply", "-f", dockerContainersTempFile.Name())
-					var stderrDockerContainers bytes.Buffer
-					applyDockerContainersCmd.Stderr = &stderrDockerContainers
-
-					err = applyDockerContainersCmd.Run()
-					dockerContainersSuccess := err == nil
-
-					applyK8sDeploymentCmd := exec.Command("kubectl", "apply", "-f", k8sDeploymentTempFile.Name())
-					var stderrK8sDeployment bytes.Buffer
-					applyK8sDeploymentCmd.Stderr = &stderrK8sDeployment
-
-					err = applyK8sDeploymentCmd.Run()
-					k8sDeploymentSuccess := err == nil
-
+						os.Remove(tempPath)
+						bar.Add(1) // Incrementar a barra após sucesso
+					}
 					bar.Finish()
 
-					if !linuxSuccess {
-						fmt.Fprintf(os.Stderr, "❌ Erro ao aplicar o template de laboratório Linux: %v\n", err)
-						fmt.Println("   Detalhes técnicos:", stderrLinux.String())
-						fmt.Println("   A infraestrutura básica foi aplicada, mas sem o template de laboratório Linux.")
-					}
-
-					if !k8sSuccess {
-						fmt.Fprintf(os.Stderr, "❌ Erro ao aplicar o template de laboratório Kubernetes: %v\n", err)
-						fmt.Println("   Detalhes técnicos:", stderrK8s.String())
-						fmt.Println("   A infraestrutura básica foi aplicada, mas sem o template de laboratório Kubernetes.")
-					}
-
-					if !dockerSuccess {
-						fmt.Fprintf(os.Stderr, "❌ Erro ao aplicar o template de laboratório Docker: %v\n", err)
-						fmt.Println("   Detalhes técnicos:", stderrDocker.String())
-						fmt.Println("   A infraestrutura básica foi aplicada, mas sem o template de laboratório Docker.")
-					}
-
-					if !linuxUsersSuccess {
-						fmt.Fprintf(os.Stderr, "❌ Erro ao aplicar o template de Usuários Linux: %v\n", err)
-						fmt.Println("   Detalhes técnicos:", stderrLinuxUsers.String())
-					}
-
-					if !linuxPermsSuccess {
-						fmt.Fprintf(os.Stderr, "❌ Erro ao aplicar o template de Permissões Linux: %v\n", err)
-						fmt.Println("   Detalhes técnicos:", stderrLinuxPerms.String())
-					}
-
-					if !dockerContainersSuccess {
-						fmt.Fprintf(os.Stderr, "❌ Erro ao aplicar o template de Containers Docker: %v\n", err)
-						fmt.Println("   Detalhes técnicos:", stderrDockerContainers.String())
-					}
-
-					if !k8sDeploymentSuccess {
-						fmt.Fprintf(os.Stderr, "❌ Erro ao aplicar o template de Deployment Kubernetes: %v\n", err)
-						fmt.Println("   Detalhes técnicos:", stderrK8sDeployment.String())
-					}
-
-					if linuxSuccess && k8sSuccess && dockerSuccess &&
-						linuxUsersSuccess && linuxPermsSuccess &&
-						dockerContainersSuccess && k8sDeploymentSuccess {
+					if allSuccess {
 						fmt.Println("✅ Todos os templates de laboratório aplicados com sucesso!")
+					} else {
+						fmt.Println("⚠️ Alguns templates de laboratório não puderam ser aplicados. Use --verbose para detalhes.")
+					}
 
-						// Verificação de diagnóstico para confirmar que os templates estão visíveis
-						fmt.Println("\n🔍 Verificando templates de laboratório instalados:")
-						listLabsCmd := exec.Command("kubectl", "get", "configmap", "-n", "girus", "-l", "app=girus-lab-template", "-o", "custom-columns=NAME:.metadata.name")
+					// Verificação de diagnóstico para confirmar que os templates estão visíveis
+					fmt.Println("\n🔍 Verificando templates de laboratório instalados:")
+					listLabsCmd := exec.Command("kubectl", "get", "configmap", "-n", "girus", "-l", "app=girus-lab-template", "-o", "custom-columns=NAME:.metadata.name")
+					var labsOutput bytes.Buffer
+					listLabsCmd.Stdout = &labsOutput
+					listLabsCmd.Stderr = &labsOutput
 
-						// Capturar output para apresentá-lo de forma mais organizada
-						var labsOutput bytes.Buffer
-						listLabsCmd.Stdout = &labsOutput
-						listLabsCmd.Stderr = &labsOutput
-
-						if err := listLabsCmd.Run(); err == nil {
-							labs := strings.Split(strings.TrimSpace(labsOutput.String()), "\n")
-							if len(labs) > 1 { // Primeira linha é o cabeçalho "NAME"
-								fmt.Println("   Templates encontrados:")
-								for i, lab := range labs {
-									if i > 0 { // Pular o cabeçalho
-										fmt.Printf("   ✅ %s\n", strings.TrimSpace(lab))
-									}
+					if err := listLabsCmd.Run(); err == nil {
+						labs := strings.Split(strings.TrimSpace(labsOutput.String()), "\n")
+						if len(labs) > 1 { // Primeira linha é o cabeçalho "NAME"
+							fmt.Println("   Templates encontrados:")
+							for i, lab := range labs {
+								if i > 0 { // Pular o cabeçalho
+									fmt.Printf("   ✅ %s\n", strings.TrimSpace(lab))
 								}
-							} else {
-								fmt.Println("   ⚠️ Nenhum template de laboratório encontrado!")
 							}
 						} else {
-							fmt.Println("   ⚠️ Não foi possível verificar os templates instalados")
+							fmt.Println("   ⚠️ Nenhum template de laboratório encontrado!")
 						}
-
-						// Reiniciar o backend para carregar os templates
-						fmt.Println("\n🔄 Reiniciando o backend para carregar os templates...")
-						restartCmd := exec.Command("kubectl", "rollout", "restart", "deployment/girus-backend", "-n", "girus")
-						restartCmd.Run()
-
-						// Aguardar o reinício completar
-						fmt.Println("   Aguardando o reinício do backend completar...")
-						waitCmd := exec.Command("kubectl", "rollout", "status", "deployment/girus-backend", "-n", "girus", "--timeout=60s")
-						// Redirecionar saída para não exibir detalhes do rollout
-						var waitOutput bytes.Buffer
-						waitCmd.Stdout = &waitOutput
-						waitCmd.Stderr = &waitOutput
-
-						// Iniciar indicador de progresso simples
-						spinChars := []string{"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"}
-						spinIdx := 0
-						done := make(chan struct{})
-						go func() {
-							for {
-								select {
-								case <-done:
-									return
-								default:
-									fmt.Printf("\r   %s Aguardando... ", spinChars[spinIdx])
-									spinIdx = (spinIdx + 1) % len(spinChars)
-									time.Sleep(100 * time.Millisecond)
-								}
-							}
-						}()
-
-						// Executar e aguardar
-						waitCmd.Run()
-						close(done)
-						fmt.Println("\r   ✅ Backend reiniciado com sucesso!            ")
-
-						// Aguardar mais alguns segundos para o backend inicializar completamente
-						fmt.Println("   Aguardando inicialização completa...")
-						time.Sleep(5 * time.Second)
-
-					} else if linuxSuccess {
-						fmt.Println("✅ Template de laboratório Linux aplicado com sucesso!")
-					} else if k8sSuccess {
-						fmt.Println("✅ Template de laboratório Kubernetes aplicado com sucesso!")
-					} else if dockerSuccess {
-						fmt.Println("✅ Template de laboratório Docker aplicado com sucesso!")
+					} else {
+						fmt.Println("   ⚠️ Não foi possível verificar os templates instalados")
 					}
 				}
+
+				// Reiniciar o backend para carregar os templates
+				fmt.Println("\n🔄 Reiniciando o backend para carregar os templates...")
+				restartCmd := exec.Command("kubectl", "rollout", "restart", "deployment/girus-backend", "-n", "girus")
+				restartCmd.Run()
+
+				// Aguardar o reinício completar
+				fmt.Println("   Aguardando o reinício do backend completar...")
+				waitCmd := exec.Command("kubectl", "rollout", "status", "deployment/girus-backend", "-n", "girus", "--timeout=60s")
+				// Redirecionar saída para não exibir detalhes do rollout
+				var waitOutput bytes.Buffer
+				waitCmd.Stdout = &waitOutput
+				waitCmd.Stderr = &waitOutput
+
+				// Iniciar indicador de progresso simples
+				spinChars := []string{"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"}
+				spinIdx := 0
+				done := make(chan struct{})
+				go func() {
+					for {
+						select {
+						case <-done:
+							return
+						default:
+							fmt.Printf("\r   %s Aguardando... ", spinChars[spinIdx])
+							spinIdx = (spinIdx + 1) % len(spinChars)
+							time.Sleep(100 * time.Millisecond)
+						}
+					}
+				}()
+
+				// Executar e aguardar
+				waitCmd.Run()
+				close(done)
+				fmt.Println("\r   ✅ Backend reiniciado com sucesso!            ")
+
+				// Aguardar mais alguns segundos para o backend inicializar completamente
+				fmt.Println("   Aguardando inicialização completa...")
+				time.Sleep(5 * time.Second)
 			}
 		}
 

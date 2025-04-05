@@ -1,0 +1,106 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: docker-compose-lab
+  namespace: girus
+  labels:
+    app: girus-lab-template
+data:
+  lab.yaml: |
+    name: docker-compose
+    title: "Introdução ao Docker Compose"
+    description: "Defina e execute aplicações multi-container Docker de forma declarativa com Docker Compose."
+    duration: 25m
+    image: "linuxtips/girus-devops:0.1"
+    privileged: true # Acesso ao Docker daemon
+    tasks:
+      - name: "Criando um Arquivo docker-compose.yaml"
+        description: "Defina os serviços, redes e volumes da sua aplicação em um arquivo YAML."
+        steps:
+          - "Crie um arquivo chamado 'docker-compose.yaml' com o seguinte conteúdo:"
+          - |
+            ```
+            version: '3.8' # Especifica a versão da sintaxe do Compose
+
+            services:
+              webapp:
+                image: nginx:alpine
+                ports:
+                  - "8080:80" # Mapeia porta 8080 do host para 80 do container
+                volumes:
+                  - ./html:/usr/share/nginx/html:ro # Monta diretório local como read-only
+                networks:
+                  - app-net
+
+              redis:
+                image: redis:alpine
+                networks:
+                  - app-net
+
+            networks:
+              app-net: # Define uma rede customizada
+                driver: bridge
+
+            volumes: {} # Seção de volumes (vazia neste exemplo)
+            ```
+          - "Crie o diretório 'html' e um arquivo 'index.html' dentro dele:"
+          - "`mkdir html`"
+          - "`echo '<h1>Bem-vindo ao Docker Compose!</h1>' > html/index.html`"
+          - "Verifique a sintaxe do arquivo compose (opcional):"
+          - "`docker-compose config`"
+        tips:
+          - type: "info"
+            title: "Estrutura do Compose"
+            content: "O arquivo define 'services' (containers), 'networks' (redes) e 'volumes'. Cada serviço tem opções como 'image', 'ports', 'volumes', 'environment', etc."
+        validation:
+          - command: "test -f docker-compose.yaml && test -f html/index.html && echo 'ok'"
+            expectedOutput: "ok"
+            errorMessage: "O arquivo docker-compose.yaml ou html/index.html não foi criado corretamente."
+
+      - name: "Executando a Aplicação com Compose"
+        description: "Use comandos do Docker Compose para iniciar, parar e gerenciar sua aplicação."
+        steps:
+          - "Inicie todos os serviços definidos no 'docker-compose.yaml' em background (-d):"
+          - "`docker-compose up -d`"
+          - "Liste os containers criados pelo Compose:"
+          - "`docker-compose ps`"
+          - "Verifique os logs do serviço 'webapp':"
+          - "`docker-compose logs webapp`"
+          - "Acesse a aplicação no navegador (ou via curl): http://localhost:8080"
+          - "`curl localhost:8080`"
+        tips:
+          - type: "tip"
+            title: "Comandos 'up' e 'down'"
+            content: "`docker-compose up` cria e inicia os containers (e redes/volumes se não existirem). `docker-compose down` para e remove os containers e a rede padrão criada pelo compose."
+        validation:
+          - command: "curl -s localhost:8080 | grep 'Docker Compose'"
+            expectedOutput: "<h1>Bem-vindo ao Docker Compose!</h1>"
+            errorMessage: "Não foi possível acessar a aplicação Nginx via curl ou o conteúdo está incorreto."
+
+      - name: "Parando e Removendo a Aplicação"
+        description: "Encerre os containers e remova os recursos criados pelo Compose."
+        steps:
+          - "Pare os serviços (sem remover os containers):"
+          - "`docker-compose stop`"
+          - "Verifique o status (devem estar parados/exited):"
+          - "`docker-compose ps`"
+          - "Inicie os serviços novamente:"
+          - "`docker-compose start`"
+          - "Verifique o status (devem estar rodando):"
+          - "`docker-compose ps`"
+          - "Pare e remova os containers e a rede criada pelo Compose:"
+          - "`docker-compose down`"
+          - "Verifique se os containers foram removidos:"
+          - "`docker-compose ps`"
+          - "Limpeza adicional (opcional): remover o volume se houvesse dados a persistir"
+          - "`docker-compose down --volumes`" # Remove volumes anônimos
+          - "Limpe os arquivos criados:"
+          - "`rm -f docker-compose.yaml && rm -rf html`"
+        tips:
+          - type: "warning"
+            title: "`docker-compose down --volumes`"
+            content: "O comando `down --volumes` remove containers, redes E volumes definidos na seção `volumes` do compose ou volumes anônimos criados pelos containers. Use com cuidado se precisar manter os dados."
+        validation:
+          - command: "docker-compose ps -q | wc -l" # Deve retornar 0 containers
+            expectedOutput: "0"
+            errorMessage: "Os containers do Docker Compose não foram removidos corretamente com 'docker-compose down'." 

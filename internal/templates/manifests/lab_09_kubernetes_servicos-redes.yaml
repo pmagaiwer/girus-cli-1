@@ -1,0 +1,97 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kubernetes-servicos-redes-lab
+  namespace: girus
+  labels:
+    app: girus-lab-template
+data:
+  lab.yaml: |
+    name: kubernetes-servicos-redes
+    title: "Serviços e Redes no Kubernetes"
+    description: "Exponha aplicações dentro e fora do cluster Kubernetes usando Services dos tipos ClusterIP e NodePort."
+    duration: 30m
+    image: "linuxtips/girus-kind-single-node:0.1"
+    tasks:
+      - name: "Criando um Deployment para Expor"
+        description: "Crie um Deployment com múltiplos pods para servir como backend para nossos Services."
+        steps:
+          - "Crie um namespace:"
+          - "`kubectl create namespace services-lab`"
+          - "Crie um Deployment do Nginx com 2 réplicas:"
+          - "`kubectl create deployment nginx-deploy --image=nginx:alpine --replicas=2 -n services-lab`"
+          - "Verifique se o deployment e os pods estão rodando:"
+          - "`kubectl get deployment nginx-deploy -n services-lab`"
+          - "`kubectl get pods -n services-lab -l app=nginx-deploy`" # Filtra pods pelo label criado pelo deployment
+        tips:
+          - type: "info"
+            title: "Labels e Selectors"
+            content: "Deployments usam labels para identificar os pods que gerenciam. Services usam selectors para encontrar os pods para os quais devem direcionar o tráfego."
+        validation:
+          - command: "kubectl get pods -n services-lab -l app=nginx-deploy --no-headers | wc -l"
+            expectedOutput: "2"
+            errorMessage: "O Deployment não criou o número esperado de pods (2)."
+
+      - name: "Expondo com ClusterIP (Acesso Interno)"
+        description: "Crie um Service do tipo ClusterIP para permitir a comunicação entre pods dentro do cluster."
+        steps:
+          - "Exponha o deployment 'nginx-deploy' como um Service chamado 'nginx-clusterip' na porta 80:"
+          - "`kubectl expose deployment nginx-deploy --name=nginx-clusterip --port=80 --target-port=80 --type=ClusterIP -n services-lab`"
+          - "Liste os Services no namespace:"
+          - "`kubectl get service -n services-lab`" # ou 'kubectl get svc'
+          - "Descreva o Service 'nginx-clusterip':"
+          - "`kubectl describe service nginx-clusterip -n services-lab`"
+          - "Observe o ClusterIP atribuído e os Endpoints (IPs dos pods)."
+          - "Teste o acesso interno (de outro pod - simulação):"
+          - "`kubectl run busybox --image=busybox:1.28 --rm -it -n services-lab -- sh -c 'wget -O- -q nginx-clusterip:80 | grep \"Welcome to nginx\"'`" # Acessa pelo nome do serviço
+        tips:
+          - type: "tip"
+            title: "DNS Interno do K8s"
+            content: "Kubernetes possui um DNS interno que permite aos pods resolverem os nomes dos Services (como 'nginx-clusterip') para seus ClusterIPs, facilitando a comunicação interna."
+          - type: "info"
+            title: "ClusterIP"
+            content: "É o tipo padrão de Service. Cria um IP virtual interno ao cluster, acessível apenas por outros pods dentro do mesmo cluster."
+        validation:
+          - command: "kubectl run busybox --image=busybox:1.28 --rm -it -n services-lab -- sh -c 'wget -O- -q nginx-clusterip:80 | grep \"Welcome to nginx\" &>/dev/null && echo ok'"
+            expectedOutput: "ok"
+            errorMessage: "Não foi possível acessar o Service ClusterIP 'nginx-clusterip' de dentro do cluster."
+
+      - name: "Expondo com NodePort (Acesso Externo Básico)"
+        description: "Crie um Service do tipo NodePort para expor a aplicação em uma porta específica em cada nó do cluster."
+        steps:
+          - "Exponha o mesmo deployment 'nginx-deploy' como um Service NodePort chamado 'nginx-nodeport':"
+          - "`kubectl expose deployment nginx-deploy --name=nginx-nodeport --port=80 --target-port=80 --type=NodePort -n services-lab`"
+          - "Liste os Services novamente:"
+          - "`kubectl get svc -n services-lab`"
+          - "Descreva o Service 'nginx-nodeport':"
+          - "`kubectl describe svc nginx-nodeport -n services-lab`"
+          - "Observe a porta alta (NodePort, >30000) mapeada para a porta 80 do serviço."
+          - "Obtenha o IP de um nó (em Kind, é o IP do container Docker):"
+          - "`NODE_IP=$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type==\"InternalIP\")].address}')`"
+          - "Obtenha a NodePort:"
+          - "`NODE_PORT=$(kubectl get svc nginx-nodeport -n services-lab -o jsonpath='{.spec.ports[0].nodePort}')`"
+          - "Acesse a aplicação usando o IP do Nó e a NodePort (de fora do pod):"
+          - "`curl $NODE_IP:$NODE_PORT`"
+        tips:
+          - type: "info"
+            title: "NodePort"
+            content: "Abre uma porta específica (>30000) em TODOS os nós do cluster. O tráfego para `IP_DO_NÓ:NodePort` é roteado para o Service. Útil para desenvolvimento ou acesso direto simples, mas não ideal para produção."
+          - type: "tip"
+            title: "Acesso em Kind"
+            content: "Em um cluster Kind, o 'nó' é um container Docker. Você acessa a NodePort usando o IP interno desse container Docker."
+        validation:
+          - command: "curl -s $NODE_IP:$NODE_PORT | grep 'Welcome to nginx'"
+            expectedOutput: "<h1>Welcome to nginx!</h1>" # Ajuste conforme a página padrão do nginx
+            errorMessage: "Não foi possível acessar a aplicação via NodePort usando o IP do nó."
+
+      - name: "Limpeza"
+        description: "Remova os recursos criados."
+        steps:
+          - "Exclua os Services e o Deployment (ou apenas o namespace):"
+          - "`kubectl delete namespace services-lab`"
+          - "Verifique a exclusão:"
+          - "`kubectl get namespace services-lab || echo 'Namespace removido'`"
+        validation:
+          - command: "kubectl get namespace services-lab &> /dev/null || echo 'Namespace removido'"
+            expectedOutput: "Namespace removido"
+            errorMessage: "O namespace 'services-lab' não foi removido corretamente." 

@@ -107,7 +107,7 @@ Os templates são a base para a criação dos laboratórios no GIRUS. Definidos 
 
 #### Estrutura de um Template
 
-```yaml
+```
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -252,7 +252,7 @@ Um dos pontos fortes do GIRUS é a facilidade de criação de novos laboratório
 1. **Estrutura do Template**:
    Crie um arquivo YAML seguindo o formato de ConfigMap do Kubernetes:
 
-   ```yaml
+   ```
    apiVersion: v1
    kind: ConfigMap
    metadata:

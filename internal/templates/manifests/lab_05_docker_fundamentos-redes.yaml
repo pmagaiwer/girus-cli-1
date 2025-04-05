@@ -1,0 +1,85 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: docker-fundamentos-redes-lab
+  namespace: girus
+  labels:
+    app: girus-lab-template
+data:
+  lab.yaml: |
+    name: docker-fundamentos-redes
+    title: "Redes Docker: Fundamentos"
+    description: "Entenda os drivers de rede padrão do Docker: bridge, host e none, e crie redes customizadas."
+    duration: 25m
+    image: "linuxtips/girus-devops:0.1"
+    privileged: true # Necessário para gerenciar redes Docker
+    tasks:
+      - name: "Rede Bridge Padrão"
+        description: "Entenda como containers se comunicam na rede 'bridge' padrão."
+        steps:
+          - "Liste as redes Docker existentes:"
+          - "`docker network ls`"
+          - "Inspecione a rede 'bridge' padrão:"
+          - "`docker network inspect bridge`"
+          - "Execute um container Alpine e veja seu IP na rede bridge:"
+          - "`docker run --rm alpine ifconfig show eth0`"
+          - "Execute dois containers Nginx em background (eles usarão a rede bridge por padrão):"
+          - "`docker run -d --name web1 nginx:alpine`"
+          - "`docker run -d --name web2 nginx:alpine`"
+          - "Tente pingar 'web2' a partir de 'web1' (pode não funcionar por nome na bridge padrão):"
+          - "`docker exec web1 ping -c 2 web2 || echo 'Ping falhou ou nome não resolvido'`"
+          - "Obtenha o IP de 'web2' e tente pingar por IP a partir de 'web1':"
+          - "`IP_WEB2=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' web2)`"
+          - "`docker exec web1 ping -c 2 $IP_WEB2`"
+          - "Limpeza:"
+          - "`docker stop web1 web2 && docker rm web1 web2`"
+        tips:
+          - type: "info"
+            title: "Rede Bridge Padrão"
+            content: "A rede 'bridge' padrão isola os containers, mas permite comunicação por IP. A resolução de nomes entre containers não é habilitada por padrão nela."
+        validation:
+          - command: "docker network inspect bridge -f '{{.Driver}}'"
+            expectedOutput: "bridge"
+            errorMessage: "A rede padrão 'bridge' não foi encontrada ou não é do tipo bridge."
+
+      - name: "Rede Host"
+        description: "Execute um container diretamente na pilha de rede do host."
+        steps:
+          - "Execute um container usando a rede do host e verifique suas interfaces de rede:"
+          - "`docker run --rm --network host alpine ifconfig`"
+          - "Compare a saída com as interfaces de rede do próprio host (fora do container):"
+          - "`ifconfig`"
+          - "Note que o container tem acesso direto às interfaces do host, sem isolamento de rede."
+        tips:
+          - type: "warning"
+            title: "Riscos da Rede Host"
+            content: "Usar `--network host` remove o isolamento de rede, o que pode ser um risco de segurança. O container pode acessar qualquer serviço rodando no host e pode haver conflitos de porta."
+        validation:
+          - command: "docker run --rm --network host alpine hostname" # Se rodar na rede host, hostname será o do host
+            expectedOutput: "`hostname`" # Captura o hostname real do host onde o lab roda
+            errorMessage: "O container executado com --network host não parece estar compartilhando o hostname do host."
+
+      - name: "Rede Bridge Customizada"
+        description: "Crie e use uma rede bridge customizada para melhor isolamento e resolução de nomes."
+        steps:
+          - "Crie uma nova rede bridge chamada 'minha-rede':"
+          - "`docker network create minha-rede`"
+          - "Inspecione a nova rede:"
+          - "`docker network inspect minha-rede`"
+          - "Execute dois containers Nginx nesta rede:"
+          - "`docker run -d --name web-net1 --network minha-rede nginx:alpine`"
+          - "`docker run -d --name web-net2 --network minha-rede nginx:alpine`"
+          - "Agora, tente pingar 'web-net2' a partir de 'web-net1' usando o nome do container:"
+          - "`docker exec web-net1 ping -c 2 web-net2`"
+          - "Note que a resolução de nomes funciona em redes customizadas."
+          - "Limpeza:"
+          - "`docker stop web-net1 web-net2 && docker rm web-net1 web-net2`"
+          - "`docker network rm minha-rede`"
+        tips:
+          - type: "tip"
+            title: "Vantagens de Redes Customizadas"
+            content: "Redes bridge customizadas fornecem melhor isolamento e resolução DNS automática entre os containers conectados a ela, sendo a prática recomendada para aplicações multi-container."
+        validation:
+          - command: "docker network ls -f name=minha-rede --format '{{.Name}}' || echo 'removed'" # Verifica se foi removida na limpeza
+            expectedOutput: "removed"
+            errorMessage: "A rede customizada 'minha-rede' não foi removida corretamente." 

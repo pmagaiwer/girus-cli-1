@@ -1,0 +1,84 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kubernetes-exploracao-recursos-lab
+  namespace: girus
+  labels:
+    app: girus-lab-template
+data:
+  lab.yaml: |
+    name: kubernetes-exploracao-recursos
+    title: "Explorando Recursos do Kubernetes com kubectl"
+    description: "Aprenda a usar os comandos 'kubectl get' e 'kubectl describe' para inspecionar recursos comuns como Pods, Services e Deployments."
+    duration: 20m
+    image: "linuxtips/girus-kind-single-node:0.1" # Imagem com Kind/kubectl
+    tasks:
+      - name: "Listando Recursos (kubectl get)"
+        description: "Use 'kubectl get' para listar diferentes tipos de recursos no cluster."
+        steps:
+          - "Verifique a conexão com o cluster e veja os nós:"
+          - "`kubectl get nodes`"
+          - "Liste os namespaces no cluster:"
+          - "`kubectl get namespaces`" # ou 'kubectl get ns'
+          - "Liste os pods em todos os namespaces:"
+          - "`kubectl get pods --all-namespaces`" # ou 'kubectl get po -A'
+          - "Crie um namespace para este laboratório:"
+          - "`kubectl create namespace explore-lab`"
+          - "Crie um pod simples neste namespace:"
+          - "`kubectl run nginx-pod --image=nginx:alpine -n explore-lab`"
+          - "Liste os pods apenas no namespace 'explore-lab':"
+          - "`kubectl get pods -n explore-lab`"
+          - "Liste os pods com mais informações (IP, nó):"
+          - "`kubectl get pods -n explore-lab -o wide`"
+        tips:
+          - type: "tip"
+            title: "Aliases e Formatos de Saída"
+            content: "Muitos recursos têm aliases (ex: ns, po, svc, deploy). Use `-o wide`, `-o yaml`, `-o json` para diferentes formatos de saída."
+        validation:
+          - command: "kubectl get pods -n explore-lab -o jsonpath='{.items[0].metadata.name}'"
+            expectedOutput: "nginx-pod"
+            errorMessage: "Não foi possível encontrar o 'nginx-pod' no namespace 'explore-lab'."
+
+      - name: "Inspecionando Recursos (kubectl describe)"
+        description: "Use 'kubectl describe' para obter informações detalhadas sobre um recurso específico."
+        steps:
+          - "Obtenha detalhes sobre o pod 'nginx-pod':"
+          - "`kubectl describe pod nginx-pod -n explore-lab`"
+          - "Observe informações como status, eventos, IPs, volumes montados, etc."
+          - "Obtenha detalhes sobre o namespace 'explore-lab':"
+          - "`kubectl describe namespace explore-lab`"
+          - "Crie um deployment:"
+          - "`kubectl create deployment my-deploy --image=nginx:alpine -n explore-lab`"
+          - "Liste os deployments:"
+          - "`kubectl get deployments -n explore-lab`" # ou 'kubectl get deploy'
+          - "Descreva o deployment criado:"
+          - "`kubectl describe deployment my-deploy -n explore-lab`"
+          - "Observe como ele gerencia um ReplicaSet, que por sua vez gerencia o Pod."
+        tips:
+          - type: "info"
+            title: "Eventos"
+            content: "A seção 'Events' na saída do `describe` é muito útil para diagnosticar problemas, mostrando o que o Kubernetes fez ou tentou fazer com o recurso."
+        validation:
+          - command: "kubectl describe deployment my-deploy -n explore-lab | grep 'StrategyType:'"
+            expectedOutput: "StrategyType:           RollingUpdate" # Verifica se a descrição do deployment contém um campo esperado
+            errorMessage: "Não foi possível obter a descrição detalhada do deployment 'my-deploy'."
+
+      - name: "Limpeza dos Recursos"
+        description: "Remova os recursos criados durante o laboratório."
+        steps:
+          - "Exclua o pod 'nginx-pod':"
+          - "`kubectl delete pod nginx-pod -n explore-lab`"
+          - "Exclua o deployment 'my-deploy':"
+          - "`kubectl delete deployment my-deploy -n explore-lab`"
+          - "Exclua o namespace 'explore-lab' (isso removerá todos os recursos dentro dele):"
+          - "`kubectl delete namespace explore-lab`"
+          - "Verifique se o namespace foi removido:"
+          - "`kubectl get namespace explore-lab || echo 'Namespace removido'`"
+        tips:
+          - type: "warning"
+            title: "Excluir Namespaces"
+            content: "Excluir um namespace remove TODOS os recursos contidos nele. Tenha cuidado ao excluir namespaces em ambientes reais."
+        validation:
+          - command: "kubectl get namespace explore-lab &> /dev/null || echo 'Namespace removido'"
+            expectedOutput: "Namespace removido"
+            errorMessage: "O namespace 'explore-lab' não foi removido corretamente." 
