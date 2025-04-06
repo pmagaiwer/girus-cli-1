@@ -39,20 +39,21 @@ data:
             ```
           - "Depois de digitar o conteúdo, salve o arquivo pressionando Ctrl+O, depois Enter, e saia do editor com Ctrl+X."
           - "Se preferir usar outro editor como vim ou não quiser usar um editor interativo, você também pode criar o arquivo com o comando cat:"
-          - "`cat > meu_script.sh << 'EOF'
-#!/bin/bash
-# Este é um comentário
-# Os comentários não são executados e servem para documentar o código
+          - |
+            cat > meu_script.sh << 'EOF'
+            #!/bin/bash
+            # Este é um comentário
+            # Os comentários não são executados e servem para documentar o código
 
-# Comando para exibir uma mensagem na tela
-echo "Olá, Girus!"
+            # Comando para exibir uma mensagem na tela
+            echo "Olá, Girus!"
 
-# Comando com substituição de comando $(comando)
-echo "O diretório atual é: $(pwd)"
+            # Comando com substituição de comando $(comando)
+            echo "O diretório atual é: $(pwd)"
 
-# Exibindo a data e hora atual
-echo "Data e hora atual: $(date)"
-EOF`"
+            # Exibindo a data e hora atual
+            echo "Data e hora atual: $(date)"
+            EOF
           - "Agora, vamos verificar o conteúdo do script para confirmar que foi criado corretamente:"
           - "`cat meu_script.sh`"
           - "Por padrão, os arquivos novos não têm permissão de execução. Vamos tornar o script executável:"

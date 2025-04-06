@@ -24,25 +24,27 @@ data:
           - "Liste as tabelas existentes (inicialmente não deve haver nenhuma):"
           - "`aws dynamodb list-tables`"
           - "Crie uma tabela com chave primária simples:"
-          - "`aws dynamodb create-table \
-  --table-name Produtos \
-  --attribute-definitions \
-      AttributeName=ProdutoId,AttributeType=S \
-  --key-schema \
-      AttributeName=ProdutoId,KeyType=HASH \
-  --provisioned-throughput \
-      ReadCapacityUnits=5,WriteCapacityUnits=5`"
+          - |
+            aws dynamodb create-table \
+              --table-name Produtos \
+              --attribute-definitions \
+                  AttributeName=ProdutoId,AttributeType=S \
+              --key-schema \
+                  AttributeName=ProdutoId,KeyType=HASH \
+              --provisioned-throughput \
+                  ReadCapacityUnits=5,WriteCapacityUnits=5
           - "Crie uma segunda tabela com chave primária composta (hash + sort):"
-          - "`aws dynamodb create-table \
-  --table-name Pedidos \
-  --attribute-definitions \
-      AttributeName=ClienteId,AttributeType=S \
-      AttributeName=PedidoId,AttributeType=S \
-  --key-schema \
-      AttributeName=ClienteId,KeyType=HASH \
-      AttributeName=PedidoId,KeyType=RANGE \
-  --provisioned-throughput \
-      ReadCapacityUnits=5,WriteCapacityUnits=5`"
+          - |
+            aws dynamodb create-table \
+              --table-name Pedidos \
+              --attribute-definitions \
+                  AttributeName=ClienteId,AttributeType=S \
+                  AttributeName=PedidoId,AttributeType=S \
+              --key-schema \
+                  AttributeName=ClienteId,KeyType=HASH \
+                  AttributeName=PedidoId,KeyType=RANGE \
+              --provisioned-throughput \
+                  ReadCapacityUnits=5,WriteCapacityUnits=5
           - "Liste as tabelas para confirmar que foram criadas:"
           - "`aws dynamodb list-tables`"
           - "Obtenha informações detalhadas sobre uma tabela:"

@@ -19,12 +19,13 @@ data:
           - "O **grep** (Global Regular Expression Print) é uma das ferramentas mais importantes para processamento de texto no Linux. Ele permite buscar padrões específicos em arquivos ou na saída de outros comandos, sendo fundamentalmente útil para administração de sistemas e análise de logs."
           - "O grep trabalha linha por linha, examinando cada uma para determinar se contém o padrão de busca especificado, exibindo apenas as linhas que correspondem ao critério."
           - "Vamos começar criando um arquivo de exemplo para demonstrar as funcionalidades do grep:"
-          - "cat > arquivo_exemplo.txt << EOL
-Linha 1 com a palavra linux
-Linha 2 sem a palavra
-Linha 3 com linux novamente
-LINHA 4 COM LINUX
-EOL"
+          - |
+            cat > arquivo_exemplo.txt << EOL
+            Linha 1 com a palavra linux
+            Linha 2 sem a palavra
+            Linha 3 com linux novamente
+            LINHA 4 COM LINUX
+            EOL
           - "Este comando cria um arquivo chamado 'arquivo_exemplo.txt' com 4 linhas diferentes. Usamos o operador de redirecionamento `>` para enviar a saída do comando `cat` para o arquivo, e o delimitador 'EOL' (End Of Line) para indicar o início e fim do conteúdo."
           - "**Busca básica com grep:**"
           - "A forma mais simples de usar o grep é fornecer um padrão de busca e o nome do arquivo:"
