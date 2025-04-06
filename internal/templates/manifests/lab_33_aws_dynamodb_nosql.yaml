@@ -68,46 +68,51 @@ data:
         description: "Aprenda a inserir, atualizar e consultar itens em tabelas DynamoDB"
         steps:
           - "Insira um item na tabela Produtos:"
-          - "`aws dynamodb put-item \
-  --table-name Produtos \
-  --item '{
-    \"ProdutoId\": {\"S\": \"prod-001\"},
-    \"Nome\": {\"S\": \"Smartphone XYZ\"},
-    \"Preco\": {\"N\": \"899.99\"},
-    \"Categoria\": {\"S\": \"Eletrônicos\"},
-    \"Estoque\": {\"N\": \"50\"}
-  }'`"
+          - |
+            aws dynamodb put-item \
+              --table-name Produtos \
+              --item '{
+                "ProdutoId": {"S": "prod-001"},
+                "Nome": {"S": "Smartphone XYZ"},
+                "Preco": {"N": "899.99"},
+                "Categoria": {"S": "Eletrônicos"},
+                "Estoque": {"N": "50"}
+              }'
           - "Insira outro item na tabela Produtos:"
-          - "`aws dynamodb put-item \
-  --table-name Produtos \
-  --item '{
-    \"ProdutoId\": {\"S\": \"prod-002\"},
-    \"Nome\": {\"S\": \"Notebook ABC\"},
-    \"Preco\": {\"N\": \"2499.99\"},
-    \"Categoria\": {\"S\": \"Computadores\"},
-    \"Estoque\": {\"N\": \"15\"}
-  }'`"
+          - |
+            aws dynamodb put-item \
+              --table-name Produtos \
+              --item '{
+                "ProdutoId": {"S": "prod-002"},
+                "Nome": {"S": "Notebook ABC"},
+                "Preco": {"N": "2499.99"},
+                "Categoria": {"S": "Computadores"},
+                "Estoque": {"N": "15"}
+              }'
           - "Insira um item na tabela Pedidos:"
-          - "`aws dynamodb put-item \
-  --table-name Pedidos \
-  --item '{
-    \"ClienteId\": {\"S\": \"cliente-001\"},
-    \"PedidoId\": {\"S\": \"pedido-001\"},
-    \"Data\": {\"S\": \"2023-04-01\"},
-    \"Valor\": {\"N\": \"899.99\"},
-    \"Produtos\": {\"SS\": [\"prod-001\"]}
-  }'`"
+          - |
+            aws dynamodb put-item \
+              --table-name Pedidos \
+              --item '{
+                "ClienteId": {"S": "cliente-001"},
+                "PedidoId": {"S": "pedido-001"},
+                "Data": {"S": "2023-04-01"},
+                "Valor": {"N": "899.99"},
+                "Produtos": {"SS": ["prod-001"]}
+              }'
           - "Obtenha um item específico da tabela Produtos:"
-          - "`aws dynamodb get-item \
-  --table-name Produtos \
-  --key '{\"ProdutoId\": {\"S\": \"prod-001\"}}'`"
+          - |
+            aws dynamodb get-item \
+              --table-name Produtos \
+              --key '{"ProdutoId": {"S": "prod-001"}}'
           - "Execute uma scan para ver todos os itens em uma tabela:"
           - "`aws dynamodb scan --table-name Produtos`"
           - "Execute uma query usando a chave primária (para a tabela Pedidos):"
-          - "`aws dynamodb query \
-  --table-name Pedidos \
-  --key-condition-expression \"ClienteId = :clienteId\" \
-  --expression-attribute-values '{\":clienteId\": {\"S\": \"cliente-001\"}}'`"
+          - |
+            aws dynamodb query \
+              --table-name Pedidos \
+              --key-condition-expression "ClienteId = :clienteId" \
+              --expression-attribute-values '{":clienteId": {"S": "cliente-001"}}'
         tips:
           - type: "warning"
             title: "Scan vs Query"
@@ -127,41 +132,46 @@ data:
         description: "Aprenda a atualizar e excluir itens em tabelas DynamoDB"
         steps:
           - "Atualize um item existente na tabela Produtos:"
-          - "`aws dynamodb update-item \
-  --table-name Produtos \
-  --key '{\"ProdutoId\": {\"S\": \"prod-001\"}}' \
-  --update-expression \"SET Preco = :preco, Estoque = :estoque\" \
-  --expression-attribute-values '{
-    \":preco\": {\"N\": \"849.99\"},
-    \":estoque\": {\"N\": \"45\"}
-  }' \
-  --return-values ALL_NEW`"
+          - |
+            aws dynamodb update-item \
+              --table-name Produtos \
+              --key '{"ProdutoId": {"S": "prod-001"}}' \
+              --update-expression "SET Preco = :preco, Estoque = :estoque" \
+              --expression-attribute-values '{
+                ":preco": {"N": "849.99"},
+                ":estoque": {"N": "45"}
+              }' \
+              --return-values ALL_NEW
           - "Verifique se a atualização foi bem-sucedida:"
-          - "`aws dynamodb get-item \
-  --table-name Produtos \
-  --key '{\"ProdutoId\": {\"S\": \"prod-001\"}}'`"
+          - |
+            aws dynamodb get-item \
+              --table-name Produtos \
+              --key '{"ProdutoId": {"S": "prod-001"}}'
           - "Adicione um novo atributo a um item existente:"
-          - "`aws dynamodb update-item \
-  --table-name Produtos \
-  --key '{\"ProdutoId\": {\"S\": \"prod-002\"}}' \
-  --update-expression \"SET Promocao = :promocao\" \
-  --expression-attribute-values '{
-    \":promocao\": {\"BOOL\": true}
-  }' \
-  --return-values ALL_NEW`"
+          - |
+            aws dynamodb update-item \
+              --table-name Produtos \
+              --key '{"ProdutoId": {"S": "prod-002"}}' \
+              --update-expression "SET Promocao = :promocao" \
+              --expression-attribute-values '{
+                ":promocao": {"BOOL": true}
+              }' \
+              --return-values ALL_NEW
           - "Exclua um atributo de um item:"
-          - "`aws dynamodb update-item \
-  --table-name Produtos \
-  --key '{\"ProdutoId\": {\"S\": \"prod-001\"}}' \
-  --update-expression \"REMOVE Categoria\" \
-  --return-values ALL_NEW`"
+          - |
+            aws dynamodb update-item \
+              --table-name Produtos \
+              --key '{"ProdutoId": {"S": "prod-001"}}' \
+              --update-expression "REMOVE Categoria" \
+              --return-values ALL_NEW
           - "Exclua um item completo da tabela:"
-          - "`aws dynamodb delete-item \
-  --table-name Pedidos \
-  --key '{
-    \"ClienteId\": {\"S\": \"cliente-001\"},
-    \"PedidoId\": {\"S\": \"pedido-001\"}
-  }'`"
+          - |
+            aws dynamodb delete-item \
+              --table-name Pedidos \
+              --key '{
+                "ClienteId": {"S": "cliente-001"},
+                "PedidoId": {"S": "pedido-001"}
+              }'
           - "Verifique se o item foi excluído:"
           - "`aws dynamodb scan --table-name Pedidos`"
         tips:
@@ -183,77 +193,83 @@ data:
         description: "Configure índices secundários e realize consultas mais complexas"
         steps:
           - "Crie uma nova tabela com um índice secundário global (GSI):"
-          - "`aws dynamodb create-table \
-  --table-name Clientes \
-  --attribute-definitions \
-      AttributeName=ClienteId,AttributeType=S \
-      AttributeName=Email,AttributeType=S \
-      AttributeName=Cidade,AttributeType=S \
-  --key-schema \
-      AttributeName=ClienteId,KeyType=HASH \
-  --provisioned-throughput \
-      ReadCapacityUnits=5,WriteCapacityUnits=5 \
-  --global-secondary-indexes '[
-    {
-      \"IndexName\": \"EmailIndex\",
-      \"KeySchema\": [
-        {\"AttributeName\": \"Email\", \"KeyType\": \"HASH\"}
-      ],
-      \"Projection\": {\"ProjectionType\": \"ALL\"},
-      \"ProvisionedThroughput\": {
-        \"ReadCapacityUnits\": 5,
-        \"WriteCapacityUnits\": 5
-      }
-    },
-    {
-      \"IndexName\": \"CidadeIndex\",
-      \"KeySchema\": [
-        {\"AttributeName\": \"Cidade\", \"KeyType\": \"HASH\"}
-      ],
-      \"Projection\": {\"ProjectionType\": \"ALL\"},
-      \"ProvisionedThroughput\": {
-        \"ReadCapacityUnits\": 5,
-        \"WriteCapacityUnits\": 5
-      }
-    }
-  ]'`"
+          - |
+            aws dynamodb create-table \
+              --table-name Clientes \
+              --attribute-definitions \
+                  AttributeName=ClienteId,AttributeType=S \
+                  AttributeName=Email,AttributeType=S \
+                  AttributeName=Cidade,AttributeType=S \
+              --key-schema \
+                  AttributeName=ClienteId,KeyType=HASH \
+              --provisioned-throughput \
+                  ReadCapacityUnits=5,WriteCapacityUnits=5 \
+              --global-secondary-indexes '[
+                {
+                  "IndexName": "EmailIndex",
+                  "KeySchema": [
+                    {"AttributeName": "Email", "KeyType": "HASH"}
+                  ],
+                  "Projection": {"ProjectionType": "ALL"},
+                  "ProvisionedThroughput": {
+                    "ReadCapacityUnits": 5,
+                    "WriteCapacityUnits": 5
+                  }
+                },
+                {
+                  "IndexName": "CidadeIndex",
+                  "KeySchema": [
+                    {"AttributeName": "Cidade", "KeyType": "HASH"}
+                  ],
+                  "Projection": {"ProjectionType": "ALL"},
+                  "ProvisionedThroughput": {
+                    "ReadCapacityUnits": 5,
+                    "WriteCapacityUnits": 5
+                  }
+                }
+              ]'
           - "Insira alguns itens para testar os índices:"
-          - "`aws dynamodb put-item \
-  --table-name Clientes \
-  --item '{
-    \"ClienteId\": {\"S\": \"cliente-001\"},
-    \"Nome\": {\"S\": \"João Silva\"},
-    \"Email\": {\"S\": \"joao@exemplo.com\"},
-    \"Cidade\": {\"S\": \"São Paulo\"}
-  }'`"
-          - "`aws dynamodb put-item \
-  --table-name Clientes \
-  --item '{
-    \"ClienteId\": {\"S\": \"cliente-002\"},
-    \"Nome\": {\"S\": \"Maria Souza\"},
-    \"Email\": {\"S\": \"maria@exemplo.com\"},
-    \"Cidade\": {\"S\": \"Rio de Janeiro\"}
-  }'`"
-          - "`aws dynamodb put-item \
-  --table-name Clientes \
-  --item '{
-    \"ClienteId\": {\"S\": \"cliente-003\"},
-    \"Nome\": {\"S\": \"Carlos Santos\"},
-    \"Email\": {\"S\": \"carlos@exemplo.com\"},
-    \"Cidade\": {\"S\": \"São Paulo\"}
-  }'`"
+          - |
+            aws dynamodb put-item \
+              --table-name Clientes \
+              --item '{
+                "ClienteId": {"S": "cliente-001"},
+                "Nome": {"S": "João Silva"},
+                "Email": {"S": "joao@exemplo.com"},
+                "Cidade": {"S": "São Paulo"}
+              }'
+          - |
+            aws dynamodb put-item \
+              --table-name Clientes \
+              --item '{
+                "ClienteId": {"S": "cliente-002"},
+                "Nome": {"S": "Maria Souza"},
+                "Email": {"S": "maria@exemplo.com"},
+                "Cidade": {"S": "Rio de Janeiro"}
+              }'
+          - |
+            aws dynamodb put-item \
+              --table-name Clientes \
+              --item '{
+                "ClienteId": {"S": "cliente-003"},
+                "Nome": {"S": "Carlos Santos"},
+                "Email": {"S": "carlos@exemplo.com"},
+                "Cidade": {"S": "São Paulo"}
+              }'
           - "Consulte usando o índice secundário por email:"
-          - "`aws dynamodb query \
-  --table-name Clientes \
-  --index-name EmailIndex \
-  --key-condition-expression \"Email = :email\" \
-  --expression-attribute-values '{\":email\": {\"S\": \"maria@exemplo.com\"}}'`"
+          - |
+            aws dynamodb query \
+              --table-name Clientes \
+              --index-name EmailIndex \
+              --key-condition-expression "Email = :email" \
+              --expression-attribute-values '{":email": {"S": "maria@exemplo.com"}}'
           - "Consulte usando o índice secundário por cidade (para encontrar todos os clientes de São Paulo):"
-          - "`aws dynamodb query \
-  --table-name Clientes \
-  --index-name CidadeIndex \
-  --key-condition-expression \"Cidade = :cidade\" \
-  --expression-attribute-values '{\":cidade\": {\"S\": \"São Paulo\"}}'`"
+          - |
+            aws dynamodb query \
+              --table-name Clientes \
+              --index-name CidadeIndex \
+              --key-condition-expression "Cidade = :cidade" \
+              --expression-attribute-values '{":cidade": {"S": "São Paulo"}}'
         tips:
           - type: "info"
             title: "Tipos de índices secundários"

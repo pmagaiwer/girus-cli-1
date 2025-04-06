@@ -116,11 +116,12 @@ data:
           - "O **awk** é uma linguagem de programação completa, especializada no processamento de dados baseados em texto. Diferente do grep e sed, que funcionam principalmente com linhas inteiras, o awk é particularmente útil para processar dados estruturados em colunas ou campos."
           - "O nome 'awk' vem das iniciais de seus criadores: Alfred **A**ho, Peter **W**einberger e Brian **K**ernighan. Esta ferramenta tem capacidades avançadas para manipulação de dados, incluindo variáveis, funções, e estruturas condicionais."
           - "Para demonstrar o poder do awk, vamos criar um arquivo com dados estruturados em colunas:"
-          - "cat > arquivo_colunas.txt << EOL
-col1 col2 col3
-val1 val2 val3
-xyz abc 123
-EOL"
+          - |
+            cat > arquivo_colunas.txt << EOL
+            col1 col2 col3
+            val1 val2 val3
+            xyz abc 123
+            EOL
           - "Este arquivo simula dados tabulares, com três colunas separadas por espaços."
           - "**Conceito fundamental: campos e registros**"
           - "No awk, cada linha do arquivo é considerada um 'registro', e cada palavra (ou conjunto de caracteres separados por delimitadores) é um 'campo'. Por padrão, os campos são separados por espaços em branco (espaços ou tabs)."
@@ -144,12 +145,13 @@ EOL"
           - "Aqui, `$3 == \"val3\"` é uma condição que deve ser satisfeita para que o bloco de código entre chaves seja executado. Note que as aspas dentro do script awk precisam ser escapadas com backslash."
           - "**Usando separadores diferentes:**"
           - "Por padrão, o awk considera espaços em branco como separadores de campo. Podemos especificar um separador diferente com a opção -F. Vamos criar um arquivo CSV para demonstrar:"
-          - "cat > arquivo_csv.txt << EOL
-Nome,Idade,Cidade
-João,35,São Paulo
-Maria,28,Rio de Janeiro
-Pedro,42,Belo Horizonte
-EOL"
+          - |
+            cat > arquivo_csv.txt << EOL
+            Nome,Idade,Cidade
+            João,35,São Paulo
+            Maria,28,Rio de Janeiro
+            Pedro,42,Belo Horizonte
+            EOL
           - "Agora podemos processar este arquivo especificando a vírgula como separador:"
           - "`awk -F, '{print \"Nome: \" $1, \"Idade: \" $2}' arquivo_csv.txt`"
           - "**Cálculos e variáveis:**"
