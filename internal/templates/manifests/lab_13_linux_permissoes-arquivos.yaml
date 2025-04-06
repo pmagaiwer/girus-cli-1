@@ -25,8 +25,8 @@ data:
           - "`touch arquivo1.txt arquivo2.txt`"
           - "Visualize as permissões atuais:"
           - "`ls -la`"
-          - "Observe o formato das permissões: [tipo][dono][grupo][outros]"
-          - "Exemplo: -rw-r--r-- significa arquivo comum, dono pode ler e escrever, grupo e outros só podem ler"
+          - "Observe o formato das permissões - **[tipo][dono][grupo][outros]**"
+          - "Exemplo - **-rw-r--r--** significa arquivo comum, dono pode ler e escrever, grupo e outros só podem ler"
           - "Crie um script simples:"
           - "`echo '#!/bin/bash' > script.sh`"
           - "`echo 'echo \"Hello, World!\"' >> script.sh`"
@@ -36,10 +36,10 @@ data:
         tips:
           - type: "info"
             title: "Formato das permissões"
-            content: "As permissões são representadas por 10 caracteres: o primeiro indica o tipo (- para arquivo, d para diretório), seguido por três grupos de rwx (read, write, execute) para dono, grupo e outros."
+            content: "As permissões são representadas por 10 caracteres - o primeiro indica o tipo (**-** para arquivo, **d** para diretório), seguido por três grupos de **rwx** (read, write, execute) para dono, grupo e outros."
           - type: "tip"
             title: "Significado dos modos"
-            content: "r (4) = permissão de leitura, w (2) = permissão de escrita, x (1) = permissão de execução. Os valores numéricos são somados para definir as permissões em octal."
+            content: "**r** (4) - permissão de leitura, **w** (2) - permissão de escrita, **x** (1) - permissão de execução. Os valores numéricos são somados para definir as permissões em octal."
         validation:
           - command: "test -f ~/permissoes/script.sh && echo 'ok'"
             expectedOutput: "ok"

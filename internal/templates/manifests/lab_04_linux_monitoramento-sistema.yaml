@@ -71,4 +71,4 @@ data:
         validation:
           - command: "grep 'model name' /proc/cpuinfo &> /dev/null && echo 'ok'"
             expectedOutput: "ok"
-            errorMessage: "Não foi possível ler informações da CPU em /proc/cpuinfo." 
+            errorMessage: "Não foi possível ler informações da CPU em /proc/cpuinfo."
