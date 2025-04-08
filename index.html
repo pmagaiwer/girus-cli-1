@@ -192,7 +192,7 @@ install_kind() {
 
     if [ "$OS" == "linux" ] || [ "$OS" == "darwin" ]; then
         # Linux/Mac
-        curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.20.0/kind-$(uname)-amd64
+        curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.20.0/kind-$(uname)-${ARCH}
         chmod +x ./kind
         sudo mv ./kind /usr/local/bin/kind
 
@@ -220,7 +220,7 @@ install_kubectl() {
 
     if [ "$OS" == "linux" ]; then
         # Linux
-        curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+        curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/${ARCH}/kubectl"
         chmod +x kubectl
         sudo mv kubectl /usr/local/bin/
 
@@ -229,7 +229,7 @@ install_kubectl() {
         if command -v brew &> /dev/null; then
             brew install kubectl
         else
-            curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/darwin/amd64/kubectl"
+            curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/darwin/${ARCH}/kubectl"
             chmod +x kubectl
             sudo mv kubectl /usr/local/bin/
         fi
