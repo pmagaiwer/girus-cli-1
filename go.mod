@@ -1,8 +1,6 @@
 module github.com/badtuxx/girus-cli
 
-go 1.22
-
-toolchain go1.23.7
+go 1.24
 
 require (
 	github.com/schollz/progressbar/v3 v3.18.0
