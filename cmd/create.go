@@ -14,6 +14,7 @@ import (
 	"github.com/badtuxx/girus-cli/internal/helpers"
 	"github.com/badtuxx/girus-cli/internal/k8s"
 	"github.com/badtuxx/girus-cli/internal/lab"
+	"github.com/badtuxx/girus-cli/internal/repo"
 	"github.com/badtuxx/girus-cli/internal/templates"
 	"github.com/schollz/progressbar/v3"
 	"github.com/spf13/cobra"
@@ -27,6 +28,7 @@ var (
 	labFile         string
 	skipPortForward bool
 	skipBrowser     bool
+	repoIndexURL    string
 )
 
 var createCmd = &cobra.Command{
@@ -757,14 +759,46 @@ var createLabCmd = &cobra.Command{
 		if labFile != "" {
 			// Modo de adicionar template a partir de arquivo
 			lab.AddLabFromFile(labFile, verboseMode)
+		} else if len(args) > 0 {
+			// Modo de adicionar template a partir do repositório remoto
+			labID := args[0]
+			createLabFromRepo(labID, repoIndexURL, verboseMode)
 		} else {
-			fmt.Fprintf(os.Stderr, "Erro: Você deve especificar um arquivo de laboratório com a flag -f\n")
-			fmt.Println("\nExemplo:")
-			fmt.Println("  girus create lab -f meulaboratorio.yaml      # Adiciona um novo template a partir do arquivo")
-			fmt.Println("  girus create lab -f /home/user/REPOS/strigus/labs/basic-linux.yaml      # Adiciona um template do diretório /labs")
+			fmt.Fprintf(os.Stderr, "Erro: Você deve especificar um ID de laboratório ou um arquivo com a flag -f\n")
+			fmt.Println("\nExemplos:")
+			fmt.Println("  girus create lab linux-monitoramento-sistema  # Instala um laboratório do repositório remoto")
+			fmt.Println("  girus create lab -f meulaboratorio.yaml       # Adiciona um novo template a partir do arquivo")
 			os.Exit(1)
 		}
 	},
+}
+
+// createLabFromRepo baixa e aplica um laboratório do repositório remoto pelo ID
+func createLabFromRepo(labID string, indexURL string, verboseMode bool) {
+	fmt.Printf("🔍 Buscando laboratório '%s'...\n", labID)
+
+	// Buscar o laboratório no index.yaml
+	labInfo, err := repo.FindLabByID(labID, indexURL)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "❌ %v\n", err)
+		fmt.Println("\nPara ver os laboratórios disponíveis, use:")
+		fmt.Println("  girus list repo-labs")
+		os.Exit(1)
+	}
+
+	fmt.Printf("📥 Baixando o template de '%s'...\n", labInfo.Title)
+
+	// Fazer o download do lab.yaml
+	tempFile, err := repo.DownloadLabYAML(labInfo.URL)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "❌ %v\n", err)
+		os.Exit(1)
+	}
+	defer os.Remove(tempFile) // Garantir que o arquivo temporário seja removido ao final
+
+	// Aplicar o laboratório
+	fmt.Println("📦 Aplicando laboratório no cluster GIRUS...")
+	lab.AddLabFromFile(tempFile, verboseMode)
 }
 
 func init() {
@@ -782,6 +816,7 @@ func init() {
 	// Flags para createLabCmd
 	createLabCmd.Flags().StringVarP(&labFile, "file", "f", "", "Arquivo de manifesto do laboratório (ConfigMap)")
 	createLabCmd.Flags().BoolVarP(&verboseMode, "verbose", "v", false, "Modo detalhado com output completo em vez da barra de progresso")
+	createLabCmd.Flags().StringVarP(&repoIndexURL, "url", "u", "", "URL do arquivo index.yaml (opcional)")
 
 	// definir o nome do cluster como "girus" sempre
 	clusterName = "girus"
