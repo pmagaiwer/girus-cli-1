@@ -47,6 +47,9 @@ jobs:
         id: tag
         run: echo "tag_name=${GITHUB_REF#refs/*/}" >> "$GITHUB_OUTPUT"
 
+      - name: Run go mod tidy
+        run: go mod tidy
+
       - name: Run GoReleaser
         id: run-goreleaser
         uses: goreleaser/goreleaser-action@9c156ee8a17a598857849441385a2041ef570552 # v6.3.0
