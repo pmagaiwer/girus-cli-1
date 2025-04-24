@@ -20,34 +20,34 @@ data:
           - "O grep trabalha linha por linha, examinando cada uma para determinar se contém o padrão de busca especificado, exibindo apenas as linhas que correspondem ao critério."
           - "Vamos começar criando um arquivo de exemplo para demonstrar as funcionalidades do grep:"
           - |
-            cat > arquivo_exemplo.txt << EOL
+            `cat > arquivo_exemplo.txt << EOL
             Linha 1 com a palavra linux
             Linha 2 sem a palavra
             Linha 3 com linux novamente
             LINHA 4 COM LINUX
-            EOL
-          - "Este comando cria um arquivo chamado 'arquivo_exemplo.txt' com 4 linhas diferentes. Usamos o operador de redirecionamento `>` para enviar a saída do comando `cat` para o arquivo, e o delimitador 'EOL' (End Of Line) para indicar o início e fim do conteúdo."
+            EOL`
+          - "Este comando cria um arquivo chamado <code>arquivo_exemplo.txt</code> com 4 linhas diferentes. Usamos o operador de redirecionamento <code>></code> para enviar a saída do comando <code>cat</code> para o arquivo, e o delimitador <code>EOL</code> (End Of Line) para indicar o início e fim do conteúdo."
           - "**Busca básica com grep:**"
           - "A forma mais simples de usar o grep é fornecer um padrão de busca e o nome do arquivo:"
           - "`grep 'linux' arquivo_exemplo.txt`"
           - "Este comando mostrará apenas as linhas que contêm a palavra 'linux'. Observe que, por padrão, o grep é case-sensitive (sensível a maiúsculas/minúsculas), então 'linux' e 'LINUX' são tratados como padrões diferentes."
           - "**Ignorando case (maiúsculas/minúsculas):**"
-          - "Para realizar uma busca que ignore diferenças entre maiúsculas e minúsculas, usamos a flag `-i` (insensitive):"
+          - "Para realizar uma busca que ignore diferenças entre maiúsculas e minúsculas, usamos a flag <code>-i</code> (insensitive):"
           - "`grep -i 'linux' arquivo_exemplo.txt`"
           - "Agora o grep exibirá todas as linhas que contêm 'linux', 'LINUX', 'Linux', ou qualquer variação de capitalização."
           - "**Contando ocorrências:**"
-          - "Em vez de exibir as linhas correspondentes, podemos apenas contar quantas delas existem com a flag `-c` (count):"
+          - "Em vez de exibir as linhas correspondentes, podemos apenas contar quantas delas existem com a flag <code>-c</code> (count):"
           - "`grep -c -i 'linux' arquivo_exemplo.txt`"
-          - "Este comando retornará '3', indicando que três linhas contêm a palavra 'linux' (em qualquer capitalização)."
+          - "Este comando retornará <code>3</code>, indicando que três linhas contêm a palavra 'linux' (em qualquer capitalização)."
           - "**Buscas mais avançadas:**"
           - "O grep também permite buscas mais complexas usando expressões regulares. Por exemplo, para encontrar linhas que começam com 'Linha':"
           - "`grep '^Linha' arquivo_exemplo.txt`"
-          - "O caractere `^` é um metacaractere que representa o início de uma linha."
+          - "O caractere <code>^</code> é um metacaractere que representa o início de uma linha."
           - "Para encontrar linhas que terminam com 'novamente':"
           - "`grep 'novamente$' arquivo_exemplo.txt`"
-          - "O caractere `$` representa o fim de uma linha."
+          - "O caractere <code>$</code> representa o fim de uma linha."
           - "**Mostrando o contexto:**"
-          - "Às vezes, é útil ver algumas linhas antes ou depois do resultado. Podemos usar as flags `-B` (before) e `-A` (after):"
+          - "Às vezes, é útil ver algumas linhas antes ou depois do resultado. Podemos usar as flags <code>-B</code> (before) e <code>-A</code> (after):"
           - "`grep -A 1 -B 1 'sem' arquivo_exemplo.txt`"
           - "Este comando mostrará a linha que contém 'sem', mais uma linha antes e uma depois, proporcionando contexto ao resultado."
         tips:
@@ -71,25 +71,25 @@ data:
           - "O **sed** (Stream Editor) é uma poderosa ferramenta de processamento de texto que permite transformar o conteúdo de um arquivo ou fluxo de dados sem necessidade de abrir um editor interativo. O sed trabalha como um editor não-interativo que processa o texto linha por linha, aplicando as transformações especificadas."
           - "Vamos continuar usando o arquivo de exemplo que criamos anteriormente para demonstrar as capacidades do sed:"
           - "**Substituição básica:**"
-          - "A operação mais comum no sed é a substituição de texto usando o comando `s` (substitute):"
+          - "A operação mais comum no sed é a substituição de texto usando o comando <code>s</code> (substitute):"
           - "`sed 's/linux/GIRUS/' arquivo_exemplo.txt`"
           - "Este comando substitui a primeira ocorrência de 'linux' por 'GIRUS' em cada linha do arquivo. Por padrão, o sed não altera o arquivo original, apenas exibe o resultado da transformação."
           - "Observe que apenas a primeira ocorrência em cada linha é substituída. Se uma linha tiver mais de uma ocorrência de 'linux', apenas a primeira será alterada."
           - "**Substituição global e insensitiva a maiúsculas/minúsculas:**"
-          - "Para substituir todas as ocorrências em cada linha, usamos a flag `g` (global). Para ignorar maiúsculas/minúsculas, usamos a flag `i` (insensitive):"
+          - "Para substituir todas as ocorrências em cada linha, usamos a flag <code>g</code> (global). Para ignorar maiúsculas/minúsculas, usamos a flag <code>i</code> (insensitive):"
           - "`sed 's/linux/GIRUS/gi' arquivo_exemplo.txt`"
           - "Este comando substitui todas as ocorrências de 'linux' (independente da capitalização) por 'GIRUS' em todo o arquivo."
           - "**Editando apenas linhas específicas:**"
           - "O sed também permite aplicar comandos apenas a linhas que correspondem a um padrão. Por exemplo, vamos deletar todas as linhas que contêm a palavra 'sem':"
           - "`sed '/sem/d' arquivo_exemplo.txt`"
-          - "Aqui, `/sem/` é um padrão de busca e `d` é o comando de deleção. Este comando remove completamente todas as linhas que contêm 'sem'."
+          - "Aqui, <code>/sem/</code> é um padrão de busca e <code>d</code> é o comando de deleção. Este comando remove completamente todas as linhas que contêm 'sem'."
           - "**Modificando múltiplas linhas:**"
           - "Podemos combinar várias operações usando múltiplos comandos separados por ponto e vírgula. Por exemplo, vamos substituir 'linux' por 'GIRUS' e 'LINHA' por 'Registro':"
           - "`sed 's/linux/GIRUS/gi; s/LINHA/Registro/g' arquivo_exemplo.txt`"
           - "**Editando arquivos no lugar:**"
-          - "Por padrão, o sed não modifica o arquivo original. Para salvar as alterações diretamente no arquivo, usamos a flag `-i` (in-place):"
+          - "Por padrão, o sed não modifica o arquivo original. Para salvar as alterações diretamente no arquivo, usamos a flag <code>-i</code> (in-place):"
           - "`sed -i 's/linux/GIRUS/gi' arquivo_exemplo.txt`"
-          - "Este comando modifica o arquivo original diretamente. Em sistemas BSD como macOS, você precisa fornecer uma extensão de backup: `sed -i '' 's/linux/GIRUS/gi' arquivo_exemplo.txt`"
+          - "Este comando modifica o arquivo original diretamente. Em sistemas BSD como macOS, você precisa fornecer uma extensão de backup: <code>sed -i '' 's/linux/GIRUS/gi' arquivo_exemplo.txt</code>"
           - "**Aplicando condicionais:**"
           - "Também podemos aplicar comandos apenas a linhas específicas por número. Por exemplo, para substituir 'linux' por 'GIRUS' apenas na primeira linha:"
           - "`sed '1 s/linux/GIRUS/' arquivo_exemplo.txt`"
@@ -117,17 +117,17 @@ data:
           - "O nome 'awk' vem das iniciais de seus criadores: Alfred **A**ho, Peter **W**einberger e Brian **K**ernighan. Esta ferramenta tem capacidades avançadas para manipulação de dados, incluindo variáveis, funções, e estruturas condicionais."
           - "Para demonstrar o poder do awk, vamos criar um arquivo com dados estruturados em colunas:"
           - |
-            cat > arquivo_colunas.txt << EOL
+            `cat > arquivo_colunas.txt << EOL
             col1 col2 col3
             val1 val2 val3
             xyz abc 123
-            EOL
+            EOL`
           - "Este arquivo simula dados tabulares, com três colunas separadas por espaços."
           - "**Conceito fundamental: campos e registros**"
           - "No awk, cada linha do arquivo é considerada um 'registro', e cada palavra (ou conjunto de caracteres separados por delimitadores) é um 'campo'. Por padrão, os campos são separados por espaços em branco (espaços ou tabs)."
-          - "- O registro completo é referenciado como `$0`"
-          - "- Os campos individuais são referenciados como `$1`, `$2`, `$3`, etc."
-          - "- `$NF` refere-se ao último campo (NF = Number of Fields)"
+          - "- O registro completo é referenciado como <code>$0</code>"
+          - "- Os campos individuais são referenciados como <code>$1</code>, <code>$2</code>, <code>$3</code>, etc."
+          - "- <code>$NF</code> refere-se ao último campo (NF = Number of Fields)"
           - "**Imprimindo campos específicos:**"
           - "O comando mais básico do awk é imprimir um ou mais campos de cada linha:"
           - "`awk '{print $1}' arquivo_colunas.txt`"
@@ -138,29 +138,29 @@ data:
           - "**Imprimindo o último campo:**"
           - "Para imprimir o último campo de cada linha, independentemente de quantos campos a linha tenha:"
           - "`awk '{print $NF}' arquivo_colunas.txt`"
-          - "A variável especial `NF` contém o número de campos da linha atual, então `$NF` se refere ao último campo."
+          - "A variável especial <code>NF</code> contém o número de campos da linha atual, então <code>$NF</code> se refere ao último campo."
           - "**Aplicando condições:**"
           - "O awk permite processar apenas linhas que atendam a certas condições. Por exemplo, para imprimir apenas linhas onde o terceiro campo é 'val3':"
           - "`awk '$3 == \"val3\" {print $0}' arquivo_colunas.txt`"
-          - "Aqui, `$3 == \"val3\"` é uma condição que deve ser satisfeita para que o bloco de código entre chaves seja executado. Note que as aspas dentro do script awk precisam ser escapadas com backslash."
+          - "Aqui, <code>$3 == \"val3\"</code> é uma condição que deve ser satisfeita para que o bloco de código entre chaves seja executado."
           - "**Usando separadores diferentes:**"
-          - "Por padrão, o awk considera espaços em branco como separadores de campo. Podemos especificar um separador diferente com a opção -F. Vamos criar um arquivo CSV para demonstrar:"
+          - "Por padrão, o awk considera espaços em branco como separadores de campo. Podemos especificar um separador diferente com a opção <code>-F</code>. Vamos criar um arquivo CSV para demonstrar:"
           - |
-            cat > arquivo_csv.txt << EOL
+            `cat > arquivo_csv.txt << EOL
             Nome,Idade,Cidade
             João,35,São Paulo
             Maria,28,Rio de Janeiro
             Pedro,42,Belo Horizonte
-            EOL
+            EOL`
           - "Agora podemos processar este arquivo especificando a vírgula como separador:"
           - "`awk -F, '{print \"Nome: \" $1, \"Idade: \" $2}' arquivo_csv.txt`"
           - "**Cálculos e variáveis:**"
           - "O awk suporta operações matemáticas e variáveis. Por exemplo, para calcular a média de idade no nosso arquivo CSV:"
           - "`awk -F, 'NR>1 {sum+=$2; count++} END {print \"Média de idade: \" sum/count}' arquivo_csv.txt`"
           - "Este comando mais complexo:"
-          - "1. Usa `NR>1` para pular o cabeçalho (NR = Number of Record, o número da linha atual)"
-          - "2. Para cada linha processada, adiciona o valor do segundo campo (`$2`, a idade) à variável `sum` e incrementa `count`"
-          - "3. Quando o processamento termina (bloco `END`), calcula e imprime a média (sum/count)"
+          - "1. Usa <code>NR>1</code> para pular o cabeçalho (NR = Number of Record, o número da linha atual)"
+          - "2. Para cada linha processada, adiciona o valor do segundo campo (<code>$2</code>, a idade) à variável <code>sum</code> e incrementa <code>count</code>"
+          - "3. Quando o processamento termina (bloco <code>END</code>), calcula e imprime a média (sum/count)"
         tips:
           - type: "info"
             title: "awk para dados tabulares"
