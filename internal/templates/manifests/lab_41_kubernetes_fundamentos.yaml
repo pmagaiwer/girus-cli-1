@@ -8,7 +8,7 @@ metadata:
 data:
   lab.yaml: |
     name: kubernetes-fundamentos
-    title: "Introdução ao Kubernetes"
+    title: "Introdução ao Kubernetes-lab"
     description: "Aprenda comandos básicos do Kubernetes para gerenciar recursos em um cluster. Este laboratório guiado fornece uma introdução completa ao Kubernetes com explicações detalhadas de cada conceito."
     duration: 15m
     image: "linuxtips/girus-kind-single-node:0.1"
@@ -58,7 +58,7 @@ data:
           - "Agora, vamos criar um pod do Nginx. Pods são a menor unidade que pode ser implantada no Kubernetes e consistem em um ou mais containers."
           - "Crie um arquivo pod.yaml com o seguinte conteúdo:"
           - |
-            ```yaml
+            ```
             apiVersion: v1
             kind: Pod
             metadata:
@@ -115,7 +115,7 @@ data:
           - "Vamos criar um Deployment do Nginx com 3 réplicas:"
           - "Crie um arquivo deployment.yaml com o seguinte conteúdo:"
           - |
-            ```yaml
+            ```
             apiVersion: apps/v1
             kind: Deployment
             metadata:
