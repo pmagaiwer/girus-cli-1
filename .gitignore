@@ -1,0 +1,44 @@
+# Go
+# Binários de compilação
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Diretórios de build
+/bin/
+
+# Cache do módulo Go
+vendor/
+
+# Arquivos de saída
+*.log
+
+# Arquivos do sistema operacional
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Arquivos temporários
+Icon?
+ehthumbs.db
+Thumbs.db
+
+# Arquivos de IDEs e editores
+# Goland / JetBrains
+.idea/
+# Vim
+*.swp
+*.swo
+
+# Cobertura de testes
+*.coverprofile
+*.coverage
+*.cov
+coverage.out
+
+# Logs de testes
+testdata/
