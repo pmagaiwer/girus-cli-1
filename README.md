@@ -245,6 +245,29 @@ O GIRUS oferece uma variedade de laboratórios em diferentes áreas tecnológica
    sudo mv girus /usr/local/bin/
    ```
 
+## Usando o Makefile
+
+Este projeto utiliza um `Makefile` para simplificar tarefas comuns de desenvolvimento e build. Para usar os comandos, navegue até o diretório raiz do projeto no seu terminal e execute `make <comando>`.
+
+Aqui estão os comandos disponíveis:
+
+### Compilação e Instalação
+
+*   **`make build`** (ou simplesmente `make`): Compila o binário `girus` para o seu sistema operacional atual e o coloca no diretório `dist/`. Este é o comando padrão se você executar `make` sem argumentos.
+*   **`make install`**: Compila o binário (se ainda não estiver compilado) e o move para `/usr/local/bin/girus`, tornando-o acessível globalmente no seu sistema. Requer permissões de superusuário (`sudo`).
+*   **`make clean`**: Remove o diretório `dist/` e todos os arquivos de build gerados.
+*   **`make release`**: Compila o binário `girus` para múltiplas plataformas (Linux, macOS, Windows - amd64 e arm64) e os coloca no diretório `dist/`.
+
+
+### Gerenciamento de Dependências (Go Modules)
+
+*   **`make check-updates`**: Verifica se há atualizações disponíveis para as dependências Go do projeto.
+*   **`make upgrade-all`**: Atualiza todas as dependências Go para suas versões mais recentes e executa `go mod tidy`.
+*   **`make upgrade MODULE=<nome/do/modulo>`**: Atualiza uma dependência Go específica para a versão mais recente. Substitua `<nome/do/modulo>` pelo caminho do módulo (ex: `make upgrade MODULE=github.com/spf13/cobra`).
+*   **`make tidy`**: Executa `go mod tidy` para remover dependências não utilizadas e limpar os arquivos `go.mod` e `go.sum`.
+*   **`make deps`**: Exibe o gráfico de dependências do projeto.
+
+
 ## Criação de Laboratórios Personalizados
 
 Um dos pontos fortes do GIRUS é a facilidade de criação de novos laboratórios. Qualquer pessoa pode contribuir com novos templates seguindo estas etapas:
