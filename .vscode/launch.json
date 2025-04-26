@@ -1,0 +1,31 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch Girus CLI",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto", 
+            "program": "${workspaceFolder}", 
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "CONFIG_FILE": "manifest/config.yaml"
+            },
+            "args": [
+                "create",
+                "cluster"
+                // "--verbose"
+            ],
+            "console": "integratedTerminal",
+            "showLog": true
+        },
+        {
+            "type": "bashdb",
+            "request": "launch",
+            "name": "Debug Bash script",
+            "program": "install.sh",
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}
