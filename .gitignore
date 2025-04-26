@@ -10,6 +10,7 @@
 
 # Diretórios de build
 /bin/
+/dist
 
 # Cache do módulo Go
 vendor/
