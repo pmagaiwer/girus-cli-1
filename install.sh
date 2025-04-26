@@ -11,7 +11,7 @@ cat << "EOF"
    ╚═════╝ ╚═╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝
 EOF
 
-echo -e "\nScript de Instalação - Versão 0.1.0 - Codename: Maracatu\n"
+echo -e "\nScript de Instalação - Versão 0.2.0 - Codename: Maracatu\n"
 
 # Verificar se o terminal é interativo
 IS_INTERACTIVE=0
@@ -91,7 +91,7 @@ if [ "$ARCH" == "unknown" ]; then
 fi
 
 # Configurações e variáveis
-GIRUS_VERSION="v0.1.0"
+GIRUS_VERSION="v0.2.0"
 
 # Definir URL com base no sistema operacional e arquitetura
 if [ "$OS" == "windows" ]; then
@@ -192,7 +192,7 @@ install_kind() {
 
     if [ "$OS" == "linux" ] || [ "$OS" == "darwin" ]; then
         # Linux/Mac
-        curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.20.0/kind-$(uname)-amd64
+        curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.20.0/kind-$(uname)-${ARCH}
         chmod +x ./kind
         sudo mv ./kind /usr/local/bin/kind
 
@@ -220,7 +220,7 @@ install_kubectl() {
 
     if [ "$OS" == "linux" ]; then
         # Linux
-        curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+        curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/${ARCH}/kubectl"
         chmod +x kubectl
         sudo mv kubectl /usr/local/bin/
 
@@ -229,7 +229,7 @@ install_kubectl() {
         if command -v brew &> /dev/null; then
             brew install kubectl
         else
-            curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/darwin/amd64/kubectl"
+            curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/darwin/${ARCH}/kubectl"
             chmod +x kubectl
             sudo mv kubectl /usr/local/bin/
         fi

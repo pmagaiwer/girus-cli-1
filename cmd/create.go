@@ -14,6 +14,7 @@ import (
 	"github.com/badtuxx/girus-cli/internal/helpers"
 	"github.com/badtuxx/girus-cli/internal/k8s"
 	"github.com/badtuxx/girus-cli/internal/lab"
+	"github.com/badtuxx/girus-cli/internal/repo"
 	"github.com/badtuxx/girus-cli/internal/templates"
 	"github.com/schollz/progressbar/v3"
 	"github.com/spf13/cobra"
@@ -23,9 +24,11 @@ var (
 	deployFile      string
 	clusterName     string
 	verboseMode     bool
+	containerEngine string
 	labFile         string
 	skipPortForward bool
 	skipBrowser     bool
+	repoIndexURL    string
 )
 
 var createCmd = &cobra.Command{
@@ -42,16 +45,16 @@ var createClusterCmd = &cobra.Command{
 	Long: `Cria um cluster Kind com o nome "girus" e implanta todos os componentes necessários.
 Por padrão, o deployment embutido no binário é utilizado.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		// Verificar se o Docker está instalado e funcionando
+		// Verificar se o containerEngine está instalado e funcionando
 		fmt.Println("🔄 Verificando pré-requisitos...")
-		dockerCmd := exec.Command("docker", "--version")
-		if err := dockerCmd.Run(); err != nil {
-			fmt.Println("❌ Docker não encontrado ou não está em execução")
-			fmt.Println("\nO Docker é necessário para criar um cluster Kind. Instruções de instalação:")
+		containerEngineCmd := exec.Command(containerEngine, "--version")
+		if err := containerEngineCmd.Run(); err != nil {
+			fmt.Println("❌ " + containerEngine + " não encontrado ou não está em execução")
+			fmt.Println("\nO " + containerEngine + " é necessário para criar um cluster Kind. Instruções de instalação:")
 
 			// Detectar o sistema operacional para instruções específicas
-			if runtime.GOOS == "darwin" {
-				// macOS
+			if runtime.GOOS == "darwin" && containerEngine == "docker" {
+				// macOS docker
 				fmt.Println("\n📦 Para macOS, recomendamos usar Colima (alternativa leve ao Docker Desktop):")
 				fmt.Println("1. Instale o Homebrew caso não tenha:")
 				fmt.Println("   /bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\"")
@@ -61,8 +64,8 @@ Por padrão, o deployment embutido no binário é utilizado.`,
 				fmt.Println("   colima start")
 				fmt.Println("\nAlternativamente, você pode instalar o Docker Desktop para macOS de:")
 				fmt.Println("https://www.docker.com/products/docker-desktop")
-			} else if runtime.GOOS == "linux" {
-				// Linux
+			} else if runtime.GOOS == "linux" && containerEngine == "docker" {
+				// Linux docker
 				fmt.Println("\n📦 Para Linux, use o script de instalação oficial:")
 				fmt.Println("   curl -fsSL https://get.docker.com | bash")
 				fmt.Println("\nApós a instalação, adicione seu usuário ao grupo docker para evitar usar sudo:")
@@ -71,37 +74,67 @@ Por padrão, o deployment embutido no binário é utilizado.`,
 				fmt.Println("\nE inicie o serviço:")
 				fmt.Println("   sudo systemctl enable docker")
 				fmt.Println("   sudo systemctl start docker")
+			}
+			if runtime.GOOS == "darwin" && containerEngine == "podman" {
+				// macOS podman
+				fmt.Println("\n📦 Para macOS, recomendamos Podman:")
+				fmt.Println("1. Instale o Homebrew caso não tenha:")
+				fmt.Println("   /bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\"")
+				fmt.Println("2. Instale o Podman")
+				fmt.Println("   brew install podman")
+				fmt.Println("3. Inicie o Podman:")
+				fmt.Println("   podman machine init")
+				fmt.Println("   podman machine start")
+			} else if runtime.GOOS == "linux" && containerEngine == "podman" {
+				// Linux podman
+				fmt.Println("\n📦 Para Linux, use o script de instalação oficial:")
+				fmt.Println("   curl -fsSL https://get.docker.com | bash")
+				fmt.Println("\nE inicie o serviço:")
+				fmt.Println("   sudo systemctl enable podman")
+				fmt.Println("   sudo systemctl start podman")
+				fmt.Println("\nOpicional: Após a instalação, para utilizar podman, rootless evitando sudo:")
+				fmt.Println("   Siga as instruções do site oficial:")
+				fmt.Println("   https://github.com/containers/podman/blob/main/docs/tutorials/rootless_tutorial.md")
+			} else if containerEngine == "podman" {
+				// Windows ou outros sistemas
+				fmt.Println("\n📦 Visite https://github.com/containers/podman/blob/main/docs/tutorials/podman-for-windows.md para instruções de instalação para seu sistema operacional")
 			} else {
 				// Windows ou outros sistemas
 				fmt.Println("\n📦 Visite https://www.docker.com/products/docker-desktop para instruções de instalação para seu sistema operacional")
 			}
 
-			fmt.Println("\nApós instalar o Docker, execute novamente este comando.")
+			fmt.Println("\nApós instalar o " + containerEngine + " execute novamente este comando.")
 			os.Exit(1)
 		}
 
-		// Verificar se o serviço Docker está rodando
-		dockerInfoCmd := exec.Command("docker", "info")
-		if err := dockerInfoCmd.Run(); err != nil {
-			fmt.Println("❌ O serviço Docker não está em execução")
+		// Verificar se o serviço containerEngine está rodando
+		containerEngineInfoCmd := exec.Command(containerEngine, "info")
+		if err := containerEngineInfoCmd.Run(); err != nil {
+			fmt.Println("❌ O serviço " + containerEngine + " não está em execução")
 
-			if runtime.GOOS == "darwin" {
+			if runtime.GOOS == "darwin" && containerEngine == "docker" {
 				fmt.Println("\nPara macOS com Colima:")
 				fmt.Println("   colima start")
 				fmt.Println("\nPara Docker Desktop:")
 				fmt.Println("   Inicie o aplicativo Docker Desktop")
-			} else if runtime.GOOS == "linux" {
+			} else if runtime.GOOS == "darwin" && containerEngine == "podman" {
+				fmt.Println("\nPara Podman:")
+				fmt.Println("   Inicie a machine com: podman machine start")
+			} else if runtime.GOOS == "linux" && containerEngine == "docker" {
 				fmt.Println("\nInicie o serviço Docker:")
 				fmt.Println("   sudo systemctl start docker")
+			} else if runtime.GOOS == "linux" && containerEngine == "podman" {
+				fmt.Println("\nInicie o serviço Podman:")
+				fmt.Println("   sudo systemctl start podman")
 			} else {
-				fmt.Println("\nInicie o Docker Desktop ou o serviço Docker apropriado para seu sistema.")
+				fmt.Println("\nInicie o serviço de containers apropriado para seu sistema.")
 			}
 
-			fmt.Println("\nApós iniciar o Docker, execute novamente este comando.")
+			fmt.Println("\nApós iniciar o " + containerEngine + ", execute novamente este comando.")
 			os.Exit(1)
 		}
 
-		fmt.Println("✅ Docker detectado e funcionando")
+		fmt.Println("✅ " + containerEngine + " detectado e funcionando")
 
 		// Verificar silenciosamente se o cluster já existe
 		checkCmd := exec.Command("kind", "get", "clusters")
@@ -211,7 +244,7 @@ Por padrão, o deployment embutido no binário é utilizado.`,
 			if err := createClusterCmd.Run(); err != nil {
 				fmt.Fprintf(os.Stderr, "❌ Erro ao criar o cluster Girus: %v\n", err)
 				fmt.Println("   Possíveis causas:")
-				fmt.Println("   • Docker não está em execução")
+				fmt.Println("   • " + containerEngine + " não está em execução")
 				fmt.Println("   • Permissões insuficientes")
 				fmt.Println("   • Conflito com cluster existente")
 				os.Exit(1)
@@ -270,7 +303,7 @@ Por padrão, o deployment embutido no binário é utilizado.`,
 					fmt.Println("   Erro: Já existe um cluster com o nome 'girus' no sistema.")
 					fmt.Println("   Por favor, exclua-o primeiro com 'kind delete cluster --name girus'")
 				} else if strings.Contains(errMsg, "permission denied") {
-					fmt.Println("   Erro: Permissão negada. Verifique as permissões do Docker.")
+					fmt.Println("   Erro: Permissão negada. Verifique as permissões do " + containerEngine + ".")
 				} else if strings.Contains(errMsg, "Cannot connect to the Docker daemon") {
 					fmt.Println("   Erro: Não foi possível conectar ao serviço Docker.")
 					fmt.Println("   Verifique se o Docker está em execução com 'systemctl status docker'")
@@ -499,8 +532,8 @@ Por padrão, o deployment embutido no binário é utilizado.`,
 						// Escrever e fechar arquivo temporário
 						if _, err := tempLabFile.Write(manifestContent); err != nil {
 							fmt.Fprintf(os.Stderr, "     ❌ Erro ao escrever template %s no arquivo temporário: %v\n", manifestName, err)
-							tempLabFile.Close()        // Fechar mesmo em caso de erro
-							os.Remove(tempPath)        // Remover o temporário
+							tempLabFile.Close() // Fechar mesmo em caso de erro
+							os.Remove(tempPath) // Remover o temporário
 							allTemplatesApplied = false
 							continue
 						}
@@ -726,14 +759,46 @@ var createLabCmd = &cobra.Command{
 		if labFile != "" {
 			// Modo de adicionar template a partir de arquivo
 			lab.AddLabFromFile(labFile, verboseMode)
+		} else if len(args) > 0 {
+			// Modo de adicionar template a partir do repositório remoto
+			labID := args[0]
+			createLabFromRepo(labID, repoIndexURL, verboseMode)
 		} else {
-			fmt.Fprintf(os.Stderr, "Erro: Você deve especificar um arquivo de laboratório com a flag -f\n")
-			fmt.Println("\nExemplo:")
-			fmt.Println("  girus create lab -f meulaboratorio.yaml      # Adiciona um novo template a partir do arquivo")
-			fmt.Println("  girus create lab -f /home/user/REPOS/strigus/labs/basic-linux.yaml      # Adiciona um template do diretório /labs")
+			fmt.Fprintf(os.Stderr, "Erro: Você deve especificar um ID de laboratório ou um arquivo com a flag -f\n")
+			fmt.Println("\nExemplos:")
+			fmt.Println("  girus create lab linux-monitoramento-sistema  # Instala um laboratório do repositório remoto")
+			fmt.Println("  girus create lab -f meulaboratorio.yaml       # Adiciona um novo template a partir do arquivo")
 			os.Exit(1)
 		}
 	},
+}
+
+// createLabFromRepo baixa e aplica um laboratório do repositório remoto pelo ID
+func createLabFromRepo(labID string, indexURL string, verboseMode bool) {
+	fmt.Printf("🔍 Buscando laboratório '%s'...\n", labID)
+
+	// Buscar o laboratório no index.yaml
+	labInfo, err := repo.FindLabByID(labID, indexURL)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "❌ %v\n", err)
+		fmt.Println("\nPara ver os laboratórios disponíveis, use:")
+		fmt.Println("  girus list repo-labs")
+		os.Exit(1)
+	}
+
+	fmt.Printf("📥 Baixando o template de '%s'...\n", labInfo.Title)
+
+	// Fazer o download do lab.yaml
+	tempFile, err := repo.DownloadLabYAML(labInfo.URL)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "❌ %v\n", err)
+		os.Exit(1)
+	}
+	defer os.Remove(tempFile) // Garantir que o arquivo temporário seja removido ao final
+
+	// Aplicar o laboratório
+	fmt.Println("📦 Aplicando laboratório no cluster GIRUS...")
+	lab.AddLabFromFile(tempFile, verboseMode)
 }
 
 func init() {
@@ -746,9 +811,12 @@ func init() {
 	createClusterCmd.Flags().BoolVarP(&skipPortForward, "skip-port-forward", "", false, "Não perguntar sobre configurar port-forwarding")
 	createClusterCmd.Flags().BoolVarP(&skipBrowser, "skip-browser", "", false, "Não abrir o navegador automaticamente")
 
+	createClusterCmd.Flags().StringVarP(&containerEngine, "container-engine", "e", "docker", "Engine de container (docker ou podman)")
+
 	// Flags para createLabCmd
 	createLabCmd.Flags().StringVarP(&labFile, "file", "f", "", "Arquivo de manifesto do laboratório (ConfigMap)")
 	createLabCmd.Flags().BoolVarP(&verboseMode, "verbose", "v", false, "Modo detalhado com output completo em vez da barra de progresso")
+	createLabCmd.Flags().StringVarP(&repoIndexURL, "url", "u", "", "URL do arquivo index.yaml (opcional)")
 
 	// definir o nome do cluster como "girus" sempre
 	clusterName = "girus"

@@ -1,3 +1,4 @@
+
 # Go
 # Binários de compilação
 *.exe
@@ -10,7 +11,7 @@
 
 # Diretórios de build
 /bin/
-/dist
+dist/
 
 # Cache do módulo Go
 vendor/
@@ -43,3 +44,4 @@ coverage.out
 
 # Logs de testes
 testdata/
+
