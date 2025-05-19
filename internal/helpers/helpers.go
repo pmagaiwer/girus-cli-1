@@ -6,6 +6,9 @@ import (
 	"os/exec"
 	"runtime"
 	"strings"
+	"time"
+
+	"github.com/schollz/progressbar/v3"
 )
 
 // portInUse verifica se uma porta está em uso
@@ -84,4 +87,19 @@ func CheckPortForwardNeeded() bool {
 
 	// Se qualquer um dos serviços precisar de port-forward, retorne true
 	return backendNeeded || frontendNeeded
+}
+
+func CreateProgressBar(total int, description string, width int, showBytes bool, setPredictTime bool, throttle time.Duration, renderBlankState bool, spinnerType int) *progressbar.ProgressBar {
+	return progressbar.NewOptions(
+		total,
+		progressbar.OptionSetDescription(description),
+		progressbar.OptionSetWidth(width),
+		progressbar.OptionShowBytes(showBytes),
+		progressbar.OptionSetPredictTime(setPredictTime),
+		progressbar.OptionThrottle(throttle*time.Millisecond),
+		progressbar.OptionShowCount(),
+		progressbar.OptionSpinnerType(spinnerType),
+		progressbar.OptionSetRenderBlankState(renderBlankState),
+		progressbar.OptionFullWidth(),
+	)
 }
