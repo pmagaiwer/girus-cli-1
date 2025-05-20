@@ -21,21 +21,20 @@ type Repository struct {
 
 // Index representa o arquivo de índice de um repositório
 type Index struct {
-	APIVersion string                 `yaml:"apiVersion"`
-	Generated  string                 `yaml:"generated"`
-	Entries    map[string][]LabEntry  `yaml:"entries"`
+	APIVersion string    `yaml:"apiVersion"`
+	Generated  string    `yaml:"generated"`
+	Labs       []LabEntry `yaml:"labs"`
 }
 
 // LabEntry representa um laboratório no índice
 type LabEntry struct {
-	Name        string   `yaml:"name"`
-	Version     string   `yaml:"version"`
+	ID          string   `yaml:"id"`
+	Title       string   `yaml:"title"`
 	Description string   `yaml:"description"`
-	Keywords    []string `yaml:"keywords"`
-	Maintainers []string `yaml:"maintainers"`
+	Version     string   `yaml:"version"`
+	Duration    string   `yaml:"duration"`
+	Tags        []string `yaml:"tags"`
 	URL         string   `yaml:"url"`
-	Created     string   `yaml:"created"`
-	Digest      string   `yaml:"digest"`
 }
 
 // RepositoryManager gerencia os repositórios de laboratórios
@@ -243,4 +242,20 @@ func fetchAndParseIndex(url string) (*Index, error) {
 	}
 
 	return &index, nil
+}
+
+// ListLabs lista todos os laboratórios disponíveis em todos os repositórios
+func (lm *LabManager) ListLabs() (map[string][]LabEntry, error) {
+	allLabs := make(map[string][]LabEntry)
+
+	for _, repo := range lm.repoManager.ListRepositories() {
+		index, err := lm.getIndex(repo)
+		if err != nil {
+			return nil, fmt.Errorf("erro ao obter índice do repositório %s: %v", repo.Name, err)
+		}
+
+		allLabs[repo.Name] = index.Labs
+	}
+
+	return allLabs, nil
 }
