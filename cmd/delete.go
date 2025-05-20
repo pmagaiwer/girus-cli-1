@@ -82,7 +82,17 @@ var deleteClusterCmd = &cobra.Command{
 			}
 		} else {
 			// Usando barra de progresso (padrão)
-			bar := helpers.CreateProgressBar(100, "Excluindo cluster...", 50, false, false, 65, true, 14)
+			barConfig := helpers.ProgressBarConfig{
+				Total:            100,
+				Description:      "Excluindo cluster...",
+				Width:            50,
+				Throttle:         65,
+				SpinnerType:      14,
+				RenderBlankState: true,
+				ShowBytes:        false,
+				SetPredictTime:   false,
+			}
+			bar := helpers.CreateProgressBar(barConfig)
 
 			// Executar comando sem mostrar saída
 			deleteCmd := exec.Command("kind", "delete", "cluster", "--name", clusterName)
