@@ -1,0 +1,325 @@
+apiVersion: v1
+generated: "2024-06-01T10:00:00Z"
+entries:
+  aws_localstack_terraform:
+    - name: aws_localstack_terraform
+      version: "1.0.0"
+      description: "Laboratório de AWS LocalStack com Terraform"
+      keywords:
+        - aws
+        - localstack
+        - terraform
+      maintainers:
+        - "Jeferson <jeferson@linuxtips.io>"
+      url: "https://raw.githubusercontent.com/badtuxx/girus-cli/main/labs/aws_localstack_terraform/lab.yaml"
+      created: "2024-06-01T10:00:00Z"
+      digest: "sha256:796479639f2a8f5426b3cb850182f9c402ea71b42f3c964b13680e5ea67c5aef"
+  aws_s3_storage:
+    - name: aws_s3_storage
+      version: "1.0.0"
+      description: "Laboratório de AWS S3 Storage"
+      keywords:
+        - aws
+        - s3
+        - storage
+      maintainers:
+        - "Jeferson <jeferson@linuxtips.io>"
+      url: "https://raw.githubusercontent.com/badtuxx/girus-cli/main/labs/aws_s3_storage/lab.yaml"
+      created: "2024-06-01T10:00:00Z"
+      digest: "sha256:a4ea25c2d7909510592175825f01a4652956187e69a371271115f070f6c8d6b7"
+  aws_dynamodb_nosql:
+    - name: aws_dynamodb_nosql
+      version: "1.0.0"
+      description: "Laboratório de AWS DynamoDB NoSQL"
+      keywords:
+        - aws
+        - dynamodb
+        - nosql
+      maintainers:
+        - "Jeferson <jeferson@linuxtips.io>"
+      url: "https://raw.githubusercontent.com/badtuxx/girus-cli/main/labs/aws_dynamodb_nosql/lab.yaml"
+      created: "2024-06-01T10:00:00Z"
+      digest: "sha256:3c337f5377e48c0d5413461f82a8e175c3e695013a2fd26a302aa0f6c6ce2c6d"
+  aws_lambda_serverless:
+    - name: aws_lambda_serverless
+      version: "1.0.0"
+      description: "Laboratório de AWS Lambda Serverless"
+      keywords:
+        - aws
+        - lambda
+        - serverless
+      maintainers:
+        - "Jeferson <jeferson@linuxtips.io>"
+      url: "https://raw.githubusercontent.com/badtuxx/girus-cli/main/labs/aws_lambda_serverless/lab.yaml"
+      created: "2024-06-01T10:00:00Z"
+      digest: "sha256:0ec129e490ccbd3339c924a9bc2fd6f391f4b7c9d5a508112d2a44b5729df414"
+  terraform_fundamentos:
+    - name: terraform_fundamentos
+      version: "1.0.0"
+      description: "Laboratório de Fundamentos do Terraform"
+      keywords:
+        - terraform
+        - infraestrutura
+      maintainers:
+        - "Jeferson <jeferson@linuxtips.io>"
+      url: "https://raw.githubusercontent.com/badtuxx/girus-cli/main/labs/terraform_fundamentos/lab.yaml"
+      created: "2024-06-01T10:00:00Z"
+      digest: "sha256:b0152d96dae8e9a33595e8e39a18ce2932829cb3656442d195a19cfb1386609d"
+  terraform_aws_infraestrutura:
+    - name: terraform_aws_infraestrutura
+      version: "1.0.0"
+      description: "Laboratório de Terraform com AWS"
+      keywords:
+        - terraform
+        - aws
+        - infraestrutura
+      maintainers:
+        - "Jeferson <jeferson@linuxtips.io>"
+      url: "https://raw.githubusercontent.com/badtuxx/girus-cli/main/labs/terraform_aws_infraestrutura/lab.yaml"
+      created: "2024-06-01T10:00:00Z"
+      digest: "sha256:e6ce9b4a03a8f2f03cc617aa539c3b67146eb4fac7f36de4847523d307e56034"
+  terraform_provisioners_e_modulos:
+    - name: terraform_provisioners_e_modulos
+      version: "1.0.0"
+      description: "Laboratório de Provisioners e Módulos no Terraform"
+      keywords:
+        - terraform
+        - provisioners
+        - módulos
+      maintainers:
+        - "Jeferson <jeferson@linuxtips.io>"
+      url: "https://raw.githubusercontent.com/badtuxx/girus-cli/main/labs/terraform_provisioners_e_modulos/lab.yaml"
+      created: "2024-06-01T10:00:00Z"
+      digest: "sha256:bd20ccb4ad7e9f34a513c28d80f59a248cefbbab86c3c05923b16a4770eb6206"
+  kubernetes_fundamentos:
+    - name: kubernetes_fundamentos
+      version: "1.0.0"
+      description: "Laboratório de Fundamentos do Kubernetes"
+      keywords:
+        - kubernetes
+        - k8s
+      maintainers:
+        - "Jeferson <jeferson@linuxtips.io>"
+      url: "https://raw.githubusercontent.com/badtuxx/girus-cli/main/labs/kubernetes_fundamentos/lab.yaml"
+      created: "2024-06-01T10:00:00Z"
+      digest: "sha256:902300e3dc0cffc056ae6743bd9fe93ce1c38820f6f1a1f5f566796cf1c419db"
+  kubernetes_deployment:
+    - name: kubernetes_deployment
+      version: "1.0.0"
+      description: "Laboratório de Deployment no Kubernetes"
+      keywords:
+        - kubernetes
+        - deployment
+      maintainers:
+        - "Jeferson <jeferson@linuxtips.io>"
+      url: "https://raw.githubusercontent.com/badtuxx/girus-cli/main/labs/kubernetes_deployment/lab.yaml"
+      created: "2024-06-01T10:00:00Z"
+      digest: "sha256:15234db636c79593918d1365fea9fa5dad8a67da17ec58f18c9dff1b9b40bf8d"
+  docker_fundamentos-redes:
+    - name: docker_fundamentos-redes
+      version: "1.0.0"
+      description: "Laboratório de Fundamentos de Redes no Docker"
+      keywords:
+        - docker
+        - redes
+      maintainers:
+        - "Jeferson <jeferson@linuxtips.io>"
+      url: "https://raw.githubusercontent.com/badtuxx/girus-cli/main/labs/docker_fundamentos-redes/lab.yaml"
+      created: "2024-06-01T10:00:00Z"
+      digest: "sha256:51fb562cf42e3bb93baa43a75f9115d6067c84a76d030e3b364a586d95b54722"
+  docker_volumes:
+    - name: docker_volumes
+      version: "1.0.0"
+      description: "Laboratório de Volumes no Docker"
+      keywords:
+        - docker
+        - volumes
+      maintainers:
+        - "Jeferson <jeferson@linuxtips.io>"
+      url: "https://raw.githubusercontent.com/badtuxx/girus-cli/main/labs/docker_volumes/lab.yaml"
+      created: "2024-06-01T10:00:00Z"
+      digest: "sha256:e6f04e128dc9e6554fd4c09e7c0f0c4704975c84a41a5ce42e30f3f9cafb6a0c"
+  docker_compose:
+    - name: docker_compose
+      version: "1.0.0"
+      description: "Laboratório de Docker Compose"
+      keywords:
+        - docker
+        - compose
+      maintainers:
+        - "Jeferson <jeferson@linuxtips.io>"
+      url: "https://raw.githubusercontent.com/badtuxx/girus-cli/main/labs/docker_compose/lab.yaml"
+      created: "2024-06-01T10:00:00Z"
+      digest: "sha256:d0462cbf6e274d611844f0e1299d0d4ff6c98c6d04ead759391e025a10c88245"
+  kubernetes_exploracao-recursos:
+    - name: kubernetes_exploracao-recursos
+      version: "1.0.0"
+      description: "Laboratório de Exploração de Recursos no Kubernetes"
+      keywords:
+        - kubernetes
+        - recursos
+      maintainers:
+        - "Jeferson <jeferson@linuxtips.io>"
+      url: "https://raw.githubusercontent.com/badtuxx/girus-cli/main/labs/kubernetes_exploracao-recursos/lab.yaml"
+      created: "2024-06-01T10:00:00Z"
+      digest: "sha256:8719299c0058bef94ef87c9513732b3a54595431edc2e3808c827dba15726cc7"
+  kubernetes_servicos-redes:
+    - name: kubernetes_servicos-redes
+      version: "1.0.0"
+      description: "Laboratório de Serviços e Redes no Kubernetes"
+      keywords:
+        - kubernetes
+        - serviços
+        - redes
+      maintainers:
+        - "Jeferson <jeferson@linuxtips.io>"
+      url: "https://raw.githubusercontent.com/badtuxx/girus-cli/main/labs/kubernetes_servicos-redes/lab.yaml"
+      created: "2024-06-01T10:00:00Z"
+      digest: "sha256:5ca5d13f401821f88fb9ffb7964d33a333e1ce66655ada8a94dd33b3f04eb30a"
+  kubernetes_configmaps-secrets:
+    - name: kubernetes_configmaps-secrets
+      version: "1.0.0"
+      description: "Laboratório de ConfigMaps e Secrets no Kubernetes"
+      keywords:
+        - kubernetes
+        - configmaps
+        - secrets
+      maintainers:
+        - "Jeferson <jeferson@linuxtips.io>"
+      url: "https://raw.githubusercontent.com/badtuxx/girus-cli/main/labs/kubernetes_configmaps-secrets/lab.yaml"
+      created: "2024-06-01T10:00:00Z"
+      digest: "sha256:b32cb5ba19e4487a933eb28951ebed33d94dd0721fc2a41a73c30c9b546971db"
+  kubernetes_cronjobs:
+    - name: kubernetes_cronjobs
+      version: "1.0.0"
+      description: "Laboratório de CronJobs no Kubernetes"
+      keywords:
+        - kubernetes
+        - cronjobs
+      maintainers:
+        - "Jeferson <jeferson@linuxtips.io>"
+      url: "https://raw.githubusercontent.com/badtuxx/girus-cli/main/labs/kubernetes_cronjobs/lab.yaml"
+      created: "2024-06-01T10:00:00Z"
+      digest: "sha256:92e2a2f7140288d195e5d91bde4afd10798557507209eea6fb80cd15c48512ec"
+  linux_comandos-basicos:
+    - name: linux_comandos-basicos
+      version: "1.0.0"
+      description: "Laboratório de Comandos Básicos no Linux"
+      keywords:
+        - linux
+        - comandos
+      maintainers:
+        - "Jeferson <jeferson@linuxtips.io>"
+      url: "https://raw.githubusercontent.com/badtuxx/girus-cli/main/labs/linux_comandos-basicos/lab.yaml"
+      created: "2024-06-01T10:00:00Z"
+      digest: "sha256:740c745715232f106cd0ffbf23463fdd2c64d910c87d31d57db5d77528d7720b"
+  linux_gerenciamento-usuarios:
+    - name: linux_gerenciamento-usuarios
+      version: "1.0.0"
+      description: "Laboratório de Gerenciamento de Usuários no Linux"
+      keywords:
+        - linux
+        - usuários
+      maintainers:
+        - "Jeferson <jeferson@linuxtips.io>"
+      url: "https://raw.githubusercontent.com/badtuxx/girus-cli/main/labs/linux_gerenciamento-usuarios/lab.yaml"
+      created: "2024-06-01T10:00:00Z"
+      digest: "sha256:ce846801ebe25dd5763a3ae6e8c0f7499ea05cdbe4daa5c925f7e1adfcd9edb6"
+  linux_permissoes-arquivos:
+    - name: linux_permissoes-arquivos
+      version: "1.0.0"
+      description: "Laboratório de Permissões de Arquivos no Linux"
+      keywords:
+        - linux
+        - permissões
+      maintainers:
+        - "Jeferson <jeferson@linuxtips.io>"
+      url: "https://raw.githubusercontent.com/badtuxx/girus-cli/main/labs/linux_permissoes-arquivos/lab.yaml"
+      created: "2024-06-01T10:00:00Z"
+      digest: "sha256:55f0227284e0f0bc1eaddbafb6e194d421b48a7c53956f9fd5d4e1d96a3c8729"
+  docker_fundamentos:
+    - name: docker_fundamentos
+      version: "1.0.0"
+      description: "Laboratório de Fundamentos do Docker"
+      keywords:
+        - docker
+        - fundamentos
+      maintainers:
+        - "Jeferson <jeferson@linuxtips.io>"
+      url: "https://raw.githubusercontent.com/badtuxx/girus-cli/main/labs/docker_fundamentos/lab.yaml"
+      created: "2024-06-01T10:00:00Z"
+      digest: "sha256:9268dd385409dab457c82aa27ce15910fa5c4de0e9abb7592be4d712a3181b56"
+  docker_gerenciamento-containers:
+    - name: docker_gerenciamento-containers
+      version: "1.0.0"
+      description: "Laboratório de Gerenciamento de Containers no Docker"
+      keywords:
+        - docker
+        - containers
+      maintainers:
+        - "Jeferson <jeferson@linuxtips.io>"
+      url: "https://raw.githubusercontent.com/badtuxx/girus-cli/main/labs/docker_gerenciamento-containers/lab.yaml"
+      created: "2024-06-01T10:00:00Z"
+      digest: "sha256:439c0941e0e6200b3c9e572c75a6d5c73d7119f5bdb8b37c86605de189665ebd"
+  linux_processamento-texto:
+    - name: linux_processamento-texto
+      version: "1.0.0"
+      description: "Laboratório de Processamento de Texto no Linux"
+      keywords:
+        - linux
+        - processamento
+        - texto
+      maintainers:
+        - "Jeferson <jeferson@linuxtips.io>"
+      url: "https://raw.githubusercontent.com/badtuxx/girus-cli/main/labs/linux_processamento-texto/lab.yaml"
+      created: "2024-06-01T10:00:00Z"
+      digest: "sha256:bbb0db3fcf1b6e4859a2b34141af4e125533a0f6ddb943abbe73d48e4bf375e4"
+  linux_gerenciamento-processos:
+    - name: linux_gerenciamento-processos
+      version: "1.0.0"
+      description: "Laboratório de Gerenciamento de Processos no Linux"
+      keywords:
+        - linux
+        - processos
+      maintainers:
+        - "Jeferson <jeferson@linuxtips.io>"
+      url: "https://raw.githubusercontent.com/badtuxx/girus-cli/main/labs/linux_gerenciamento-processos/lab.yaml"
+      created: "2024-06-01T10:00:00Z"
+      digest: "sha256:b6ee38e9d4aaa2579136cdf10e5555f5991342f5b832bf5356bce284139c5b80"
+  kubernetes_deployments:
+    - name: kubernetes_deployments
+      version: "1.0.0"
+      description: "Laboratório de Deployments no Kubernetes"
+      keywords:
+        - kubernetes
+        - deployments
+      maintainers:
+        - "Jeferson <jeferson@linuxtips.io>"
+      url: "https://raw.githubusercontent.com/badtuxx/girus-cli/main/labs/kubernetes_deployments/lab.yaml"
+      created: "2024-06-01T10:00:00Z"
+      digest: "sha256:2d2735b8c99c2775d825c28d051d357f754f1f70ed5d62b746f185d02845135a"
+  linux_shell-script:
+    - name: linux_shell-script
+      version: "1.0.0"
+      description: "Laboratório de Shell Script no Linux"
+      keywords:
+        - linux
+        - shell
+        - script
+      maintainers:
+        - "Jeferson <jeferson@linuxtips.io>"
+      url: "https://raw.githubusercontent.com/badtuxx/girus-cli/main/labs/linux_shell-script/lab.yaml"
+      created: "2024-06-01T10:00:00Z"
+      digest: "sha256:bd19f6f8669fb59564d10d16cd19a8ad3bdbea4c0c885a9ff0701a5be70333d0"
+  linux_monitoramento-sistema:
+    - name: linux_monitoramento-sistema
+      version: "1.0.0"
+      description: "Laboratório de Monitoramento de Sistema no Linux"
+      keywords:
+        - linux
+        - monitoramento
+      maintainers:
+        - "Jeferson <jeferson@linuxtips.io>"
+      url: "https://raw.githubusercontent.com/badtuxx/girus-cli/main/labs/linux_monitoramento-sistema/lab.yaml"
+      created: "2024-06-01T10:00:00Z"
+      digest: "sha256:d0b045f51c2ae38ec654571cb8d14774ef56843c865167fd4ec1e7506d50e565"

@@ -20,6 +20,143 @@ Desenvolvida pela LINUXtips, a plataforma GIRUS se diferencia por ser executada 
 - **Open Source**: Projeto totalmente aberto para contribuições da comunidade
 - **Multilíngue**: Criado originalmente para o português, mas com um sistema de templates flexível, é possível criar laboratórios em outros idiomas. Nas versões futuras, o sistema de templates será expandido para suportar múltiplos idiomas.
 
+## Gerenciamento de Repositórios e Laboratórios
+
+O GIRUS implementa um sistema robusto de gerenciamento de repositórios e laboratórios, similar ao Helm para Kubernetes. Este sistema permite:
+
+### Repositórios
+
+- **Adicionar Repositórios**: 
+  ```bash
+  girus repo add linuxtips https://github.com/linuxtips/labs/raw/main
+  ```
+
+- **Listar Repositórios**:
+  ```bash
+  girus repo list
+  ```
+
+- **Remover Repositórios**:
+  ```bash
+  girus repo remove linuxtips
+  ```
+
+- **Atualizar Repositórios**:
+  ```bash
+  girus repo update linuxtips https://github.com/linuxtips/labs/raw/main
+  ```
+
+### Suporte a Repositórios Locais (file://)
+
+O GIRUS agora suporta repositórios locais usando o prefixo `file://`. Isso é útil para testar laboratórios ou desenvolver repositórios sem precisar publicar em um servidor remoto.
+
+#### Exemplo de uso:
+
+```bash
+# Adicionando um repositório local
+./girus repo add meu-local file:///caminho/absoluto/para/seu-repo
+
+# Exemplo prático:
+./girus repo add test-repo file:///home/jeferson/REPOS/teste/girus-cli/test-repo
+```
+
+> **Nota:** O caminho após `file://` deve ser absoluto e apontar para o diretório onde está o `index.yaml` do repositório.
+
+Você pode listar, buscar e instalar laboratórios normalmente a partir de repositórios locais, assim como faria com repositórios remotos.
+
+### Laboratórios
+
+- **Listar Laboratórios Disponíveis**:
+  ```bash
+  girus lab list
+  ```
+
+- **Instalar Laboratório**:
+  ```bash
+  girus lab install linuxtips linux-basics
+  ```
+
+- **Buscar Laboratórios**:
+  ```bash
+  girus lab search docker
+  ```
+
+### Estrutura de Repositórios
+
+Os repositórios seguem uma estrutura padronizada:
+
+```
+repositorio/
+├── index.yaml           # Índice do repositório
+└── labs/               # Diretório contendo os laboratórios
+    ├── lab1/
+    │   ├── lab.yaml    # Definição do laboratório
+    │   └── assets/     # Recursos do laboratório (opcional)
+    └── lab2/
+        ├── lab.yaml
+        └── assets/
+```
+
+### Formato dos Arquivos
+
+#### index.yaml
+```yaml
+apiVersion: v1
+generated: "2024-03-20T10:00:00Z"
+entries:
+  lab-name:
+    - name: lab-name
+      version: "1.0.0"
+      description: "Descrição do laboratório"
+      keywords:
+        - keyword1
+        - keyword2
+      maintainers:
+        - "Nome <email@exemplo.com>"
+      url: "https://github.com/seu-repo/raw/main/labs/lab-name/lab.yaml"
+      created: "2024-03-20T10:00:00Z"
+      digest: "sha256:hash-do-arquivo"
+```
+
+#### lab.yaml
+```yaml
+apiVersion: girus.linuxtips.io/v1
+kind: Lab
+metadata:
+  name: lab-name
+  version: "1.0.0"
+  description: "Descrição do laboratório"
+  author: "Nome do Autor"
+  created: "2024-03-20T10:00:00Z"
+spec:
+  environment:
+    image: ubuntu:22.04
+    resources:
+      cpu: "1"
+      memory: "1Gi"
+    volumes:
+      - name: workspace
+        mountPath: /workspace
+        size: "1Gi"
+
+  tasks:
+    - name: "Nome da Tarefa"
+      description: "Descrição da tarefa"
+      steps:
+        - description: "Descrição do passo"
+          command: "comando"
+          expectedOutput: "saída esperada"
+          hint: "Dica para o usuário"
+
+  validation:
+    - name: "Nome da Validação"
+      description: "Descrição da validação"
+      checks:
+        - command: "comando"
+          expectedOutput: "saída esperada"
+          errorMessage: "Mensagem de erro"
+```
+
 ## Arquitetura
 
 O projeto GIRUS é composto por quatro componentes principais:
@@ -53,345 +190,143 @@ O projeto GIRUS é composto por quatro componentes principais:
 
 ### GIRUS CLI
 
-O GIRUS CLI é a porta de entrada para a plataforma, proporcionando uma interface de linha de comando simples para gerenciar todo o ambiente. Desenvolvido em Go, ele automatiza a criação do cluster Kubernetes usando Kind (Kubernetes in Docker), a implantação dos componentes da plataforma, e o gerenciamento dos laboratórios.
+GIRUS (GIRUS Is Really Useful System) é uma ferramenta CLI desenvolvida pela LINUXtips para criar e gerenciar ambientes de laboratório práticos.
 
-#### Principais Comandos
+## Instalação
 
-- **`girus create cluster`**: Cria um novo cluster Kind e implanta todos os componentes da plataforma
-- **`girus list clusters`**: Lista os clusters existentes e seus status
-- **`girus list labs`**: Lista os laboratórios disponíveis na plataforma
-- **`girus delete cluster`**: Remove o cluster GIRUS e libera os recursos
+### Usando o script de instalação
 
-#### Fluxo de Instalação
-
-1. Verificação de dependências (Docker, Kind, kubectl)
-2. Instalação de dependências faltantes (opcional)
-3. Criação do cluster Kubernetes com Kind
-4. Implantação do backend e frontend
-5. Configuração do port-forwarding (8080 para backend, 8000 para frontend)
-6. Abertura automática do navegador com a interface web
-
-### Backend (Golang)
-
-O backend é o coração da plataforma GIRUS, responsável por orquestrar os ambientes Kubernetes para cada laboratório. Desenvolvido em Go com o framework Gin, ele gerencia o ciclo de vida dos laboratórios, fornece endpoints RESTful para o frontend, e implementa a validação automática das tarefas.
-
-#### Principais Componentes do Backend
-
-- **LabManager**: Orquestra a criação, monitoramento e exclusão de recursos Kubernetes
-- **TemplateManager**: Gerencia os templates de laboratórios disponíveis
-- **API Handlers**: Implementa os endpoints RESTful e WebSocket
-- **Validators**: Verifica o progresso das tarefas e fornece feedback imediato
-
-#### Endpoints Principais
-
-- `/api/v1/templates`: Retorna a lista de templates de laboratórios disponíveis
-- `/api/v1/labs`: Cria um novo laboratório
-- `/api/v1/labs/{namespace}/{pod}/validate`: Valida uma tarefa específica
-- `/ws/terminal/{namespace}/{pod}`: Endpoint WebSocket para o terminal interativo
-
-### Frontend (React)
-
-O frontend do GIRUS proporciona uma interface web moderna e responsiva para interação com os laboratórios. Desenvolvido com React, TypeScript e Material-UI, ele apresenta um terminal interativo, instruções de tarefas, e feedback visual sobre o progresso.
-
-#### Principais Recursos do Frontend
-
-- **Terminal Interativo**: Implementado com xterm.js e conectado via WebSocket ao pod do laboratório
-- **Painel de Tarefas**: Exibe instruções passo a passo e botões de validação
-- **Navegação entre Tarefas**: Permite avançar e retroceder entre diferentes etapas do laboratório
-- **Feedback Visual**: Indicadores de progresso e mensagens de validação
-- **Seletor de Laboratórios**: Interface para escolher entre os diferentes laboratórios disponíveis
-
-### Templates de Laboratórios
-
-Os templates são a base para a criação dos laboratórios no GIRUS. Definidos como ConfigMaps do Kubernetes em formato YAML, eles especificam as tarefas, passos, validadores e recursos necessários para cada laboratório.
-
-#### Estrutura de um Template
-
-```
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: lab-linux-basics
-  namespace: girus
-  labels:
-    app: girus-lab-template
-data:
-  lab.yaml: |
-    name: linux-basics
-    title: "Introdução ao Linux"
-    description: "Laboratório básico para praticar comandos Linux essenciais"
-    duration: 30m
-    tasks:
-      - name: "Navegação básica"
-        description: "Pratique comandos básicos de navegação"
-        steps:
-          - "Use 'pwd' para ver o diretório atual"
-          - "Liste os arquivos com 'ls -la'"
-          - "Crie um diretório chamado 'test' com 'mkdir test'"
-        validation:
-          - command: "test -d test"
-            expectedOutput: ""
-            errorMessage: "Diretório 'test' não foi criado"
+```bash
+curl -sSL https://raw.githubusercontent.com/badtuxx/girus-cli/main/install/install.sh | bash
 ```
 
-## Fluxo de Trabalho do Usuário
+### Usando o Makefile
 
-1. **Instalação do GIRUS CLI**:
-   ```bash
-   curl -fsSL https://girus.linuxtips.io | bash
-   ```
-
-2. **Criação do Ambiente**:
-   ```bash
-   girus create cluster
-   ```
-
-3. **Acesso à Interface Web**:
-   O navegador é aberto automaticamente em `http://localhost:8000`
-
-4. **Seleção de Laboratório**:
-   O usuário escolhe entre os laboratórios disponíveis na interface
-
-5. **Execução do Laboratório**:
-   - Um namespace e pod específicos são criados para o usuário
-   - O terminal interativo é conectado ao pod via WebSocket
-   - O painel de tarefas exibe as instruções para a primeira tarefa
-
-6. **Realização das Tarefas**:
-   - O usuário executa os comandos no terminal
-   - Ao concluir uma etapa, clica em "Verificar"
-   - O sistema valida a tarefa e fornece feedback
-   - O usuário avança para a próxima tarefa
-
-7. **Conclusão do Laboratório**:
-   - Ao completar todas as tarefas, o usuário recebe uma mensagem de congratulações
-   - Os recursos são marcados para limpeza automática
-
-8. **Limpeza do Ambiente**:
-   ```bash
-   girus delete cluster
-   ```
-
-## Laboratórios
-
-O GIRUS oferece uma variedade de laboratórios em diferentes áreas tecnológicas, por exemplo:
-
-### Linux Fundamentals
-- **Introdução ao Linux**: Comandos básicos, navegação, manipulação de arquivos
-- **Gerenciamento de Usuários e Permissões**: Criação de usuários, grupos, chmod, chown
-- **Administração de Serviços**: Systemd, logs, monitoramento
-
-### Kubernetes 
-- **Fundamentos de Kubernetes**: Pods, deployments, services, namespaces
-- **Configuração e Armazenamento**: ConfigMaps, Secrets, Volumes, PersistentVolumes
-- **Segurança e Políticas**: RBAC, NetworkPolicies, SecurityContexts
-
-### DevOps & SRE 
-- **Configuração de CI/CD**: Pipelines, integração com GitHub Actions
-- **Monitoramento e Observabilidade**: Prometheus, Grafana, logs
-- **Infraestrutura como Código**: Terraform, Ansible, configurações declarativas
-
-## Requisitos do Sistema
-
-- **Sistema Operacional**: Linux, macOS ou Windows com WSL2
-- **Docker**: Versão 20.10 ou superior (em execução) ou Podman 4.0 ou superior
-- **Memória**: Mínimo 4GB disponível
-- **Espaço em Disco**: Mínimo 5GB livre
-- **Conectividade**: Internet para download inicial das imagens
-
-> **Nota**: O script de instalação do GIRUS CLI verifica e instala automaticamente as dependências necessárias (Kind, kubectl) caso não estejam presentes no sistema.
-
-## Guia de Instalação Detalhado
-
-### Método Automatizado (Recomendado)
-
-1. **Instalação via Script**:
-   ```bash
-   curl -fsSL https://girus.linuxtips.io | bash
-   ```
-
-   Este script realiza as seguintes ações:
-   - Verifica a presença do Docker/Podman e sua execução
-   - Instala Kind e kubectl se necessário
-   - Compila e instala o GIRUS CLI
-   - Configura as permissões adequadas
-
-2. **Verificação da Instalação**:
-   ```bash
-   girus --help
-   ```
-
-### Instalação Manual
-
-1. **Pré-requisitos**:
-   - Instale Docker seguindo as [instruções oficiais](https://docs.docker.com/engine/install/) ou Podman seguindo as [instruções oficiais](https://podman.io/docs/installation)
-   - Instale Go a partir do [site oficial](https://golang.org/dl/)
-   - Instale Kind seguindo as [instruções do projeto](https://kind.sigs.k8s.io/docs/user/quick-start/)
-   - Instale kubectl seguindo a [documentação do Kubernetes](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
-
-2. **Clone o Repositório**:
-   ```bash
-   git clone https://github.com/badtuxx/girus-cli.git
-   cd girus/girus-cli
-   ```
-
-3. **Compile o CLI**:
-   ```bash
-   go build -o girus
-   ```
-
-4. **Instale o CLI**:
-   ```bash
-   sudo mv girus /usr/local/bin/
-   ```
-
-## Usando o Makefile
-
-Este projeto utiliza um `Makefile` para simplificar tarefas comuns de desenvolvimento e build. Para usar os comandos, navegue até o diretório raiz do projeto no seu terminal e execute `make <comando>`.
+Clone o repositório e execute `make <comando>`.
 
 Aqui estão os comandos disponíveis:
 
 ### Compilação e Instalação
 
-*   **`make build`** (ou simplesmente `make`): Compila o binário `girus` para o seu sistema operacional atual e o coloca no diretório `dist/`. Este é o comando padrão se você executar `make` sem argumentos.
-*   **`make install`**: Compila o binário (se ainda não estiver compilado) e o move para `/usr/local/bin/girus`, tornando-o acessível globalmente no seu sistema. Requer permissões de superusuário (`sudo`).
-*   **`make clean`**: Remove o diretório `dist/` e todos os arquivos de build gerados.
-*   **`make release`**: Compila o binário `girus` para múltiplas plataformas (Linux, macOS, Windows - amd64 e arm64) e os coloca no diretório `dist/`.
-
+* **`make build`** (ou simplesmente `make`): Compila o binário `girus` para o seu sistema operacional atual e o coloca no diretório `dist/`. Este é o comando padrão se você executar `make` sem argumentos.
+* **`make install`**: Compila o binário (se ainda não estiver compilado) e o move para `/usr/local/bin/girus`, tornando-o acessível globalmente no seu sistema. Requer permissões de superusuário (`sudo`).
+* **`make clean`**: Remove o diretório `dist/` e todos os arquivos de build gerados.
+* **`make release`**: Compila o binário `girus` para múltiplas plataformas (Linux, macOS, Windows - amd64 e arm64) e os coloca no diretório `dist/`.
 
 ### Gerenciamento de Dependências (Go Modules)
 
-*   **`make check-updates`**: Verifica se há atualizações disponíveis para as dependências Go do projeto.
-*   **`make upgrade-all`**: Atualiza todas as dependências Go para suas versões mais recentes e executa `go mod tidy`.
-*   **`make upgrade MODULE=<nome/do/modulo>`**: Atualiza uma dependência Go específica para a versão mais recente. Substitua `<nome/do/modulo>` pelo caminho do módulo (ex: `make upgrade MODULE=github.com/spf13/cobra`).
-*   **`make tidy`**: Executa `go mod tidy` para remover dependências não utilizadas e limpar os arquivos `go.mod` e `go.sum`.
-*   **`make deps`**: Exibe o gráfico de dependências do projeto.
+* **`make check-updates`**: Verifica se há atualizações disponíveis para as dependências Go do projeto.
+* **`make upgrade-all`**: Atualiza todas as dependências Go para suas versões mais recentes e executa `go mod tidy`.
+* **`make upgrade MODULE=<nome/do/modulo>`**: Atualiza uma dependência Go específica para a versão mais recente. Substitua `<nome/do/modulo>` pelo caminho do módulo (ex: `make upgrade MODULE=github.com/spf13/cobra`).
+* **`make tidy`**: Executa `go mod tidy` para remover dependências não utilizadas e limpar os arquivos `go.mod` e `go.sum`.
+* **`make deps`**: Exibe o gráfico de dependências do projeto.
 
+## Repositório de Labs
 
-## Criação de Laboratórios Personalizados
+Este repositório contém uma coleção de labs práticos para diferentes tecnologias, organizados nas seguintes categorias:
 
-Um dos pontos fortes do GIRUS é a facilidade de criação de novos laboratórios. Qualquer pessoa pode contribuir com novos templates seguindo estas etapas:
+### AWS Labs
+- AWS LocalStack com Terraform
+- AWS S3 Storage
+- AWS DynamoDB NoSQL
+- AWS Lambda Serverless
 
-1. **Estrutura do Template**:
-   Crie um arquivo YAML seguindo o formato de ConfigMap do Kubernetes:
+### Terraform Labs
+- Fundamentos do Terraform
+- Terraform com AWS
+- Provisioners e Módulos no Terraform
 
-   ```
-   apiVersion: v1
-   kind: ConfigMap
-   metadata:
-     name: meu-novo-lab
-     namespace: girus
-     labels:
-       app: girus-lab-template
-   data:
-     lab.yaml: |
-       name: meu-lab-id
-       title: "Título do Meu Laboratório"
-       description: "Descrição detalhada do laboratório"
-       duration: 45m
-       image: "ubuntu:20.04"  # Imagem base para o pod
-       tasks:
-         - name: "Nome da Tarefa 1"
-           description: "Descrição da tarefa"
-           steps:
-             - "Passo 1: Faça isso"
-             - "Passo 2: Execute aquilo"
-           validation:
-             - command: "comando para verificar"
-               expectedOutput: "saída esperada"
-               errorMessage: "Mensagem de erro personalizada"
-   ```
+### Kubernetes Labs
+- Fundamentos do Kubernetes
+- Deployment no Kubernetes
+- Exploração de Recursos
+- Serviços e Redes
+- ConfigMaps e Secrets
+- CronJobs
 
-2. **Teste o Template**:
-   ```bash
-   # Aplique o template no cluster GIRUS
-   girus create lab -f meu-novo-lab.yaml
-   ```
+### Docker Labs
+- Fundamentos do Docker
+- Gerenciamento de Containers
+- Fundamentos de Redes
+- Volumes
+- Docker Compose
 
-3. **Contribua com o Projeto**:
-   - Faça um fork do repositório
-   - Adicione seu template ao diretório `/labs`
-   - Envie um Pull Request com sua contribuição
+### Linux Labs
+- Comandos Básicos
+- Gerenciamento de Usuários
+- Permissões de Arquivos
+- Processamento de Texto
+- Gerenciamento de Processos
+- Shell Script
+- Monitoramento de Sistema
 
-## Integração com Sistemas de Aprendizado
+## Usando os Labs
 
-O GIRUS foi criado pela LINUXtips para melhorar a experiência de aprendizado dos alunos, mas não é restrito aos alunos da LINUXtips, você pode usar o GIRUS em qualquer lugar que você precise de um ambiente prático para aprender ou testar novas tecnologias, por exemplo:
+### Adicionar o Repositório
 
-1. **Complemento para Cursos Online**:
-   - Ambiente prático para reforçar conteúdo teórico
-   - Validação automatizada de exercícios
-   - Experiência hands-on sem necessidade de infraestrutura adicional
+```bash
+# Adicionar o repositório oficial
+girus repo add girus-cli https://raw.githubusercontent.com/badtuxx/girus-cli/main/index.yaml
 
-2. **Treinamentos Corporativos**:
-   - Ambientes padronizados para todos os participantes
-   - Fácil distribuição de exercícios práticos
-   - Redução de custos com infraestrutura
+# Ou adicionar localmente para desenvolvimento
+girus repo add girus-cli file:///caminho/para/girus-cli
+```
 
-3. **Preparação para Certificações**:
-   - Simulação de ambientes similares aos exames
-   - Tarefas baseadas em syllabus oficial
-   - Feedback imediato sobre o progresso
+### Listar Labs Disponíveis
 
-## Contribuição e Comunidade
+```bash
+girus lab list
+```
 
-O GIRUS é um projeto open-source que depende da contribuição da comunidade para crescer. Existem várias formas de contribuir:
+### Iniciar um Lab
 
-### Desenvolvimento
-- Correção de bugs e melhorias no código-fonte
-- Implementação de novos recursos
-- Otimização de performance
-- Testes e garantia de qualidade
+```bash
+girus lab start <nome-do-lab>
+```
 
-### Criação de Conteúdo
-- Desenvolvimento de novos templates de laboratórios
-- Tradução do conteúdo para outros idiomas
-- Elaboração de tutoriais e documentação
+Por exemplo:
+```bash
+girus lab start aws_localstack_terraform
+```
 
-### Divulgação
-- Compartilhamento do projeto nas redes sociais
-- Apresentações em eventos e conferências
-- Artigos sobre o uso e benefícios da plataforma
+## Contribuindo com Labs
 
-### Processo de Contribuição
-1. Fork o repositório em [GitHub](https://github.com/badtuxx/girus)
-2. Crie uma branch para sua feature (`git checkout -b feature/nova-funcionalidade`)
-3. Faça suas alterações e commit (`git commit -m 'Adiciona nova funcionalidade'`)
-4. Push para a branch (`git push origin feature/nova-funcionalidade`)
-5. Abra um Pull Request
+Para contribuir com novos labs, siga estas etapas:
 
-## Roadmap de Desenvolvimento
+1. Crie um novo diretório em `labs/<nome-do-lab>`
+2. Adicione um arquivo `lab.yaml` com a estrutura do lab
+3. Atualize o `index.yaml` com as informações do novo lab
+4. Envie um Pull Request
 
-O projeto GIRUS tem um plano de desenvolvimento contínuo com os seguintes objetivos:
+### Estrutura do Lab
 
-### Curto Prazo (3-6 meses)
-- Expansão da biblioteca de laboratórios com o Girus Hub
-- Melhorias na interface do usuário
-- Suporte a múltiplos idiomas
-- Integração com sistemas de badges/conquistas
-
-### Médio Prazo (6-12 meses)
-- Implementação de recursos colaborativos
-- Sistema de competições e desafios
-- Métricas avançadas de progresso
-- Suporte a plugins de extensão
+```yaml
+name: nome-do-lab
+title: "Título do Lab"
+description: "Descrição detalhada do lab"
+duration: 45m
+image: "ubuntu:20.04"
+tasks:
+  - name: "Nome da Tarefa"
+    description: "Descrição da tarefa"
+    steps:
+      - "Passo 1: Faça isso"
+      - "Passo 2: Execute aquilo"
+    validation:
+      - command: "comando para verificar"
+        expectedOutput: "saída esperada"
+        errorMessage: "Mensagem de erro personalizada"
+```
 
 ## Suporte e Contato
 
-O projeto GIRUS oferece diferentes canais para suporte e comunicação:
+* **GitHub Issues**: [github.com/badtuxx/girus-cli/issues](https://github.com/badtuxx/girus-cli/issues)
+* **GitHub Discussions**: [github.com/badtuxx/girus-cli/discussions](https://github.com/badtuxx/girus-cli/discussions)
+* **Discord da Comunidade**: [discord.gg/linuxtips](https://discord.gg/linuxtips)
 
-- **GitHub Issues**: [github.com/badtuxx/girus/issues](https://github.com/linuxtips/girus/issues)
-- **GitHub Discussions**: [github.com/badtuxx/girus/discussions](https://github.com/linuxtips/girus/discussions)
-- **Discord da Comunidade**: [discord.gg/linuxtips](https://discord.gg/linuxtips)
+## Licença
 
-## Licença e Atribuição
-
-O projeto GIRUS é distribuído sob a licença GPLv3, o que significa que:
-
-- Você tem liberdade para usar, modificar e distribuir o software
-- Modificações devem ser disponibilizadas sob a mesma licença
-- Não há garantia para o software
-
-Para mais detalhes, consulte o arquivo `LICENSE` no repositório.
+Este projeto é distribuído sob a licença GPL-3.0. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
 
 ## Agradecimentos
 
