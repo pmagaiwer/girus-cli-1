@@ -62,6 +62,20 @@ func NewRepositoryManager() (*RepositoryManager, error) {
 		return nil, err
 	}
 
+	// Se não houver repositórios configurados, adiciona o repositório oficial
+	if len(rm.repos) == 0 {
+		defaultRepo := Repository{
+			Name:        "girus-labs",
+			URL:         "https://raw.githubusercontent.com/badtuxx/girus-labs/main",
+			Description: "Repositório oficial de labs do GIRUS",
+			Version:     "v1",
+		}
+		rm.repos[defaultRepo.Name] = defaultRepo
+		if err := rm.saveRepositories(); err != nil {
+			return nil, fmt.Errorf("erro ao salvar repositório padrão: %v", err)
+		}
+	}
+
 	return rm, nil
 }
 

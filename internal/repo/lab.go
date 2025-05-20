@@ -126,7 +126,9 @@ func (lm *LabManager) DownloadLab(repoName, labName, version string) error {
 func (lm *LabManager) getIndex(repo Repository) (*Index, error) {
 	// Tenta obter do cache primeiro
 	cacheFile := filepath.Join(lm.cachePath, repo.Name, "index.yaml")
+	fmt.Printf("Verificando cache em: %s\n", cacheFile)
 	if data, err := os.ReadFile(cacheFile); err == nil {
+		fmt.Println("Usando índice do cache")
 		var index Index
 		if err := yaml.Unmarshal(data, &index); err == nil {
 			return &index, nil
@@ -134,7 +136,9 @@ func (lm *LabManager) getIndex(repo Repository) (*Index, error) {
 	}
 
 	// Se não estiver em cache, baixa do repositório
-	resp, err := http.Get(fmt.Sprintf("%s/index.yaml", repo.URL))
+	indexURL := fmt.Sprintf("%s/index.yaml", repo.URL)
+	fmt.Printf("Buscando índice em: %s\n", indexURL)
+	resp, err := http.Get(indexURL)
 	if err != nil {
 		return nil, fmt.Errorf("erro ao acessar índice do repositório: %v", err)
 	}
@@ -148,6 +152,8 @@ func (lm *LabManager) getIndex(repo Repository) (*Index, error) {
 	if err != nil {
 		return nil, fmt.Errorf("erro ao ler conteúdo do repositório: %v", err)
 	}
+
+	fmt.Printf("Conteúdo do índice: %s\n", string(data))
 
 	var index Index
 	if err := yaml.Unmarshal(data, &index); err != nil {

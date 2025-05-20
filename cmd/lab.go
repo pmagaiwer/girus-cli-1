@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"strings"
 	"text/tabwriter"
 
 	"github.com/badtuxx/girus-cli/internal/repo"
@@ -88,7 +89,7 @@ var labSearchCmd = &cobra.Command{
 	Long:  `Busca laboratórios por nome ou palavras-chave.`,
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		term := args[0]
+		term := strings.ToLower(args[0])
 
 		rm, err := repo.NewRepositoryManager()
 		if err != nil {
@@ -107,32 +108,40 @@ var labSearchCmd = &cobra.Command{
 
 		w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
 		fmt.Fprintln(w, "NOME\tVERSÃO\tREPOSITÓRIO\tDESCRIÇÃO")
+		found := false
 		for name, entries := range labs {
 			for _, entry := range entries {
-				// Busca por nome ou palavras-chave
-				if contains(entry.Keywords, term) || contains([]string{name}, term) {
+				// Busca por nome, descrição ou palavras-chave
+				if strings.Contains(strings.ToLower(name), term) ||
+					strings.Contains(strings.ToLower(entry.Description), term) ||
+					containsCaseInsensitive(entry.Keywords, term) {
 					fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", name, entry.Version, entry.URL, entry.Description)
+					found = true
 				}
 			}
 		}
 		w.Flush()
+
+		if !found {
+			fmt.Printf("\nNenhum laboratório encontrado para o termo '%s'\n", args[0])
+		}
 
 		return nil
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(labCmd)
 	labCmd.AddCommand(labListCmd, labInstallCmd, labSearchCmd)
 
 	// Flags para os comandos
 	labInstallCmd.Flags().String("version", "", "Versão específica do laboratório")
 }
 
-// contains verifica se uma string está presente em um slice
-func contains(slice []string, str string) bool {
+// containsCaseInsensitive verifica se uma string está presente em um slice, ignorando maiúsculas/minúsculas
+func containsCaseInsensitive(slice []string, str string) bool {
+	str = strings.ToLower(str)
 	for _, s := range slice {
-		if s == str {
+		if strings.Contains(strings.ToLower(s), str) {
 			return true
 		}
 	}

@@ -113,7 +113,6 @@ var repoUpdateCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(repoCmd)
 	repoCmd.AddCommand(repoAddCmd, repoRemoveCmd, repoListCmd, repoUpdateCmd)
 
 	// Flags para os comandos

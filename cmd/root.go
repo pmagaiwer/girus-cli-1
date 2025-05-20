@@ -23,8 +23,8 @@ func init() {
 	rootCmd.AddCommand(createCmd)
 	rootCmd.AddCommand(deleteCmd)
 	rootCmd.AddCommand(listCmd)
-	rootCmd.AddCommand(repoCmd)
 	rootCmd.AddCommand(labCmd)
+	rootCmd.AddCommand(repoCmd)
 
 	// Configura flags globais
 	rootCmd.PersistentFlags().StringP("config", "c", "", "arquivo de configuração (padrão: $HOME/.girus/config.yaml)")
