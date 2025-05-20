@@ -12,4 +12,4 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Erro ao executar o comando: %s\n", err)
 		os.Exit(1)
 	}
-} 
+}
