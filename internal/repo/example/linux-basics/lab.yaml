@@ -1,0 +1,89 @@
+apiVersion: girus.linuxtips.io/v1
+kind: Lab
+metadata:
+  name: linux-basics
+  version: "1.0.0"
+  description: "Introdução aos comandos básicos do Linux"
+  author: "LINUXtips Team"
+  created: "2024-03-20T10:00:00Z"
+spec:
+  environment:
+    image: ubuntu:22.04
+    resources:
+      cpu: "1"
+      memory: "1Gi"
+    volumes:
+      - name: workspace
+        mountPath: /workspace
+        size: "1Gi"
+
+  tasks:
+    - name: "Navegação Básica"
+      description: "Aprenda a navegar pelo sistema de arquivos do Linux"
+      steps:
+        - description: "Verifique o diretório atual"
+          command: "pwd"
+          expectedOutput: "/workspace"
+          hint: "Use o comando pwd para ver o diretório atual"
+
+        - description: "Liste os arquivos do diretório"
+          command: "ls -la"
+          expectedOutput: "total"
+          hint: "Use o comando ls -la para listar todos os arquivos, incluindo os ocultos"
+
+        - description: "Crie um diretório chamado 'test'"
+          command: "mkdir test"
+          expectedOutput: ""
+          hint: "Use o comando mkdir para criar um novo diretório"
+
+    - name: "Manipulação de Arquivos"
+      description: "Aprenda a criar, editar e manipular arquivos"
+      steps:
+        - description: "Crie um arquivo chamado 'hello.txt'"
+          command: "echo 'Hello, Linux!' > hello.txt"
+          expectedOutput: ""
+          hint: "Use o comando echo com redirecionamento para criar um arquivo"
+
+        - description: "Verifique o conteúdo do arquivo"
+          command: "cat hello.txt"
+          expectedOutput: "Hello, Linux!"
+          hint: "Use o comando cat para exibir o conteúdo do arquivo"
+
+        - description: "Copie o arquivo para o diretório 'test'"
+          command: "cp hello.txt test/"
+          expectedOutput: ""
+          hint: "Use o comando cp para copiar arquivos"
+
+    - name: "Permissões de Arquivos"
+      description: "Aprenda sobre permissões de arquivos no Linux"
+      steps:
+        - description: "Verifique as permissões do arquivo"
+          command: "ls -l hello.txt"
+          expectedOutput: "-rw-r--r--"
+          hint: "Use o comando ls -l para ver as permissões detalhadas"
+
+        - description: "Altere as permissões do arquivo"
+          command: "chmod 755 hello.txt"
+          expectedOutput: ""
+          hint: "Use o comando chmod para alterar as permissões"
+
+        - description: "Verifique as novas permissões"
+          command: "ls -l hello.txt"
+          expectedOutput: "-rwxr-xr-x"
+          hint: "Use o comando ls -l para verificar as novas permissões"
+
+  validation:
+    - name: "Verificação Final"
+      description: "Verifique se todas as tarefas foram concluídas corretamente"
+      checks:
+        - command: "test -d test"
+          expectedOutput: ""
+          errorMessage: "O diretório 'test' não foi criado"
+
+        - command: "test -f test/hello.txt"
+          expectedOutput: ""
+          errorMessage: "O arquivo 'hello.txt' não foi copiado para o diretório 'test'"
+
+        - command: "ls -l hello.txt | grep -q '^-rwxr-xr-x'"
+          expectedOutput: ""
+          errorMessage: "As permissões do arquivo 'hello.txt' não foram alteradas corretamente"

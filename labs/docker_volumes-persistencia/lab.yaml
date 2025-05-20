@@ -1,0 +1,69 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: docker-volumes-persistencia-lab
+  namespace: girus
+  labels:
+    app: girus-lab-template
+data:
+  lab.yaml: |
+    name: docker-volumes-persistencia
+    title: "Volumes e Persistência no Docker"
+    description: "Aprenda a gerenciar dados persistentes em containers Docker usando volumes, bind mounts e tmpfs mounts. Este laboratório guiado explora diferentes técnicas de persistência de dados e suas aplicações práticas."
+    duration: 35m
+    image: "linuxtips/girus-devops:0.1"
+    privileged: true
+    tasks:
+      - name: "Gerenciamento de Volumes"
+        description: "Aprenda a criar e gerenciar volumes Docker."
+        steps:
+          - description: "Crie um volume Docker"
+            command: "docker volume create meu-volume"
+            expectedOutput: "meu-volume"
+            hint: "Use o comando docker volume create"
+
+          - description: "Liste os volumes disponíveis"
+            command: "docker volume ls"
+            expectedOutput: "meu-volume"
+            hint: "Use o comando docker volume ls para listar os volumes"
+
+          - description: "Inspecione o volume criado"
+            command: "docker volume inspect meu-volume"
+            expectedOutput: "meu-volume"
+            hint: "Use o comando docker volume inspect para ver detalhes do volume"
+
+      - name: "Containers com Volumes"
+        description: "Implemente containers usando volumes para persistência."
+        steps:
+          - description: "Crie um container com volume"
+            command: "docker run -d --name container-volume -v meu-volume:/dados nginx"
+            expectedOutput: ""
+            hint: "Use o comando docker run com a flag -v para montar o volume"
+
+          - description: "Crie um arquivo no volume"
+            command: "docker exec container-volume sh -c 'echo \"Dados persistentes\" > /dados/teste.txt'"
+            expectedOutput: ""
+            hint: "Use o comando docker exec para executar comandos no container"
+
+          - description: "Verifique o conteúdo do arquivo"
+            command: "docker exec container-volume cat /dados/teste.txt"
+            expectedOutput: "Dados persistentes"
+            hint: "Use o comando docker exec para ler o arquivo"
+
+      - name: "Bind Mounts e Tmpfs"
+        description: "Explore diferentes tipos de montagens para persistência."
+        steps:
+          - description: "Crie um container com bind mount"
+            command: "docker run -d --name container-bind -v $(pwd):/app nginx"
+            expectedOutput: ""
+            hint: "Use o comando docker run com bind mount para o diretório atual"
+
+          - description: "Crie um container com tmpfs"
+            command: "docker run -d --name container-tmpfs --tmpfs /tmp nginx"
+            expectedOutput: ""
+            hint: "Use o comando docker run com a flag --tmpfs"
+
+          - description: "Verifique as montagens"
+            command: "docker inspect container-bind | grep -A 10 Mounts"
+            expectedOutput: "Mounts"
+            hint: "Use o comando docker inspect para verificar as montagens"
