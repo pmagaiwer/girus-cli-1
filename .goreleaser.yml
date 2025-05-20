@@ -30,6 +30,11 @@ builds:
       - arm64
     env:
       - CGO_ENABLED=0
+    ldflags:
+      - -s -w -X github.com/badtuxx/girus-cli/internal/common.Version={{ .Version }}
+      - -X github.com/badtuxx/girus-cli/internal/common.BuildDate={{ .Date }}
+      - -X github.com/badtuxx/girus-cli/internal/common.CommitID={{ .ShortCommit }}
+      - -X github.com/badtuxx/girus-cli/internal/common.BuildUser={{ .Env.GITHUB_ACTOR }}
 
 signs:
   # Keyless
