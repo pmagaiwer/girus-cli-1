@@ -16,7 +16,6 @@ import (
 	"github.com/badtuxx/girus-cli/internal/lab"
 	"github.com/badtuxx/girus-cli/internal/repo"
 	"github.com/badtuxx/girus-cli/internal/templates"
-	"github.com/schollz/progressbar/v3"
 	"github.com/spf13/cobra"
 )
 
@@ -180,16 +179,7 @@ Por padrão, o deployment embutido no binário é utilizado.`,
 					}
 				} else {
 					// Usar barra de progresso
-					bar := progressbar.NewOptions(100,
-						progressbar.OptionSetDescription("Excluindo cluster existente..."),
-						progressbar.OptionSetWidth(80),
-						progressbar.OptionShowBytes(false),
-						progressbar.OptionSetPredictTime(false),
-						progressbar.OptionThrottle(65*time.Millisecond),
-						progressbar.OptionSetRenderBlankState(true),
-						progressbar.OptionSpinnerType(14),
-						progressbar.OptionFullWidth(),
-					)
+					bar := helpers.CreateProgressBar(100, "Excluindo cluster existente...", 80, false, false, 65, true, 14)
 
 					var stderr bytes.Buffer
 					deleteCmd.Stderr = &stderr
@@ -251,16 +241,7 @@ Por padrão, o deployment embutido no binário é utilizado.`,
 			}
 		} else {
 			// Usando barra de progresso (padrão)
-			bar := progressbar.NewOptions(100,
-				progressbar.OptionSetDescription("Criando cluster..."),
-				progressbar.OptionSetWidth(80),
-				progressbar.OptionShowBytes(false),
-				progressbar.OptionSetPredictTime(false),
-				progressbar.OptionThrottle(65*time.Millisecond),
-				progressbar.OptionSetRenderBlankState(true),
-				progressbar.OptionSpinnerType(14),
-				progressbar.OptionFullWidth(),
-			)
+			bar := helpers.CreateProgressBar(100, "Criando cluster...", 80, false, false, 65, true, 14)
 
 			// Executar comando sem mostrar saída
 			createClusterCmd := exec.Command("kind", "create", "cluster", "--name", clusterName)
@@ -355,16 +336,7 @@ Por padrão, o deployment embutido no binário é utilizado.`,
 				}
 			} else {
 				// Usar barra de progresso
-				bar := progressbar.NewOptions(100,
-					progressbar.OptionSetDescription("Implantando Girus..."),
-					progressbar.OptionSetWidth(80),
-					progressbar.OptionShowBytes(false),
-					progressbar.OptionSetPredictTime(false),
-					progressbar.OptionThrottle(65*time.Millisecond),
-					progressbar.OptionSetRenderBlankState(true),
-					progressbar.OptionSpinnerType(14),
-					progressbar.OptionFullWidth(),
-				)
+				bar := helpers.CreateProgressBar(100, "Implantando Girus...", 80, false, false, 65, true, 14)
 
 				// Executar comando sem mostrar saída
 				applyCmd := exec.Command("kubectl", "apply", "-f", deployFile)
@@ -443,16 +415,7 @@ Por padrão, o deployment embutido no binário é utilizado.`,
 				}
 			} else {
 				// Usar barra de progresso para o deploy (padrão)
-				bar := progressbar.NewOptions(100,
-					progressbar.OptionSetDescription("Implantando infraestrutura..."),
-					progressbar.OptionSetWidth(80),
-					progressbar.OptionShowBytes(false),
-					progressbar.OptionSetPredictTime(false),
-					progressbar.OptionThrottle(65*time.Millisecond),
-					progressbar.OptionSetRenderBlankState(true),
-					progressbar.OptionSpinnerType(14),
-					progressbar.OptionFullWidth(),
-				)
+				bar := helpers.CreateProgressBar(100, "Implantando infraestrutura...", 80, false, false, 65, true, 14)
 
 				// Executar comando sem mostrar saída
 				applyCmd := exec.Command("kubectl", "apply", "-f", tempFile.Name())
@@ -560,16 +523,7 @@ Por padrão, o deployment embutido no binário é utilizado.`,
 
 				} else {
 					// Modo com barra de progresso: Aplicar cada template individualmente
-					bar := progressbar.NewOptions(len(manifestFiles),
-						progressbar.OptionSetDescription("Aplicando templates de laboratório..."),
-						progressbar.OptionSetWidth(80),
-						progressbar.OptionShowCount(),
-						progressbar.OptionSetPredictTime(false),
-						progressbar.OptionThrottle(65*time.Millisecond),
-						progressbar.OptionSetRenderBlankState(true),
-						progressbar.OptionSpinnerType(14),
-						progressbar.OptionFullWidth(),
-					)
+					bar := helpers.CreateProgressBar(len(manifestFiles), "Aplicando templates de laboratório...", 80, false, false, 65, true, 14)
 
 					allSuccess := true
 					for _, manifestName := range manifestFiles {
