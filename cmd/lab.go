@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"strings"
 	"text/tabwriter"
 
@@ -43,9 +44,13 @@ var labListCmd = &cobra.Command{
 
 		w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
 		fmt.Fprintln(w, "NOME\tVERSÃO\tREPOSITÓRIO\tDESCRIÇÃO")
-		for name, entries := range labs {
+		for repoName, entries := range labs {
 			for _, entry := range entries {
-				fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", name, entry.Version, entry.URL, entry.Description)
+				fmt.Fprintf(w, "%s\t%s\t%s\t%s\n",
+					entry.ID,
+					entry.Version,
+					repoName,
+					entry.Description)
 			}
 		}
 		w.Flush()
@@ -79,53 +84,74 @@ var labInstallCmd = &cobra.Command{
 		}
 
 		fmt.Printf("Laboratório '%s' instalado com sucesso.\n", labName)
+
+		// Reinicia o backend
+		fmt.Println("Reiniciando o backend...")
+		restartCmd := exec.Command("kubectl", "rollout", "restart", "deployment/girus-backend", "-n", "girus")
+		if err := restartCmd.Run(); err != nil {
+			return fmt.Errorf("erro ao reiniciar o backend: %v", err)
+		}
+
+		// Aguarda o reinício completar
+		fmt.Println("Aguardando o reinício do backend completar...")
+		waitCmd := exec.Command("kubectl", "rollout", "status", "deployment/girus-backend", "-n", "girus", "--timeout=60s")
+		if err := waitCmd.Run(); err != nil {
+			return fmt.Errorf("erro ao aguardar reinício do backend: %v", err)
+		}
+		fmt.Println("Backend reiniciado com sucesso.")
+
 		return nil
 	},
 }
 
 var labSearchCmd = &cobra.Command{
 	Use:   "search [termo]",
-	Short: "Busca laboratórios",
-	Long:  `Busca laboratórios por nome ou palavras-chave.`,
+	Short: "Busca laboratórios por termo",
+	Long:  `Busca laboratórios por termo, procurando em nomes, descrições e tags`,
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		term := strings.ToLower(args[0])
 
 		rm, err := repo.NewRepositoryManager()
 		if err != nil {
-			return err
+			return fmt.Errorf("erro ao criar gerenciador de repositórios: %v", err)
 		}
 
 		lm, err := repo.NewLabManager(rm)
 		if err != nil {
-			return err
+			return fmt.Errorf("erro ao criar gerenciador de laboratórios: %v", err)
 		}
 
 		labs, err := lm.ListLabs()
 		if err != nil {
-			return err
+			return fmt.Errorf("erro ao listar laboratórios: %v", err)
 		}
 
 		w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
 		fmt.Fprintln(w, "NOME\tVERSÃO\tREPOSITÓRIO\tDESCRIÇÃO")
+
 		found := false
-		for name, entries := range labs {
+		for repoName, entries := range labs {
 			for _, entry := range entries {
-				// Busca por nome, descrição ou palavras-chave
-				if strings.Contains(strings.ToLower(name), term) ||
-					strings.Contains(strings.ToLower(entry.Description), term) ||
-					containsCaseInsensitive(entry.Keywords, term) {
-					fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", name, entry.Version, entry.URL, entry.Description)
+				// Verifica se o termo está no título, descrição ou tags
+				if containsCaseInsensitive(entry.Title, term) ||
+					containsCaseInsensitive(entry.Description, term) ||
+					containsCaseInsensitive(entry.Tags, term) {
+					fmt.Fprintf(w, "%s\t%s\t%s\t%s\n",
+						entry.ID,
+						entry.Version,
+						repoName,
+						entry.Description)
 					found = true
 				}
 			}
 		}
-		w.Flush()
 
 		if !found {
-			fmt.Printf("\nNenhum laboratório encontrado para o termo '%s'\n", args[0])
+			fmt.Printf("\nNenhum laboratório encontrado para o termo '%s'\n", term)
 		}
 
+		w.Flush()
 		return nil
 	},
 }
@@ -137,12 +163,16 @@ func init() {
 	labInstallCmd.Flags().String("version", "", "Versão específica do laboratório")
 }
 
-// containsCaseInsensitive verifica se uma string está presente em um slice, ignorando maiúsculas/minúsculas
-func containsCaseInsensitive(slice []string, str string) bool {
-	str = strings.ToLower(str)
-	for _, s := range slice {
-		if strings.Contains(strings.ToLower(s), str) {
-			return true
+// containsCaseInsensitive verifica se uma string está contida em outra, ignorando maiúsculas/minúsculas
+func containsCaseInsensitive(s interface{}, term string) bool {
+	switch v := s.(type) {
+	case string:
+		return strings.Contains(strings.ToLower(v), term)
+	case []string:
+		for _, str := range v {
+			if strings.Contains(strings.ToLower(str), term) {
+				return true
+			}
 		}
 	}
 	return false

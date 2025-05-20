@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"gopkg.in/yaml.v3"
+	"time"
 )
 
 // LabManager gerencia os laboratórios
@@ -33,24 +34,6 @@ func NewLabManager(repoManager *RepositoryManager) (*LabManager, error) {
 	}, nil
 }
 
-// ListLabs lista todos os laboratórios disponíveis em todos os repositórios
-func (lm *LabManager) ListLabs() (map[string][]LabEntry, error) {
-	allLabs := make(map[string][]LabEntry)
-
-	for _, repo := range lm.repoManager.ListRepositories() {
-		index, err := lm.getIndex(repo)
-		if err != nil {
-			return nil, fmt.Errorf("erro ao obter índice do repositório %s: %v", repo.Name, err)
-		}
-
-		for name, entries := range index.Entries {
-			allLabs[name] = append(allLabs[name], entries...)
-		}
-	}
-
-	return allLabs, nil
-}
-
 // GetLab obtém um laboratório específico
 func (lm *LabManager) GetLab(repoName, labName, version string) (*LabEntry, error) {
 	repo, err := lm.repoManager.GetRepository(repoName)
@@ -63,24 +46,22 @@ func (lm *LabManager) GetLab(repoName, labName, version string) (*LabEntry, erro
 		return nil, err
 	}
 
-	entries, exists := index.Entries[labName]
-	if !exists {
-		return nil, fmt.Errorf("laboratório '%s' não encontrado no repositório '%s'", labName, repoName)
-	}
+	// Procura o laboratório pelo ID
+	for _, lab := range index.Labs {
+		if lab.ID == labName {
+			// Se a versão não for especificada, retorna o laboratório encontrado
+			if version == "" {
+				return &lab, nil
+			}
 
-	// Se a versão não for especificada, retorna a mais recente
-	if version == "" {
-		return &entries[0], nil
-	}
-
-	// Procura a versão específica
-	for _, entry := range entries {
-		if entry.Version == version {
-			return &entry, nil
+			// Procura a versão específica
+			if lab.Version == version {
+				return &lab, nil
+			}
 		}
 	}
 
-	return nil, fmt.Errorf("versão '%s' do laboratório '%s' não encontrada no repositório '%s'", version, labName, repoName)
+	return nil, fmt.Errorf("laboratório '%s' não encontrado no repositório '%s'", labName, repoName)
 }
 
 // DownloadLab baixa um laboratório específico
@@ -127,15 +108,25 @@ func (lm *LabManager) getIndex(repo Repository) (*Index, error) {
 	// Tenta obter do cache primeiro
 	cacheFile := filepath.Join(lm.cachePath, repo.Name, "index.yaml")
 	fmt.Printf("Verificando cache em: %s\n", cacheFile)
-	if data, err := os.ReadFile(cacheFile); err == nil {
-		fmt.Println("Usando índice do cache")
-		var index Index
-		if err := yaml.Unmarshal(data, &index); err == nil {
-			return &index, nil
+
+	// Verifica se o arquivo de cache existe e não está expirado
+	if info, err := os.Stat(cacheFile); err == nil {
+		// Verifica se o arquivo tem menos de 7 dias
+		if time.Since(info.ModTime()) < 7*24*time.Hour {
+			fmt.Println("Usando índice do cache")
+			data, err := os.ReadFile(cacheFile)
+			if err == nil {
+				var index Index
+				if err := yaml.Unmarshal(data, &index); err == nil {
+					return &index, nil
+				}
+			}
+		} else {
+			fmt.Println("Cache expirado, baixando novo índice")
 		}
 	}
 
-	// Se não estiver em cache, baixa do repositório
+	// Se não estiver em cache ou estiver expirado, baixa do repositório
 	indexURL := fmt.Sprintf("%s/index.yaml", repo.URL)
 	fmt.Printf("Buscando índice em: %s\n", indexURL)
 	resp, err := http.Get(indexURL)
@@ -152,8 +143,6 @@ func (lm *LabManager) getIndex(repo Repository) (*Index, error) {
 	if err != nil {
 		return nil, fmt.Errorf("erro ao ler conteúdo do repositório: %v", err)
 	}
-
-	fmt.Printf("Conteúdo do índice: %s\n", string(data))
 
 	var index Index
 	if err := yaml.Unmarshal(data, &index); err != nil {
