@@ -1,0 +1,74 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: terraform-modulos-lab
+  namespace: girus
+  labels:
+    app: girus-lab-template
+data:
+  lab.yaml: |
+    name: terraform-modulos
+    title: "Módulos e Reutilização de Código no Terraform"
+    description: "Aprenda a criar e utilizar módulos no Terraform para reutilizar código e manter sua infraestrutura organizada. Este laboratório guiado explora boas práticas de modularização."
+    duration: 45m
+    image: "linuxtips/girus-devops:0.1"
+    privileged: true
+    tasks:
+      - name: "Criando um Módulo Básico"
+        description: "Aprenda a criar um módulo básico para provisionar recursos AWS."
+        steps:
+          - description: "Crie a estrutura de diretórios para o módulo"
+            command: "mkdir -p terraform-modules/modules/ec2 && cd terraform-modules"
+            expectedOutput: ""
+            hint: "Use o comando mkdir para criar a estrutura de diretórios"
+
+          - description: "Crie o arquivo main.tf do módulo"
+            command: "echo -e 'resource \"aws_instance\" \"this\" {\n  ami           = var.ami_id\n  instance_type = var.instance_type\n\n  tags = merge(\n    var.tags,\n    {\n      Name = var.instance_name\n    }\n  )\n}' > modules/ec2/main.tf"
+            expectedOutput: ""
+            hint: "Crie o arquivo main.tf com a definição do recurso EC2"
+
+          - description: "Crie o arquivo variables.tf do módulo"
+            command: "echo -e 'variable \"ami_id\" {\n  description = \"ID da AMI para a instância\"\n  type        = string\n}\n\nvariable \"instance_type\" {\n  description = \"Tipo da instância EC2\"\n  type        = string\n  default     = \"t2.micro\"\n}\n\nvariable \"instance_name\" {\n  description = \"Nome da instância EC2\"\n  type        = string\n}\n\nvariable \"tags\" {\n  description = \"Tags para a instância\"\n  type        = map(string)\n  default     = {}\n}' > modules/ec2/variables.tf"
+            expectedOutput: ""
+            hint: "Crie o arquivo variables.tf com as definições de variáveis"
+
+      - name: "Utilizando o Módulo"
+        description: "Aprenda a utilizar o módulo criado em um projeto Terraform."
+        steps:
+          - description: "Crie o arquivo main.tf do projeto"
+            command: "echo -e 'terraform {\n  required_providers {\n    aws = {\n      source  = \"hashicorp/aws\"\n      version = \"~> 4.0\"\n    }\n  }\n}\n\nprovider \"aws\" {\n  region = \"us-east-1\"\n}\n\nmodule \"web_server\" {\n  source = \"./modules/ec2\"\n\n  ami_id         = \"ami-0c55b159cbfafe1f0\"\n  instance_type  = \"t2.micro\"\n  instance_name  = \"web-server\"\n\n  tags = {\n    Environment = \"dev\"\n    Project     = \"terraform-modules\"\n  }\n}' > main.tf"
+            expectedOutput: ""
+            hint: "Crie o arquivo main.tf do projeto usando o módulo"
+
+          - description: "Crie o arquivo outputs.tf do projeto"
+            command: "echo -e 'output \"instance_id\" {\n  description = \"ID da instância EC2\"\n  value       = module.web_server.instance_id\n}\n\noutput \"public_ip\" {\n  description = \"IP público da instância EC2\"\n  value       = module.web_server.public_ip\n}' > outputs.tf"
+            expectedOutput: ""
+            hint: "Crie o arquivo outputs.tf para expor os outputs do módulo"
+
+          - description: "Inicialize e aplique a configuração"
+            command: "terraform init && terraform apply -auto-approve"
+            expectedOutput: "Apply complete!"
+            hint: "Use os comandos terraform init e apply"
+
+      - name: "Módulos Aninhados"
+        description: "Aprenda a criar e utilizar módulos aninhados para infraestrutura mais complexa."
+        steps:
+          - description: "Crie um módulo para VPC"
+            command: "mkdir -p modules/vpc && echo -e 'resource \"aws_vpc\" \"this\" {\n  cidr_block = var.vpc_cidr\n\n  tags = merge(\n    var.tags,\n    {\n      Name = var.vpc_name\n    }\n  )\n}\n\nresource \"aws_subnet\" \"this\" {\n  vpc_id     = aws_vpc.this.id\n  cidr_block = var.subnet_cidr\n\n  tags = merge(\n    var.tags,\n    {\n      Name = \"${var.vpc_name}-subnet\"\n    }\n  )\n}' > modules/vpc/main.tf"
+            expectedOutput: ""
+            hint: "Crie o módulo VPC com recursos básicos"
+
+          - description: "Atualize o módulo EC2 para usar a VPC"
+            command: "echo -e 'resource \"aws_instance\" \"this\" {\n  ami           = var.ami_id\n  instance_type = var.instance_type\n  subnet_id     = var.subnet_id\n\n  tags = merge(\n    var.tags,\n    {\n      Name = var.instance_name\n    }\n  )\n}' > modules/ec2/main.tf"
+            expectedOutput: ""
+            hint: "Atualize o módulo EC2 para incluir a subnet"
+
+          - description: "Atualize o projeto principal"
+            command: "echo -e 'module \"vpc\" {\n  source = \"./modules/vpc\"\n\n  vpc_cidr = \"10.0.0.0/16\"\n  vpc_name = \"terraform-vpc\"\n  subnet_cidr = \"10.0.1.0/24\"\n\n  tags = {\n    Environment = \"dev\"\n    Project     = \"terraform-modules\"\n  }\n}\n\nmodule \"web_server\" {\n  source = \"./modules/ec2\"\n\n  ami_id         = \"ami-0c55b159cbfafe1f0\"\n  instance_type  = \"t2.micro\"\n  instance_name  = \"web-server\"\n  subnet_id      = module.vpc.subnet_id\n\n  tags = {\n    Environment = \"dev\"\n    Project     = \"terraform-modules\"\n  }\n}' > main.tf"
+            expectedOutput: ""
+            hint: "Atualize o projeto principal para usar os módulos aninhados"
+
+          - description: "Aplique a configuração atualizada"
+            command: "terraform apply -auto-approve"
+            expectedOutput: "Apply complete!"
+            hint: "Use o comando terraform apply"
