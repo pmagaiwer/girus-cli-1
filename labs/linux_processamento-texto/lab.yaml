@@ -20,9 +20,9 @@ data:
           - "O grep trabalha linha por linha, examinando cada uma para determinar se contém o padrão de busca especificado, exibindo apenas as linhas que correspondem ao critério."
           - "Vamos começar criando um arquivo de exemplo para demonstrar as funcionalidades do grep:"
           - |
-            `cat > arquivo_exemplo.txt << EOL
+            `cat <<EOL > arquivo_exemplo.txt
             Linha 1 com a palavra linux
-            Linha 2 sem a palavra
+            Linha 2 sem a palavra 
             Linha 3 com linux novamente
             LINHA 4 COM LINUX
             EOL`
