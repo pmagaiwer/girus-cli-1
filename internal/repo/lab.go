@@ -1,12 +1,12 @@
 package repo
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
+	"gopkg.in/yaml.v3"
 )
 
 // LabManager gerencia os laboratórios
@@ -128,7 +128,7 @@ func (lm *LabManager) getIndex(repo Repository) (*Index, error) {
 	cacheFile := filepath.Join(lm.cachePath, repo.Name, "index.yaml")
 	if data, err := os.ReadFile(cacheFile); err == nil {
 		var index Index
-		if err := json.Unmarshal(data, &index); err == nil {
+		if err := yaml.Unmarshal(data, &index); err == nil {
 			return &index, nil
 		}
 	}
@@ -144,19 +144,19 @@ func (lm *LabManager) getIndex(repo Repository) (*Index, error) {
 		return nil, fmt.Errorf("erro ao acessar índice do repositório (status: %d)", resp.StatusCode)
 	}
 
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("erro ao ler conteúdo do repositório: %v", err)
+	}
+
 	var index Index
-	if err := json.NewDecoder(resp.Body).Decode(&index); err != nil {
+	if err := yaml.Unmarshal(data, &index); err != nil {
 		return nil, fmt.Errorf("erro ao decodificar índice do repositório: %v", err)
 	}
 
 	// Salva no cache
 	if err := os.MkdirAll(filepath.Dir(cacheFile), 0755); err != nil {
 		return nil, fmt.Errorf("erro ao criar diretório de cache: %v", err)
-	}
-
-	data, err := json.MarshalIndent(index, "", "  ")
-	if err != nil {
-		return nil, fmt.Errorf("erro ao codificar índice: %v", err)
 	}
 
 	if err := os.WriteFile(cacheFile, data, 0644); err != nil {

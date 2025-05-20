@@ -3,37 +3,39 @@ package repo
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
+	"gopkg.in/yaml.v3"
 )
 
 // Repository representa um repositório de laboratórios
 type Repository struct {
-	Name        string `json:"name"`
-	URL         string `json:"url"`
-	Description string `json:"description"`
-	Version     string `json:"version"`
+	Name        string `yaml:"name"`
+	URL         string `yaml:"url"`
+	Description string `yaml:"description"`
+	Version     string `yaml:"version"`
 }
 
 // Index representa o arquivo de índice de um repositório
 type Index struct {
-	APIVersion string                 `json:"apiVersion"`
-	Generated  string                 `json:"generated"`
-	Entries    map[string][]LabEntry  `json:"entries"`
+	APIVersion string                 `yaml:"apiVersion"`
+	Generated  string                 `yaml:"generated"`
+	Entries    map[string][]LabEntry  `yaml:"entries"`
 }
 
 // LabEntry representa um laboratório no índice
 type LabEntry struct {
-	Name        string   `json:"name"`
-	Version     string   `json:"version"`
-	Description string   `json:"description"`
-	Keywords    []string `json:"keywords"`
-	Maintainers []string `json:"maintainers"`
-	URL         string   `json:"url"`
-	Created     string   `json:"created"`
-	Digest      string   `json:"digest"`
+	Name        string   `yaml:"name"`
+	Version     string   `yaml:"version"`
+	Description string   `yaml:"description"`
+	Keywords    []string `yaml:"keywords"`
+	Maintainers []string `yaml:"maintainers"`
+	URL         string   `yaml:"url"`
+	Created     string   `yaml:"created"`
+	Digest      string   `yaml:"digest"`
 }
 
 // RepositoryManager gerencia os repositórios de laboratórios
@@ -186,4 +188,45 @@ func (rm *RepositoryManager) validateRepository(url string) error {
 		return fmt.Errorf("falha ao validar repositório: %v", err)
 	}
 	return nil
+}
+
+// fetchAndParseIndex baixa e parseia o arquivo index.yaml de um repositório
+func fetchAndParseIndex(url string) (*Index, error) {
+	// Se a URL usa o protocolo file://
+	if strings.HasPrefix(url, "file://") {
+		filePath := strings.TrimPrefix(url, "file://")
+		data, err := os.ReadFile(filePath)
+		if err != nil {
+			return nil, fmt.Errorf("erro ao ler arquivo local: %v", err)
+		}
+
+		var index Index
+		if err := yaml.Unmarshal(data, &index); err != nil {
+			return nil, fmt.Errorf("erro ao decodificar arquivo local: %v", err)
+		}
+		return &index, nil
+	}
+
+	// Para URLs HTTP/HTTPS
+	resp, err := http.Get(fmt.Sprintf("%s/index.yaml", url))
+	if err != nil {
+		return nil, fmt.Errorf("erro ao acessar repositório: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("erro ao acessar repositório (status: %d)", resp.StatusCode)
+	}
+
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("erro ao ler conteúdo do repositório: %v", err)
+	}
+
+	var index Index
+	if err := yaml.Unmarshal(data, &index); err != nil {
+		return nil, fmt.Errorf("erro ao decodificar índice do repositório: %v", err)
+	}
+
+	return &index, nil
 }
