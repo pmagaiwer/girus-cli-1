@@ -26,6 +26,6 @@ func ListManifests() ([]string, error) {
 			manifests = append(manifests, entry.Name())
 		}
 	}
-	
+
 	return manifests, nil
 }
