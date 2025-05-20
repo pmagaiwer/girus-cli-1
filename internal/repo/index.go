@@ -181,32 +181,9 @@ func (rm *RepositoryManager) saveRepositories() error {
 
 // validateRepository valida se um repositório é acessível e válido
 func (rm *RepositoryManager) validateRepository(url string) error {
-	// Se for um caminho local, verifica se o arquivo existe
-	if strings.HasPrefix(url, "file://") {
-		path := strings.TrimPrefix(url, "file://")
-		indexPath := filepath.Join(path, "index.yaml")
-		if _, err := os.Stat(indexPath); os.IsNotExist(err) {
-			return fmt.Errorf("arquivo index.yaml não encontrado em %s", path)
-		}
-		return nil
-	}
-
-	// Para URLs remotas, tenta acessar via HTTP
-	resp, err := http.Get(fmt.Sprintf("%s/index.yaml", url))
+	_, err := fetchAndParseIndex(url)
 	if err != nil {
-		return fmt.Errorf("erro ao acessar repositório: %v", err)
+		return fmt.Errorf("falha ao validar repositório: %v", err)
 	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("repositório inacessível (status: %d)", resp.StatusCode)
-	}
-
-	// Tenta decodificar o índice
-	var index Index
-	if err := json.NewDecoder(resp.Body).Decode(&index); err != nil {
-		return fmt.Errorf("índice do repositório inválido: %v", err)
-	}
-
 	return nil
-} 
+}
