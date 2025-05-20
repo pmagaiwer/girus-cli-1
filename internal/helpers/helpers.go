@@ -11,6 +11,17 @@ import (
 	"github.com/schollz/progressbar/v3"
 )
 
+type ProgressBarConfig struct {
+	Total            int
+	Description      string
+	Width            int
+	ShowBytes        bool
+	SetPredictTime   bool
+	Throttle         time.Duration
+	RenderBlankState bool
+	SpinnerType      int
+}
+
 // portInUse verifica se uma porta está em uso
 func PortInUse(port int) bool {
 	checkCmd := exec.Command("lsof", "-i", fmt.Sprintf(":%d", port))
@@ -89,17 +100,17 @@ func CheckPortForwardNeeded() bool {
 	return backendNeeded || frontendNeeded
 }
 
-func CreateProgressBar(total int, description string, width int, showBytes bool, setPredictTime bool, throttle time.Duration, renderBlankState bool, spinnerType int) *progressbar.ProgressBar {
+func CreateProgressBar(config ProgressBarConfig) *progressbar.ProgressBar {
 	return progressbar.NewOptions(
-		total,
-		progressbar.OptionSetDescription(description),
-		progressbar.OptionSetWidth(width),
-		progressbar.OptionShowBytes(showBytes),
-		progressbar.OptionSetPredictTime(setPredictTime),
-		progressbar.OptionThrottle(throttle),
+		config.Total,
+		progressbar.OptionSetDescription(config.Description),
+		progressbar.OptionSetWidth(config.Width),
+		progressbar.OptionShowBytes(config.ShowBytes),
+		progressbar.OptionSetPredictTime(config.SetPredictTime),
+		progressbar.OptionThrottle(config.Throttle*time.Millisecond),
 		progressbar.OptionShowCount(),
-		progressbar.OptionSpinnerType(spinnerType),
-		progressbar.OptionSetRenderBlankState(renderBlankState),
+		progressbar.OptionSpinnerType(config.SpinnerType),
+		progressbar.OptionSetRenderBlankState(config.RenderBlankState),
 		progressbar.OptionFullWidth(),
 	)
 }
