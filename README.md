@@ -16,6 +16,7 @@ Desenvolvida pela LINUXtips, a plataforma GIRUS se diferencia por ser executada 
 - **Ambientes Isolados**: Cada laboratório é executado em um ambiente isolado no Kubernetes, garantindo segurança e evitando conflitos com o sistema host
 - **Interface Intuitiva**: Terminal interativo com tarefas guiadas e validação automática de progresso
 - **Fácil Instalação**: CLI simples que gerencia todo o ciclo de vida da plataforma (criação, execução e exclusão)
+- **Atualização Simplificada**: Comando `update` integrado que verifica, baixa e instala novas versões automaticamente
 - **Laboratórios Personalizáveis**: Sistema de templates baseado em ConfigMaps do Kubernetes que facilita a criação de novos laboratórios
 - **Open Source**: Projeto totalmente aberto para contribuições da comunidade
 - **Multilíngue**: Criado originalmente para o português, mas com um sistema de templates flexível, é possível criar laboratórios em outros idiomas. Nas versões futuras, o sistema de templates será expandido para suportar múltiplos idiomas.
@@ -23,6 +24,14 @@ Desenvolvida pela LINUXtips, a plataforma GIRUS se diferencia por ser executada 
 ## Gerenciamento de Repositórios e Laboratórios
 
 O GIRUS implementa um sistema robusto de gerenciamento de repositórios e laboratórios, similar ao Helm para Kubernetes. Este sistema permite:
+
+### Atualização da CLI
+
+- **Verificar e Atualizar para a Última Versão**:
+  ```bash
+  girus update
+  ```
+  Este comando verifica se há uma versão mais recente do GIRUS CLI disponível, baixa e instala a atualização, oferecendo a opção de recriar o cluster após a atualização para garantir compatibilidade.
 
 ### Repositórios
 
@@ -351,7 +360,7 @@ A: O GIRUS é otimizado para ser leve. Um cluster básico consome aproximadament
 A: Absolutamente! O sistema de templates é flexível e permite a criação de laboratórios específicos para suas necessidades.
 
 **Q: Como faço para atualizar o GIRUS para a versão mais recente?**  
-A: Execute o mesmo script de instalação novamente ou use `girus update` (disponível em versões mais recentes).
+A: Execute o comando `girus update`. O comando verificará se há uma versão mais recente disponível e, se houver, executará a atualização automaticamente. Após a atualização, você terá a opção de recriar o cluster para garantir a compatibilidade com as novas funcionalidades.
 
 **Q: O GIRUS funciona em ambientes corporativos com restrições de rede?**  
 A: Sim, após o download inicial das imagens, o GIRUS opera localmente sem necessidade de conexão externa.

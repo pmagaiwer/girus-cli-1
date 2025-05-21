@@ -44,6 +44,36 @@ var createClusterCmd = &cobra.Command{
 	Long: `Cria um cluster Kind com o nome "girus" e implanta todos os componentes necessários.
 Por padrão, o deployment embutido no binário é utilizado.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		// Verificar se há atualização disponível para o CLI
+		fmt.Println("🔄 Verificando por atualizações...")
+		currentVersion := Version
+		latestVersion, err := GetLatestGitHubVersion("badtuxx/girus-cli")
+
+		if err == nil && IsNewerVersion(latestVersion, currentVersion) {
+			fmt.Printf("📢 Nova versão disponível: %s (atual: %s)\n", latestVersion, currentVersion)
+			fmt.Print("Deseja atualizar antes de criar o cluster? [S/n]: ")
+
+			reader := bufio.NewReader(os.Stdin)
+			response, _ := reader.ReadString('\n')
+			response = strings.ToLower(strings.TrimSpace(response))
+
+			if response == "" || response == "s" || response == "sim" || response == "y" || response == "yes" {
+				// Criar comando de atualização
+				updateCmd := exec.Command("girus", "update")
+				updateCmd.Stdout = os.Stdout
+				updateCmd.Stderr = os.Stderr
+				updateCmd.Stdin = os.Stdin
+
+				if err := updateCmd.Run(); err != nil {
+					fmt.Fprintf(os.Stderr, "❌ Erro ao executar atualização: %v\n", err)
+					fmt.Println("Continuando com a versão atual...")
+				} else {
+					fmt.Println("✅ Atualização concluída. Por favor, execute o comando novamente.")
+					os.Exit(0)
+				}
+			}
+		}
+
 		// Verificar se o containerEngine está instalado e funcionando
 		fmt.Println("🔄 Verificando pré-requisitos...")
 		containerEngineCmd := exec.Command(containerEngine, "--version")

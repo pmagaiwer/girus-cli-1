@@ -4,6 +4,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// Version é a versão atual do GIRUS CLI
+var Version = "0.2.0"
+
 var rootCmd = &cobra.Command{
 	Use:   "girus",
 	Short: "GIRUS - Plataforma de Laboratórios Interativos",
@@ -28,4 +31,4 @@ func init() {
 
 	// Configura flags globais
 	rootCmd.PersistentFlags().StringP("config", "c", "", "arquivo de configuração (padrão: $HOME/.girus/config.yaml)")
-} 
+}
