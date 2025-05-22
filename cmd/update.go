@@ -136,23 +136,29 @@ func IsNewerVersion(v1, v2 string) bool {
 	}
 
 	// Comparar major
-	if parts1[0] > parts2[0] {
+	major1, _ := strconv.Atoi(parts1[0])
+	major2, _ := strconv.Atoi(parts2[0])
+	if major1 > major2 {
 		return true
 	}
-	if parts1[0] < parts2[0] {
+	if major1 < major2 {
 		return false
 	}
 
 	// Comparar minor
-	if parts1[1] > parts2[1] {
+	minor1, _ := strconv.Atoi(parts1[1])
+	minor2, _ := strconv.Atoi(parts2[1])
+	if minor1 > minor2 {
 		return true
 	}
-	if parts1[1] < parts2[1] {
+	if minor1 < minor2 {
 		return false
 	}
 
 	// Comparar patch
-	if parts1[2] > parts2[2] {
+	patch1, _ := strconv.Atoi(parts1[2])
+	patch2, _ := strconv.Atoi(parts2[2])
+	if patch1 > patch2 {
 		return true
 	}
 
