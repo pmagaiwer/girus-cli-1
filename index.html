@@ -95,9 +95,9 @@ GIRUS_VERSION="v0.3.0"
 
 # Definir URL com base no sistema operacional e arquitetura
 if [ "$OS" == "windows" ]; then
-    BINARY_URL="https://github.com/badtuxx/girus-cli/releases/download/$GIRUS_VERSION/girus-$OS-$ARCH.exe"
+    BINARY_URL="https://github.com/badtuxx/girus-cli/releases/download/$GIRUS_VERSION/girus-cli-$OS-$ARCH.exe"
 else
-    BINARY_URL="https://github.com/badtuxx/girus-cli/releases/download/$GIRUS_VERSION/girus-$OS-$ARCH"
+    BINARY_URL="https://github.com/badtuxx/girus-cli/releases/download/$GIRUS_VERSION/girus-cli-$OS-$ARCH"
 fi
 
 echo "URL de download: $BINARY_URL"
