@@ -45,7 +45,13 @@ jobs:
 
       - name: Set tag output
         id: tag
-        run: echo "tag_name=${GITHUB_REF#refs/*/}" >> "$GITHUB_OUTPUT"
+        run: |
+          TAG_NAME=${GITHUB_REF#refs/*/}
+          VERSION=${TAG_NAME#v}  # Remove the 'v' prefix if present
+          echo "tag_name=${TAG_NAME}" >> "$GITHUB_OUTPUT"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "VERSION=${VERSION}" >> "$GITHUB_ENV"
+          echo "Determined version: ${VERSION}"
 
       - name: Run go mod tidy
         run: go mod tidy
@@ -59,6 +65,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_ACTOR: ${{ github.actor }}
+          VERSION: ${{ env.VERSION }}
 
       - name: Generate subject
         id: hash
