@@ -6,6 +6,22 @@ BD=dist
 # DIRETÓRIO ATUAL
 CDR=.
 CONFIG_PATH=manifest/config.yaml
+# Variáveis para versionamento
+VERSION    := dev
+DATE       := $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
+BUILT_BY   := $(shell whoami)
+COMMITID   := $(shell git rev-parse --short HEAD)
+GO_VERSION := $(shell go version | cut -d' ' -f3)
+GO_OS 	   := $(shell go env GOOS)
+GO_ARCH    := $(shell go env GOARCH)
+
+LDFLAGS := -X github.com/badtuxx/girus-cli/internal/common.Version=$(VERSION)
+LDFLAGS += -X github.com/badtuxx/girus-cli/internal/common.BuildDate=$(DATE)
+LDFLAGS += -X github.com/badtuxx/girus-cli/internal/common.BuildUser=$(BUILT_BY)
+LDFLAGS += -X github.com/badtuxx/girus-cli/internal/common.CommitID=$(COMMITID)
+LDFLAGS += -X github.com/badtuxx/girus-cli/internal/common.GoVersion=$(GO_VERSION)
+LDFLAGS += -X github.com/badtuxx/girus-cli/internal/common.GoOS=$(GO_OS)
+LDFLAGS += -X github.com/badtuxx/girus-cli/internal/common.GoArch=$(GO_ARCH)
 
 # PLATAFORMAS SUPORTADAS
 PLATAFORMAS = \
@@ -21,7 +37,7 @@ all: build
 
 # Constrói o binário principal
 build:
-	go build -o $(BD)/$(BIN) $(CDR)/main.go
+	go build -v -ldflags="$(LDFLAGS)" -o $(BD)/$(BIN) $(CDR)/main.go
 
 # Instala o binário no sistema
 install: build
@@ -43,7 +59,7 @@ release:
 			OUT=$$OUT.exe; \
 		fi; \
 		echo "-> $$OS/$$ARCH (Saída: $$OUT)"; \
-		GOOS=$$OS GOARCH=$$ARCH go build -v -o $$OUT $(CDR)/main.go || exit 1; \
+		GOOS=$$OS GOARCH=$$ARCH go build -ldflags "$(LDFLAGS)" -v -o $$OUT $(CDR)/main.go || exit 1; \
 	done
 
 # Executa o binário localmente usando o arquivo de configuração

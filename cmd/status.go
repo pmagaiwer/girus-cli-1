@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/badtuxx/girus-cli/internal/common"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -65,7 +66,7 @@ var statusCmd = &cobra.Command{
 		fmt.Println(strings.Repeat("─", 80))
 
 		// Verificar versão da CLI
-		fmt.Printf("%s: %s\n", bold("Versão da CLI"), magenta(Version))
+		fmt.Printf("%s: %s\n", bold("Versão da CLI"), magenta(common.Version))
 
 		// Verificar se o cluster existe
 		fmt.Println("\n" + headerColor("Verificando Cluster..."))

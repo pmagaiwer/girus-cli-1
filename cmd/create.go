@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/badtuxx/girus-cli/internal/common"
 	"github.com/badtuxx/girus-cli/internal/helpers"
 	"github.com/badtuxx/girus-cli/internal/k8s"
 	"github.com/badtuxx/girus-cli/internal/lab"
@@ -63,6 +64,7 @@ Por padrão, o deployment embutido no binário é utilizado.`,
 		fmt.Println(headerColor("Verificando atualizações..."))
 
 		currentVersion := Version
+
 		latestVersion, err := GetLatestGitHubVersion("badtuxx/girus-cli")
 
 		if err == nil && IsNewerVersion(latestVersion, currentVersion) {

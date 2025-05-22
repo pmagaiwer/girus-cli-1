@@ -5,9 +5,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// Version é a versão atual do GIRUS CLI
-var Version = "0.2.0"
-
 var rootCmd = &cobra.Command{
 	Use:   "girus",
 	Short: "GIRUS - Plataforma de Laboratórios Interativos",
@@ -84,6 +81,7 @@ Use "{{magenta "girus [command] --help"}}" for more information about a command.
 	rootCmd.AddCommand(labCmd)
 	rootCmd.AddCommand(repoCmd)
 	rootCmd.AddCommand(statusCmd)
+	rootCmd.AddCommand(versionCmd)
 
 	// Não adicionar updateCmd aqui, pois já é adicionado no update.go
 
