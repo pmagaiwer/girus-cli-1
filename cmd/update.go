@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/badtuxx/girus-cli/internal/common"
 	"io"
 	"net/http"
 	"os"
@@ -43,7 +44,7 @@ compatibilidade com as novas features.`,
 		fmt.Println(strings.Repeat("─", 80))
 
 		// Verificar versão atual da CLI
-		currentVersion := Version
+		currentVersion := common.Version
 		fmt.Printf("%s: %s\n", bold("Versão atual da CLI"), magenta(currentVersion))
 
 		// Obter última versão do GitHub
