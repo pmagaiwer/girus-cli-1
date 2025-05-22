@@ -11,6 +11,7 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 )
 
@@ -26,54 +27,72 @@ var updateCmd = &cobra.Command{
 Após a atualização, oferece a opção de recriar o cluster para garantir
 compatibilidade com as novas features.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		// Criar formatadores de cores
+		green := color.New(color.FgGreen).SprintFunc()
+		red := color.New(color.FgRed).SprintFunc()
+		bold := color.New(color.Bold).SprintFunc()
+		magenta := color.New(color.FgMagenta).SprintFunc() // Para informações importantes
+		yellow := color.New(color.FgYellow).SprintFunc()
+
+		// Criar formatador para títulos
+		headerColor := color.New(color.FgCyan, color.Bold).SprintFunc()
+
+		// Exibir cabeçalho
+		fmt.Println(strings.Repeat("─", 80))
+		fmt.Println(headerColor("GIRUS UPDATE"))
+		fmt.Println(strings.Repeat("─", 80))
+
 		// Verificar versão atual da CLI
 		currentVersion := Version
-		fmt.Printf("Versão atual da CLI: %s\n", currentVersion)
+		fmt.Printf("%s: %s\n", bold("Versão atual da CLI"), magenta(currentVersion))
 
 		// Obter última versão do GitHub
+		fmt.Println("\n" + headerColor("Verificando atualizações..."))
 		latestCliVersion, err := GetLatestGitHubVersion(cliRepo)
 		if err != nil {
-			return fmt.Errorf("erro ao verificar última versão da CLI: %v", err)
+			return fmt.Errorf("%s erro ao verificar última versão da CLI: %v", red("ERRO:"), err)
 		}
 
-		fmt.Printf("Última versão disponível: %s\n", latestCliVersion)
+		fmt.Printf("%s: %s\n", bold("Última versão disponível"), magenta(latestCliVersion))
 
 		// Verificar se já está na versão mais recente
 		isLatest := !IsNewerVersion(latestCliVersion, currentVersion)
 
 		if isLatest {
-			fmt.Println("Você já está usando a última versão do GIRUS CLI!")
+			fmt.Println("\n" + green("Você já está usando a última versão do GIRUS CLI!"))
 			return nil
 		}
 
 		// Confirmar atualização
-		fmt.Printf("\nNova versão disponível (%s). Deseja atualizar? (S/n): ", latestCliVersion)
+		fmt.Printf("\n%s (%s). Deseja atualizar? (S/n): ",
+			yellow("Nova versão disponível"), magenta(latestCliVersion))
 		var response string
 		fmt.Scanln(&response)
 		if strings.ToLower(response) != "s" && response != "" {
-			fmt.Println("Atualização cancelada.")
+			fmt.Println(yellow("Atualização cancelada."))
 			return nil
 		}
 
 		// Atualizar CLI
-		fmt.Println("\nAtualizando CLI...")
+		fmt.Println("\n" + headerColor("Atualizando CLI..."))
 		if err := downloadAndInstall(latestCliVersion); err != nil {
-			return fmt.Errorf("erro ao atualizar CLI: %v", err)
+			return fmt.Errorf("%s erro ao atualizar CLI: %v", red("ERRO:"), err)
 		}
-		fmt.Printf("CLI atualizada com sucesso para a versão %s!\n", latestCliVersion)
+		fmt.Printf("%s CLI atualizada com sucesso para a versão %s!\n",
+			green("SUCESSO:"), magenta(latestCliVersion))
 
 		// Perguntar se deseja recriar o cluster
-		fmt.Print("\nDeseja recriar o cluster para garantir compatibilidade com as novas features? (S/n): ")
+		fmt.Print("\n" + yellow("Deseja recriar o cluster para garantir compatibilidade com as novas features? (S/n): "))
 		fmt.Scanln(&response)
 		if strings.ToLower(response) == "s" || response == "" {
-			fmt.Println("\nRecriando o cluster...")
+			fmt.Println("\n" + headerColor("Recriando o cluster..."))
 
 			// Executar o comando delete
 			deleteCmd := exec.Command("girus", "delete")
 			deleteCmd.Stdout = os.Stdout
 			deleteCmd.Stderr = os.Stderr
 			if err := deleteCmd.Run(); err != nil {
-				return fmt.Errorf("erro ao deletar o cluster: %v", err)
+				return fmt.Errorf("%s erro ao deletar o cluster: %v", red("ERRO:"), err)
 			}
 
 			// Executar o comando create
@@ -81,12 +100,12 @@ compatibilidade com as novas features.`,
 			createCmd.Stdout = os.Stdout
 			createCmd.Stderr = os.Stderr
 			if err := createCmd.Run(); err != nil {
-				return fmt.Errorf("erro ao criar o cluster: %v", err)
+				return fmt.Errorf("%s erro ao criar o cluster: %v", red("ERRO:"), err)
 			}
 
-			fmt.Println("\nCluster recriado com sucesso!")
+			fmt.Println("\n" + green("Cluster recriado com sucesso!"))
 		} else {
-			fmt.Println("\nCluster mantido como está. Lembre-se que algumas novas features podem não funcionar corretamente com o cluster atual.")
+			fmt.Println("\n" + yellow("Cluster mantido como está. Lembre-se que algumas novas features podem não funcionar corretamente com o cluster atual."))
 		}
 
 		return nil
