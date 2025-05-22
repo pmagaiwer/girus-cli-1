@@ -20,7 +20,7 @@ builds:
     main: .
     flags:
       - -trimpath
-    mod_timestamp: '{{ .CommitTimestamp }}'
+    mod_timestamp: "{{ .CommitTimestamp }}"
     goos:
       - linux
       - darwin
@@ -45,13 +45,31 @@ signs:
     signature: "${artifact}-keyless.sig"
     certificate: "${artifact}-keyless.pem"
     cmd: cosign
-    args: ["sign-blob", "--output-signature", "${artifact}.sig", "--output-certificate", "${artifact}.pem", "${artifact}"]
+    args:
+      [
+        "sign-blob",
+        "--yes",
+        "--output-signature",
+        "${artifact}.sig",
+        "--output-certificate",
+        "${artifact}.pem",
+        "${artifact}",
+      ]
     artifacts: binary
   - id: checksum
     signature: "${artifact}.sig"
     certificate: "${artifact}.pem"
     cmd: cosign
-    args: ["sign-blob", "--output-signature", "${artifact}-keyless.sig", "--output-certificate", "${artifact}.pem", "${artifact}"]
+    args:
+      [
+        "sign-blob",
+        "--yes",
+        "--output-signature",
+        "${artifact}-keyless.sig",
+        "--output-certificate",
+        "${artifact}.pem",
+        "${artifact}",
+      ]
     artifacts: checksum
 
 archives:
