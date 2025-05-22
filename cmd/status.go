@@ -735,7 +735,3 @@ func getAccessURL() string {
 	// Se não encontrou nenhuma forma de acesso
 	return "Execute 'kubectl port-forward svc/girus-frontend -n girus 8000:80' para acessar"
 }
-
-func init() {
-	rootCmd.AddCommand(statusCmd)
-}

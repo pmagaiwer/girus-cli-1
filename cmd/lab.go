@@ -8,6 +8,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/badtuxx/girus-cli/internal/repo"
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 )
 
@@ -22,20 +23,29 @@ var labListCmd = &cobra.Command{
 	Short: "Lista todos os laboratórios disponíveis",
 	Long:  `Lista todos os laboratórios disponíveis em todos os repositórios configurados.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		// Criar formatadores de cores
+		red := color.New(color.FgRed).SprintFunc()
+		cyan := color.New(color.FgCyan).SprintFunc()
+		magenta := color.New(color.FgMagenta).SprintFunc()
+		headerColor := color.New(color.FgCyan, color.Bold).SprintFunc()
+
 		rm, err := repo.NewRepositoryManager()
 		if err != nil {
-			return err
+			return fmt.Errorf("%s %v", red("ERRO:"), err)
 		}
 
 		lm, err := repo.NewLabManager(rm)
 		if err != nil {
-			return err
+			return fmt.Errorf("%s %v", red("ERRO:"), err)
 		}
 
 		labs, err := lm.ListLabs()
 		if err != nil {
-			return err
+			return fmt.Errorf("%s %v", red("ERRO:"), err)
 		}
+
+		fmt.Println(headerColor("LABORATÓRIOS DISPONÍVEIS"))
+		fmt.Println(strings.Repeat("─", 80))
 
 		if len(labs) == 0 {
 			fmt.Println("Nenhum laboratório disponível.")
@@ -43,11 +53,11 @@ var labListCmd = &cobra.Command{
 		}
 
 		w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
-		fmt.Fprintln(w, "NOME\tVERSÃO\tREPOSITÓRIO\tDESCRIÇÃO")
+		fmt.Fprintln(w, cyan("NOME")+"\t"+cyan("VERSÃO")+"\t"+cyan("REPOSITÓRIO")+"\t"+cyan("DESCRIÇÃO"))
 		for repoName, entries := range labs {
 			for _, entry := range entries {
 				fmt.Fprintf(w, "%s\t%s\t%s\t%s\n",
-					entry.ID,
+					magenta(entry.ID),
 					entry.Version,
 					repoName,
 					entry.Description)
@@ -65,40 +75,53 @@ var labInstallCmd = &cobra.Command{
 	Long:  `Instala um laboratório específico de um repositório.`,
 	Args:  cobra.ExactArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
+		// Criar formatadores de cores
+		green := color.New(color.FgGreen).SprintFunc()
+		red := color.New(color.FgRed).SprintFunc()
+		magenta := color.New(color.FgMagenta).SprintFunc()
+		headerColor := color.New(color.FgCyan, color.Bold).SprintFunc()
+
 		repoName := args[0]
 		labName := args[1]
 		version, _ := cmd.Flags().GetString("version")
 
 		rm, err := repo.NewRepositoryManager()
 		if err != nil {
-			return err
+			return fmt.Errorf("%s %v", red("ERRO:"), err)
 		}
 
 		lm, err := repo.NewLabManager(rm)
 		if err != nil {
-			return err
+			return fmt.Errorf("%s %v", red("ERRO:"), err)
 		}
+
+		fmt.Println(headerColor("INSTALANDO LABORATÓRIO"))
+		fmt.Println(strings.Repeat("─", 80))
+		fmt.Printf("Instalando laboratório %s do repositório %s...\n", magenta(labName), magenta(repoName))
 
 		if err := lm.DownloadLab(repoName, labName, version); err != nil {
-			return err
+			return fmt.Errorf("%s %v", red("ERRO:"), err)
 		}
 
-		fmt.Printf("Laboratório '%s' instalado com sucesso.\n", labName)
+		fmt.Printf("%s Laboratório %s instalado com sucesso.\n", green("SUCESSO:"), magenta(labName))
 
 		// Reinicia o backend
-		fmt.Println("Reiniciando o backend...")
+		fmt.Println("\n" + headerColor("REINICIANDO BACKEND"))
+		fmt.Println(strings.Repeat("─", 80))
+		fmt.Println("Reiniciando o backend para aplicar as mudanças...")
+
 		restartCmd := exec.Command("kubectl", "rollout", "restart", "deployment/girus-backend", "-n", "girus")
 		if err := restartCmd.Run(); err != nil {
-			return fmt.Errorf("erro ao reiniciar o backend: %v", err)
+			return fmt.Errorf("%s Erro ao reiniciar o backend: %v", red("ERRO:"), err)
 		}
 
 		// Aguarda o reinício completar
 		fmt.Println("Aguardando o reinício do backend completar...")
 		waitCmd := exec.Command("kubectl", "rollout", "status", "deployment/girus-backend", "-n", "girus", "--timeout=60s")
 		if err := waitCmd.Run(); err != nil {
-			return fmt.Errorf("erro ao aguardar reinício do backend: %v", err)
+			return fmt.Errorf("%s Erro ao aguardar reinício do backend: %v", red("ERRO:"), err)
 		}
-		fmt.Println("Backend reiniciado com sucesso.")
+		fmt.Printf("%s Backend reiniciado com sucesso.\n", green("SUCESSO:"))
 
 		return nil
 	},
@@ -110,25 +133,35 @@ var labSearchCmd = &cobra.Command{
 	Long:  `Busca laboratórios por termo, procurando em nomes, descrições e tags`,
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
+		// Criar formatadores de cores
+		red := color.New(color.FgRed).SprintFunc()
+		cyan := color.New(color.FgCyan).SprintFunc()
+		magenta := color.New(color.FgMagenta).SprintFunc()
+		headerColor := color.New(color.FgCyan, color.Bold).SprintFunc()
+
 		term := strings.ToLower(args[0])
 
 		rm, err := repo.NewRepositoryManager()
 		if err != nil {
-			return fmt.Errorf("erro ao criar gerenciador de repositórios: %v", err)
+			return fmt.Errorf("%s Erro ao criar gerenciador de repositórios: %v", red("ERRO:"), err)
 		}
 
 		lm, err := repo.NewLabManager(rm)
 		if err != nil {
-			return fmt.Errorf("erro ao criar gerenciador de laboratórios: %v", err)
+			return fmt.Errorf("%s Erro ao criar gerenciador de laboratórios: %v", red("ERRO:"), err)
 		}
 
 		labs, err := lm.ListLabs()
 		if err != nil {
-			return fmt.Errorf("erro ao listar laboratórios: %v", err)
+			return fmt.Errorf("%s Erro ao listar laboratórios: %v", red("ERRO:"), err)
 		}
 
+		fmt.Println(headerColor("BUSCA DE LABORATÓRIOS"))
+		fmt.Println(strings.Repeat("─", 80))
+		fmt.Printf("Buscando por: %s\n\n", magenta(term))
+
 		w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
-		fmt.Fprintln(w, "NOME\tVERSÃO\tREPOSITÓRIO\tDESCRIÇÃO")
+		fmt.Fprintln(w, cyan("NOME")+"\t"+cyan("VERSÃO")+"\t"+cyan("REPOSITÓRIO")+"\t"+cyan("DESCRIÇÃO"))
 
 		found := false
 		for repoName, entries := range labs {
@@ -138,7 +171,7 @@ var labSearchCmd = &cobra.Command{
 					containsCaseInsensitive(entry.Description, term) ||
 					containsCaseInsensitive(entry.Tags, term) {
 					fmt.Fprintf(w, "%s\t%s\t%s\t%s\n",
-						entry.ID,
+						magenta(entry.ID),
 						entry.Version,
 						repoName,
 						entry.Description)
@@ -147,11 +180,13 @@ var labSearchCmd = &cobra.Command{
 			}
 		}
 
+		w.Flush()
+
 		if !found {
-			fmt.Printf("\nNenhum laboratório encontrado para o termo '%s'\n", term)
+			fmt.Printf("\n%s Nenhum laboratório encontrado para o termo '%s'\n",
+				red("AVISO:"), magenta(term))
 		}
 
-		w.Flush()
 		return nil
 	},
 }
