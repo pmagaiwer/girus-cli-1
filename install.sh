@@ -11,7 +11,7 @@ cat << "EOF"
    ╚═════╝ ╚═╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝
 EOF
 
-echo -e "\nScript de Instalação - Versão 0.2.0 - Codename: Maracatu\n"
+echo -e "\nScript de Instalação - Versão 0.3.0 - Codename: Maracatu\n"
 
 # Verificar se o terminal é interativo
 IS_INTERACTIVE=0
@@ -91,7 +91,7 @@ if [ "$ARCH" == "unknown" ]; then
 fi
 
 # Configurações e variáveis
-GIRUS_VERSION="v0.2.0"
+GIRUS_VERSION="v0.3.0"
 
 # Definir URL com base no sistema operacional e arquitetura
 if [ "$OS" == "windows" ]; then

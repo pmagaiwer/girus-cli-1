@@ -2,7 +2,7 @@
 
 # GIRUS: Plataforma de Laboratórios Interativos
 
-Versão 0.2.0 Codename: "Maracatu" - Abril de 2025
+Versão 0.3.0 Codename: "Maracatu" - Maio de 2025
 
 ## Visão Geral
 
@@ -221,6 +221,26 @@ Aqui estão os comandos disponíveis:
 * **`make install`**: Compila o binário (se ainda não estiver compilado) e o move para `/usr/local/bin/girus`, tornando-o acessível globalmente no seu sistema. Requer permissões de superusuário (`sudo`).
 * **`make clean`**: Remove o diretório `dist/` e todos os arquivos de build gerados.
 * **`make release`**: Compila o binário `girus` para múltiplas plataformas (Linux, macOS, Windows - amd64 e arm64) e os coloca no diretório `dist/`.
+
+### Versionamento
+
+O GIRUS CLI utiliza um sistema de versionamento dinâmico baseado em git tags. O processo de build detecta automaticamente a versão com base nos seguintes critérios:
+
+* Se existir uma tag git (ex: `v0.3.0`), essa versão será utilizada removendo o prefixo `v` (resultado: `0.3.0`)
+* Se não existirem tags, será utilizada a versão padrão `0.3.0`
+* Para builds locais, você pode compilar com uma versão específica através do seguinte comando:
+
+```bash
+go build -o girus -ldflags="-X 'github.com/badtuxx/girus-cli/internal/common.Version=0.3.0'" ./main.go
+```
+
+Para verificar a versão atual do binário, execute:
+
+```bash
+./girus version
+```
+
+Os workflows CI/CD do projeto também utilizam este mecanismo de versionamento dinâmico para as builds do Docker e artefatos de release, garantindo consistência em todo o processo de build.
 
 ### Gerenciamento de Dependências (Go Modules)
 
