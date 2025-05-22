@@ -44,6 +44,36 @@ var createClusterCmd = &cobra.Command{
 	Long: `Cria um cluster Kind com o nome "girus" e implanta todos os componentes necessários.
 Por padrão, o deployment embutido no binário é utilizado.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		// Verificar se há atualização disponível para o CLI
+		fmt.Println("🔄 Verificando por atualizações...")
+		currentVersion := Version
+		latestVersion, err := GetLatestGitHubVersion("badtuxx/girus-cli")
+
+		if err == nil && IsNewerVersion(latestVersion, currentVersion) {
+			fmt.Printf("📢 Nova versão disponível: %s (atual: %s)\n", latestVersion, currentVersion)
+			fmt.Print("Deseja atualizar antes de criar o cluster? [S/n]: ")
+
+			reader := bufio.NewReader(os.Stdin)
+			response, _ := reader.ReadString('\n')
+			response = strings.ToLower(strings.TrimSpace(response))
+
+			if response == "" || response == "s" || response == "sim" || response == "y" || response == "yes" {
+				// Criar comando de atualização
+				updateCmd := exec.Command("girus", "update")
+				updateCmd.Stdout = os.Stdout
+				updateCmd.Stderr = os.Stderr
+				updateCmd.Stdin = os.Stdin
+
+				if err := updateCmd.Run(); err != nil {
+					fmt.Fprintf(os.Stderr, "❌ Erro ao executar atualização: %v\n", err)
+					fmt.Println("Continuando com a versão atual...")
+				} else {
+					fmt.Println("✅ Atualização concluída. Por favor, execute o comando novamente.")
+					os.Exit(0)
+				}
+			}
+		}
+
 		// Verificar se o containerEngine está instalado e funcionando
 		fmt.Println("🔄 Verificando pré-requisitos...")
 		containerEngineCmd := exec.Command(containerEngine, "--version")
@@ -179,7 +209,17 @@ Por padrão, o deployment embutido no binário é utilizado.`,
 					}
 				} else {
 					// Usar barra de progresso
-					bar := helpers.CreateProgressBar(100, "Excluindo cluster existente...", 80, false, false, 65, true, 14)
+					barConfig := helpers.ProgressBarConfig{
+						Total:            100,
+						Description:      "Excluindo cluster existente...",
+						Width:            80,
+						Throttle:         65,
+						SpinnerType:      15,
+						RenderBlankState: true,
+						ShowBytes:        false,
+						SetPredictTime:   false,
+					}
+					bar := helpers.CreateProgressBar(barConfig)
 
 					var stderr bytes.Buffer
 					deleteCmd.Stderr = &stderr
@@ -241,7 +281,17 @@ Por padrão, o deployment embutido no binário é utilizado.`,
 			}
 		} else {
 			// Usando barra de progresso (padrão)
-			bar := helpers.CreateProgressBar(100, "Criando cluster...", 80, false, false, 65, true, 14)
+			barConfig := helpers.ProgressBarConfig{
+				Total:            100,
+				Description:      "Criando cluster...",
+				Width:            80,
+				Throttle:         65,
+				SpinnerType:      14,
+				RenderBlankState: true,
+				ShowBytes:        false,
+				SetPredictTime:   false,
+			}
+			bar := helpers.CreateProgressBar(barConfig)
 
 			// Executar comando sem mostrar saída
 			createClusterCmd := exec.Command("kind", "create", "cluster", "--name", clusterName)
@@ -336,7 +386,17 @@ Por padrão, o deployment embutido no binário é utilizado.`,
 				}
 			} else {
 				// Usar barra de progresso
-				bar := helpers.CreateProgressBar(100, "Implantando Girus...", 80, false, false, 65, true, 14)
+				barConfig := helpers.ProgressBarConfig{
+					Total:            100,
+					Description:      "Implantando Girus...",
+					Width:            80,
+					Throttle:         65,
+					SpinnerType:      14,
+					RenderBlankState: true,
+					ShowBytes:        false,
+					SetPredictTime:   false,
+				}
+				bar := helpers.CreateProgressBar(barConfig)
 
 				// Executar comando sem mostrar saída
 				applyCmd := exec.Command("kubectl", "apply", "-f", deployFile)
@@ -415,7 +475,17 @@ Por padrão, o deployment embutido no binário é utilizado.`,
 				}
 			} else {
 				// Usar barra de progresso para o deploy (padrão)
-				bar := helpers.CreateProgressBar(100, "Implantando infraestrutura...", 80, false, false, 65, true, 14)
+				barConfig := helpers.ProgressBarConfig{
+					Total:            100,
+					Description:      "Implantando infraestrutura...",
+					Width:            80,
+					Throttle:         65,
+					SpinnerType:      14,
+					RenderBlankState: true,
+					ShowBytes:        false,
+					SetPredictTime:   false,
+				}
+				bar := helpers.CreateProgressBar(barConfig)
 
 				// Executar comando sem mostrar saída
 				applyCmd := exec.Command("kubectl", "apply", "-f", tempFile.Name())
@@ -523,7 +593,17 @@ Por padrão, o deployment embutido no binário é utilizado.`,
 
 				} else {
 					// Modo com barra de progresso: Aplicar cada template individualmente
-					bar := helpers.CreateProgressBar(len(manifestFiles), "Aplicando templates de laboratório...", 80, false, false, 65, true, 14)
+					barConfig := helpers.ProgressBarConfig{
+						Total:            len(manifestFiles),
+						Description:      "Aplicando templates de laboratório...",
+						Width:            80,
+						Throttle:         65,
+						SpinnerType:      14,
+						RenderBlankState: true,
+						ShowBytes:        false,
+						SetPredictTime:   false,
+					}
+					bar := helpers.CreateProgressBar(barConfig)
 
 					allSuccess := true
 					for _, manifestName := range manifestFiles {

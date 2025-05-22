@@ -19,13 +19,7 @@ data:
           - "O **grep** (Global Regular Expression Print) é uma das ferramentas mais importantes para processamento de texto no Linux. Ele permite buscar padrões específicos em arquivos ou na saída de outros comandos, sendo fundamentalmente útil para administração de sistemas e análise de logs."
           - "O grep trabalha linha por linha, examinando cada uma para determinar se contém o padrão de busca especificado, exibindo apenas as linhas que correspondem ao critério."
           - "Vamos começar criando um arquivo de exemplo para demonstrar as funcionalidades do grep:"
-          - |
-            `cat > arquivo_exemplo.txt << EOL
-            Linha 1 com a palavra linux
-            Linha 2 sem a palavra
-            Linha 3 com linux novamente
-            LINHA 4 COM LINUX
-            EOL`
+          - "`for i in "Linha 1 com a palavra linux" "Linha 2 sem a palavra" "Linha 3 com linux novamente" "LINHA 4 COM LINUX"; do echo $i >> arquivo_exemplo.txt; done`"
           - "Este comando cria um arquivo chamado <code>arquivo_exemplo.txt</code> com 4 linhas diferentes. Usamos o operador de redirecionamento <code>></code> para enviar a saída do comando <code>cat</code> para o arquivo, e o delimitador <code>EOL</code> (End Of Line) para indicar o início e fim do conteúdo."
           - "**Busca básica com grep:**"
           - "A forma mais simples de usar o grep é fornecer um padrão de busca e o nome do arquivo:"
@@ -116,12 +110,7 @@ data:
           - "O **awk** é uma linguagem de programação completa, especializada no processamento de dados baseados em texto. Diferente do grep e sed, que funcionam principalmente com linhas inteiras, o awk é particularmente útil para processar dados estruturados em colunas ou campos."
           - "O nome 'awk' vem das iniciais de seus criadores: Alfred **A**ho, Peter **W**einberger e Brian **K**ernighan. Esta ferramenta tem capacidades avançadas para manipulação de dados, incluindo variáveis, funções, e estruturas condicionais."
           - "Para demonstrar o poder do awk, vamos criar um arquivo com dados estruturados em colunas:"
-          - |
-            `cat > arquivo_colunas.txt << EOL
-            col1 col2 col3
-            val1 val2 val3
-            xyz abc 123
-            EOL`
+          - "`for i in "col1 col2 col3" "val1 val2 val3" "xyz abc 123"; do echo $i >> arquivo_colunas.txt; done`"
           - "Este arquivo simula dados tabulares, com três colunas separadas por espaços."
           - "**Conceito fundamental: campos e registros**"
           - "No awk, cada linha do arquivo é considerada um 'registro', e cada palavra (ou conjunto de caracteres separados por delimitadores) é um 'campo'. Por padrão, os campos são separados por espaços em branco (espaços ou tabs)."
@@ -145,13 +134,7 @@ data:
           - "Aqui, <code>$3 == \"val3\"</code> é uma condição que deve ser satisfeita para que o bloco de código entre chaves seja executado."
           - "**Usando separadores diferentes:**"
           - "Por padrão, o awk considera espaços em branco como separadores de campo. Podemos especificar um separador diferente com a opção <code>-F</code>. Vamos criar um arquivo CSV para demonstrar:"
-          - |
-            `cat > arquivo_csv.txt << EOL
-            Nome,Idade,Cidade
-            João,35,São Paulo
-            Maria,28,Rio de Janeiro
-            Pedro,42,Belo Horizonte
-            EOL`
+          - "`for i in "Nome,Idade,Cidade" "João,35,São Paulo" "Maria,28,Rio de Janeiro" "Pedro,42,Belo Horizonte"; do echo $i >> arquivo_csv.txt; done`"
           - "Agora podemos processar este arquivo especificando a vírgula como separador:"
           - "`awk -F, '{print \"Nome: \" $1, \"Idade: \" $2}' arquivo_csv.txt`"
           - "**Cálculos e variáveis:**"
