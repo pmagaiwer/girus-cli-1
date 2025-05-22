@@ -2,11 +2,11 @@ package repo
 
 import (
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
-	"gopkg.in/yaml.v3"
 	"time"
 )
 
@@ -159,4 +159,4 @@ func (lm *LabManager) getIndex(repo Repository) (*Index, error) {
 	}
 
 	return &index, nil
-} 
+}

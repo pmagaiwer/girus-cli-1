@@ -3,12 +3,12 @@ package repo
 import (
 	"encoding/json"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
-	"gopkg.in/yaml.v3"
 )
 
 // Repository representa um repositório de laboratórios
@@ -21,8 +21,8 @@ type Repository struct {
 
 // Index representa o arquivo de índice de um repositório
 type Index struct {
-	APIVersion string    `yaml:"apiVersion"`
-	Generated  string    `yaml:"generated"`
+	APIVersion string     `yaml:"apiVersion"`
+	Generated  string     `yaml:"generated"`
 	Labs       []LabEntry `yaml:"labs"`
 }
 
