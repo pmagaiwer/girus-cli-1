@@ -37,7 +37,6 @@ builds:
       - -X github.com/badtuxx/girus-cli/internal/common.BuildUser={{ .Env.GITHUB_ACTOR }}
       - -X github.com/badtuxx/girus-cli/internal/common.GoOS={{ .Os }}
       - -X github.com/badtuxx/girus-cli/internal/common.GoArch={{ .Arch }}
-      - -X github.com/badtuxx/girus-cli/internal/common.GoVersion={{ .Env.GOVERSION }}
 
 signs:
   # Keyless
