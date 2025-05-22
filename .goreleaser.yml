@@ -42,8 +42,8 @@ builds:
 signs:
   # Keyless
   - id: girus-cli
-    signature: "${artifact}-keyless.sig"
-    certificate: "${artifact}-keyless.pem"
+    signature: "${artifact}.sig"
+    certificate: "${artifact}.pem"
     cmd: cosign
     args:
       [
@@ -57,7 +57,7 @@ signs:
       ]
     artifacts: binary
   - id: checksum
-    signature: "${artifact}.sig"
+    signature: "${artifact}-keyless.sig"
     certificate: "${artifact}.pem"
     cmd: cosign
     args:
