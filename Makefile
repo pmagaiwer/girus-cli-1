@@ -7,7 +7,7 @@ BD=dist
 CDR=.
 CONFIG_PATH=manifest/config.yaml
 # Variáveis para versionamento
-VERSION    := "dev"
+VERSION    := dev
 DATE       := $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
 BUILT_BY   := $(shell whoami)
 COMMITID   := $(shell git rev-parse --short HEAD)
