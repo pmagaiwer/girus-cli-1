@@ -25,6 +25,7 @@ func init() {
 	rootCmd.AddCommand(listCmd)
 	rootCmd.AddCommand(labCmd)
 	rootCmd.AddCommand(repoCmd)
+	rootCmd.AddCommand(statusCmd)
 	rootCmd.AddCommand(versionCmd)
 
 	// Configura flags globais
