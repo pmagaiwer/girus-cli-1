@@ -222,7 +222,7 @@ func checkComponentStatus() (string, string) {
 	// Verificar o backend
 	backendCmd := exec.Command("kubectl", "get", "pods", "-n", "girus", "-l", "app=girus-backend", "-o", "jsonpath={.items[0].status.phase}")
 	backendOutput, err := backendCmd.Output()
-	backendStatus := "Não encontrado"
+	var backendStatus string
 	if err == nil && len(backendOutput) > 0 {
 		status := string(backendOutput)
 		if status == "Running" {
@@ -244,7 +244,7 @@ func checkComponentStatus() (string, string) {
 	// Verificar o frontend
 	frontendCmd := exec.Command("kubectl", "get", "pods", "-n", "girus", "-l", "app=girus-frontend", "-o", "jsonpath={.items[0].status.phase}")
 	frontendOutput, err := frontendCmd.Output()
-	frontendStatus := "Não encontrado"
+	var frontendStatus string
 	if err == nil && len(frontendOutput) > 0 {
 		status := string(frontendOutput)
 		if status == "Running" {
