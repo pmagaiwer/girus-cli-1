@@ -63,7 +63,7 @@ Por padrão, o deployment embutido no binário é utilizado.`,
 		// Verificar se há atualização disponível para o CLI
 		fmt.Println(headerColor("Verificando atualizações..."))
 
-		currentVersion := Version
+		currentVersion := common.Version
 
 		latestVersion, err := GetLatestGitHubVersion("badtuxx/girus-cli")
 
