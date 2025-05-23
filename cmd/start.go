@@ -64,12 +64,12 @@ var startCmd = &cobra.Command{
 		}
 		err = startDeployment(client, ctx, backendDeploymentName)
 		if err != nil {
-			fmt.Printf("Erro ao tentar iniciar o backend: %w\n", err)
+			fmt.Printf("Erro ao tentar iniciar o backend: %v\n", err)
 			return
 		}
 		err = startDeployment(client, ctx, frontendDeploymentName)
 		if err != nil {
-			fmt.Printf("Erro ao tentar iniciar o frontend: %w\n", err)
+			fmt.Printf("Erro ao tentar iniciar o frontend: %v\n", err)
 			return
 		}
 	},
@@ -78,7 +78,7 @@ var startCmd = &cobra.Command{
 func startDeployment(client *k8s.KubernetesClient, ctx context.Context, deploymentName string) error {
 	err := client.ScaleDeploy(ctx, "girus", deploymentName, 1)
 	if err != nil {
-		fmt.Printf("Erro ao tentar iniciar o deploy %s: %w\n", magenta(deploymentName), yellow(err))
+		fmt.Printf("Erro ao tentar iniciar o deploy %s: %v\n", magenta(deploymentName), yellow(err))
 		fmt.Println("Leia o erro, se você não conseguir resolvê-lo, recrie o cluster.")
 		return err
 	}
