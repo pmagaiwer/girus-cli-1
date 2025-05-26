@@ -199,30 +199,106 @@ func (k *KubernetesClient) CreateDeployment(ctx context.Context, namespace, name
 	labels := map[string]string{
 		"app": name,
 	}
-
-	envs := []corev1.EnvVar{
-		{
-			Name:  "PORT",
-			Value: "8080",
-		},
-		{
-			Name:  "GIN_MODE",
-			Value: "release",
-		},
-		{
-			Name: "LAB_DEFAULT_IMAGE",
-			ValueFrom: &corev1.EnvVarSource{
-				ConfigMapKeyRef: &corev1.ConfigMapKeySelector{
-					Optional: ptr.To(true),
-					LocalObjectReference: corev1.LocalObjectReference{
-						Name: "girus-config",
+	// Define o conteúdo das variáveis de ambiente dependendo de qual deployment está sendo criado
+	var envs []corev1.EnvVar
+	if name == "girus-backend" {
+		envs = []corev1.EnvVar{
+			{
+				Name:  "PORT",
+				Value: "8080",
+			},
+			{
+				Name:  "GIN_MODE",
+				Value: "release",
+			},
+			{
+				Name: "LAB_DEFAULT_IMAGE",
+				ValueFrom: &corev1.EnvVarSource{
+					ConfigMapKeyRef: &corev1.ConfigMapKeySelector{
+						Optional: ptr.To(true),
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "girus-config",
+						},
+						Key: "lab.defaultImage",
 					},
-					Key: "lab.defaultImage",
 				},
 			},
-		},
+		}
+	} else {
+		envs = []corev1.EnvVar{}
 	}
 
+	// Define o conteúdo dos volumeMounts dependendo de qual deployment está sendo criado
+	var volumeMount []corev1.VolumeMount
+	if name == "girus-backend" {
+		volumeMount = []corev1.VolumeMount{
+			{
+				Name:      "config-volume",
+				MountPath: "/app/config",
+			},
+		}
+	} else {
+		volumeMount = []corev1.VolumeMount{
+			{
+				Name:      "nginx-config",
+				MountPath: "/etc/nginx/conf.d",
+			},
+		}
+	}
+
+	// Define o conteúdo dos volumes montados dependendo de qual deployment está sendo criado
+	var volumes []corev1.Volume
+	if name == "girus-backend" {
+		volumes = []corev1.Volume{
+			{
+				Name: "config-volume",
+				VolumeSource: corev1.VolumeSource{
+					ConfigMap: &corev1.ConfigMapVolumeSource{
+						DefaultMode: ptr.To(int32(420)),
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "girus-config",
+						},
+					},
+				},
+			},
+		}
+	} else {
+		volumes = []corev1.Volume{
+			{
+				Name: "nginx-config",
+				VolumeSource: corev1.VolumeSource{
+					ConfigMap: &corev1.ConfigMapVolumeSource{
+						DefaultMode: ptr.To(int32(420)),
+						LocalObjectReference: corev1.LocalObjectReference{
+							Name: "nginx-config",
+						},
+					},
+				},
+			},
+		}
+	}
+
+	// Define quais portas expor dependendo de qual deployment está sendo criado
+	var containerPorts []corev1.ContainerPort
+	if name == "girus-backend" {
+		containerPorts = []corev1.ContainerPort{
+			{
+				Name:          "http",
+				ContainerPort: 8080,
+				Protocol:      "TCP",
+			},
+		}
+	} else {
+		containerPorts = []corev1.ContainerPort{
+			{
+				Name:          "http",
+				ContainerPort: 80,
+				Protocol:      "TCP",
+			},
+		}
+	}
+
+	// Define o deployment que será criado
 	deployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -257,39 +333,16 @@ func (k *KubernetesClient) CreateDeployment(ctx context.Context, namespace, name
 					DNSPolicy:          corev1.DNSClusterFirst,
 					Containers: []corev1.Container{
 						{
-							Name:            name,
-							Image:           image,
-							ImagePullPolicy: corev1.PullIfNotPresent,
-							Env:             envs,
-							Ports: []corev1.ContainerPort{
-								{
-									Name:          "http",
-									ContainerPort: 8080,
-									Protocol:      corev1.Protocol("TCP"),
-								},
-							},
-							VolumeMounts: []corev1.VolumeMount{
-								{
-									Name:      "config-volume",
-									MountPath: "/app/config",
-								},
-							},
+							Name:                   strings.ReplaceAll(name, "girus-", ""), // Remove o "girus-" do nome do container
+							Image:                  image,
+							ImagePullPolicy:        corev1.PullIfNotPresent,
+							Env:                    envs,
+							Ports:                  containerPorts,
+							VolumeMounts:           volumeMount,
 							TerminationMessagePath: "/dev/termination-log",
 						},
 					},
-					Volumes: []corev1.Volume{
-						{
-							Name: "config-volume",
-							VolumeSource: corev1.VolumeSource{
-								ConfigMap: &corev1.ConfigMapVolumeSource{
-									DefaultMode: ptr.To(int32(420)),
-									LocalObjectReference: corev1.LocalObjectReference{
-										Name: "girus-config",
-									},
-								},
-							},
-						},
-					},
+					Volumes: volumes,
 				},
 			},
 		},
