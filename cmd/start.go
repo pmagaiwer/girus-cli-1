@@ -76,7 +76,7 @@ var startCmd = &cobra.Command{
 }
 
 func startDeployment(client *k8s.KubernetesClient, ctx context.Context, deploymentName string) error {
-	err := client.ScaleDeploy(ctx, "girus", deploymentName, 1)
+	err := client.CreateDeployment(ctx, "girus", deploymentName)
 	if err != nil {
 		fmt.Printf("Erro ao tentar iniciar o deploy %s: %v\n", magenta(deploymentName), yellow(err))
 		fmt.Println("Leia o erro, se você não conseguir resolvê-lo, recrie o cluster.")

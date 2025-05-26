@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/ptr"
 	"os"
 	"os/exec"
@@ -13,6 +15,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/schollz/progressbar/v3"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -20,15 +23,34 @@ import (
 	"k8s.io/client-go/util/homedir"
 )
 
+var (
+	green = color.New(color.FgGreen).SprintFunc()
+	bold  = color.New(color.Bold).SprintFunc()
+)
+
 // KubernetesClient wraper do cliente Kubernetes
 type KubernetesClient struct {
 	clientset *kubernetes.Clientset
 }
 
-type DeploymentStatus struct {
+// DeploymentConfig objeto que define as configurações de um deployment
+type DeploymentConfig struct {
 	Name      string
 	Namespace string
-	Ready     bool
+	Image     string
+	Replicas  int32
+	Port      int32
+	Labels    map[string]string
+	EnvVars   map[string]string
+	Resources *ResourceConfig
+}
+
+// ResourceConfig defines resource requests and limits
+type ResourceConfig struct {
+	CPURequest    string
+	MemoryRequest string
+	CPULimit      string
+	MemoryLimit   string
 }
 
 // NewKubernetesClient cria um novo cliente Kubernetes
@@ -97,6 +119,187 @@ func (k *KubernetesClient) ScaleDeploy(ctx context.Context, namespace, name stri
 		return err
 	}
 
+	return nil
+}
+
+// DeletePodGracefully remove o pod com grade period (permitindo que os containers terminem primeiro)
+func (k *KubernetesClient) DeleteDeployGracefully(ctx context.Context, namespace, podName string) error {
+	deletePolicy := metav1.DeletePropagationForeground
+	deleteOptions := metav1.DeleteOptions{
+		PropagationPolicy:  &deletePolicy,
+		GracePeriodSeconds: ptr.To(int64(30)),
+	}
+
+	err := k.clientset.AppsV1().Deployments(namespace).Delete(ctx, podName, deleteOptions)
+	if err != nil {
+		return fmt.Errorf("falha ao remover deploy %s no namespace %s: %w", podName, namespace, err)
+	}
+
+	return nil
+}
+
+func (k *KubernetesClient) DeleteDeploy(ctx context.Context, namespace, name string) error {
+	deleteOptions := metav1.DeleteOptions{
+		PropagationPolicy: ptr.To(metav1.DeletePropagationForeground),
+	}
+	fmt.Printf("Removendo deployment %s...\n", name)
+	err := k.clientset.AppsV1().Deployments(namespace).Delete(ctx, name, deleteOptions)
+	if err != nil {
+		_ = fmt.Errorf("falha ao buscar pelo deploy %s: %w", name, err)
+		return err
+	}
+
+	return nil
+}
+
+// WaitForDeploymentDeletion espera pelo deployment ser removido
+func (k *KubernetesClient) WaitForDeploymentDeletion(ctx context.Context, namespace, deployName string) error {
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+			_, err := k.clientset.CoreV1().Pods(namespace).Get(ctx, deployName, metav1.GetOptions{})
+			if err != nil {
+				// Se o deployment não for encontrado, significa que já foi removido
+				if errors.IsNotFound(err) {
+					return nil
+				}
+				return fmt.Errorf("erro ao : %w", err)
+			}
+			// Deployment existe, espera pra checar novamente
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			case <-time.After(1 * time.Second):
+				continue
+			}
+		}
+	}
+}
+
+// StopDeployAndWait para o deployment e espera que seja removido
+func (k *KubernetesClient) StopDeployAndWait(ctx context.Context, namespace, podName string) error {
+	// First, delete the pod
+	if err := k.DeleteDeployGracefully(ctx, namespace, podName); err != nil {
+		return fmt.Errorf("falha ao esperar pelo deployment ser terminado gracefully: %w", err)
+	}
+
+	// Then wait for it to be completely removed
+	if err := k.WaitForDeploymentDeletion(ctx, namespace, podName); err != nil {
+		return fmt.Errorf("falha ao esperar pelo deployment ser terminado: %w", err)
+	}
+
+	return nil
+}
+
+// CreateDeployment cria um deployment do backend ou do frontend do girus
+func (k *KubernetesClient) CreateDeployment(ctx context.Context, namespace, name string) error {
+	image := fmt.Sprintf("linuxtips/%s:latest", name)
+	labels := map[string]string{
+		"app": name,
+	}
+
+	envs := []corev1.EnvVar{
+		{
+			Name:  "PORT",
+			Value: "8080",
+		},
+		{
+			Name:  "GIN_MODE",
+			Value: "release",
+		},
+		{
+			Name: "LAB_DEFAULT_IMAGE",
+			ValueFrom: &corev1.EnvVarSource{
+				ConfigMapKeyRef: &corev1.ConfigMapKeySelector{
+					Optional: ptr.To(true),
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: "girus-config",
+					},
+					Key: "lab.defaultImage",
+				},
+			},
+		},
+	}
+
+	deployment := &appsv1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+			Labels:    labels,
+		},
+		Spec: appsv1.DeploymentSpec{
+			Strategy: appsv1.DeploymentStrategy{
+				Type: appsv1.RollingUpdateDeploymentStrategyType,
+				RollingUpdate: &appsv1.RollingUpdateDeployment{
+					MaxSurge: &intstr.IntOrString{
+						Type:   intstr.String, // Pode ser intstr.Int também
+						StrVal: "25%",
+					},
+					MaxUnavailable: &intstr.IntOrString{
+						Type:   intstr.String, // Pode ser intstr.Int também
+						StrVal: "25%",
+					},
+				},
+			},
+			Replicas: ptr.To(int32(1)),
+			Selector: &metav1.LabelSelector{
+				MatchLabels: labels,
+			},
+			Template: corev1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: labels,
+				},
+				Spec: corev1.PodSpec{
+					ServiceAccountName: "girus-sa",
+					RestartPolicy:      corev1.RestartPolicyAlways,
+					DNSPolicy:          corev1.DNSClusterFirst,
+					Containers: []corev1.Container{
+						{
+							Name:            name,
+							Image:           image,
+							ImagePullPolicy: corev1.PullIfNotPresent,
+							Env:             envs,
+							Ports: []corev1.ContainerPort{
+								{
+									Name:          "http",
+									ContainerPort: 8080,
+									Protocol:      corev1.Protocol("TCP"),
+								},
+							},
+							VolumeMounts: []corev1.VolumeMount{
+								{
+									Name:      "config-volume",
+									MountPath: "/app/config",
+								},
+							},
+							TerminationMessagePath: "/dev/termination-log",
+						},
+					},
+					Volumes: []corev1.Volume{
+						{
+							Name: "config-volume",
+							VolumeSource: corev1.VolumeSource{
+								ConfigMap: &corev1.ConfigMapVolumeSource{
+									DefaultMode: ptr.To(int32(420)),
+									LocalObjectReference: corev1.LocalObjectReference{
+										Name: "girus-config",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	_, err := k.clientset.AppsV1().Deployments(namespace).Create(ctx, deployment, metav1.CreateOptions{})
+	if err != nil {
+		return fmt.Errorf("falha ao criar o deploy %s no namespace %s: %w", name, namespace, err)
+	}
+	fmt.Printf("%s: Deploy %s criado com sucesso!\n", green("SUCESSO:"), bold(name))
 	return nil
 }
 

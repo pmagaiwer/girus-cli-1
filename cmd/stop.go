@@ -69,7 +69,7 @@ var stopCmd = &cobra.Command{
 
 		// Verifica se o backend está em execução, se sim, parar o deploy e remover o serviço
 		if isRunning, _ := client.IsPodRunning(ctx, "girus", backendPod); isRunning {
-			err := stopDeployment(client, ctx, backendDeploymentName)
+			err := deleteDeployment(client, ctx, backendDeploymentName)
 			if err != nil {
 				fmt.Printf("falha ao tentar parar o deploy do backend do GIRUS: %v\n", err)
 				return
@@ -82,7 +82,7 @@ var stopCmd = &cobra.Command{
 
 		// Verifica se o frontend está em execução, se sim, parar o deploy e remover o serviço
 		if isRunning, _ := client.IsPodRunning(ctx, "girus", frontendPod); isRunning {
-			err := stopDeployment(client, ctx, frontendDeploymentName)
+			err := deleteDeployment(client, ctx, frontendDeploymentName)
 			if err != nil {
 				fmt.Printf("falha ao tentar parar o deploy do frontend do GIRUS: %v\n", err)
 				return
@@ -101,6 +101,32 @@ func stopDeployment(client *k8s.KubernetesClient, ctx context.Context, deploymen
 		if err != nil {
 			return err
 		}
+		fmt.Printf("%s Você quer forçar a parada do deployment %s?\n",
+			yellow("AVISO:"), magenta(deploymentName))
+		fmt.Print("Deseja continuar? [s/N]: ")
+
+		reader := bufio.NewReader(os.Stdin)
+		confirmStr, _ := reader.ReadString('\n')
+		confirm := strings.TrimSpace(strings.ToLower(confirmStr))
+
+		if confirm != "s" && confirm != "sim" && confirm != "y" && confirm != "yes" {
+			fmt.Println("Operação cancelada pelo usuário.")
+			return err
+		}
+		return err
+	}
+
+	return nil
+}
+
+func deleteDeployment(client *k8s.KubernetesClient, ctx context.Context, deploymentName string) error {
+	err := client.StopDeployAndWait(ctx, "girus", deploymentName)
+	if err != nil {
+		_, err := fmt.Fprintf(os.Stderr, "Erro ao tentar parar o deploy: %v\n", err)
+		if err != nil {
+			return err
+		}
+
 		fmt.Printf("%s Você quer forçar a parada do deployment %s?\n",
 			yellow("AVISO:"), magenta(deploymentName))
 		fmt.Print("Deseja continuar? [s/N]: ")
