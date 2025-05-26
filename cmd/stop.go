@@ -94,31 +94,6 @@ var stopCmd = &cobra.Command{
 	},
 }
 
-func stopDeployment(client *k8s.KubernetesClient, ctx context.Context, deploymentName string) error {
-	err := client.ScaleDeploy(ctx, "girus", deploymentName, 0)
-	if err != nil {
-		_, err := fmt.Fprintf(os.Stderr, "Erro ao tentar parar o pod: %v\n", err)
-		if err != nil {
-			return err
-		}
-		fmt.Printf("%s Você quer forçar a parada do deployment %s?\n",
-			yellow("AVISO:"), magenta(deploymentName))
-		fmt.Print("Deseja continuar? [s/N]: ")
-
-		reader := bufio.NewReader(os.Stdin)
-		confirmStr, _ := reader.ReadString('\n')
-		confirm := strings.TrimSpace(strings.ToLower(confirmStr))
-
-		if confirm != "s" && confirm != "sim" && confirm != "y" && confirm != "yes" {
-			fmt.Println("Operação cancelada pelo usuário.")
-			return err
-		}
-		return err
-	}
-
-	return nil
-}
-
 func deleteDeployment(client *k8s.KubernetesClient, ctx context.Context, deploymentName string) error {
 	err := client.StopDeployAndWait(ctx, "girus", deploymentName)
 	if err != nil {
