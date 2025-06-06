@@ -159,13 +159,13 @@ func (k *KubernetesClient) WaitForDeploymentDeletion(ctx context.Context, namesp
 		case <-ctx.Done():
 			return ctx.Err()
 		default:
-			_, err := k.clientset.CoreV1().Pods(namespace).Get(ctx, deployName, metav1.GetOptions{})
+			_, err := k.clientset.AppsV1().Deployments(namespace).Get(ctx, deployName, metav1.GetOptions{})
 			if err != nil {
 				// Se o deployment não for encontrado, significa que já foi removido
 				if errors.IsNotFound(err) {
 					return nil
 				}
-				return fmt.Errorf("erro ao : %w", err)
+				return fmt.Errorf("erro ao verificar deployment: %w", err)
 			}
 			// Deployment existe, espera pra checar novamente
 			select {
