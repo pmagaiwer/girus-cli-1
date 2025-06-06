@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 
 	"github.com/fatih/color"
@@ -143,40 +144,30 @@ func GetLatestGitHubVersion(repo string) (string, error) {
 // IsNewerVersion compara duas versões semânticas
 // retorna TRUE se v1 é MAIS NOVA que v2
 func IsNewerVersion(v1, v2 string) bool {
-	// Padronizar para ter 3 componentes (major.minor.patch)
+	// Remove prefixo 'v' se existir e divide as versões
+	v1 = strings.TrimPrefix(v1, "v")
+	v2 = strings.TrimPrefix(v2, "v")
 	parts1 := strings.Split(v1, ".")
 	parts2 := strings.Split(v2, ".")
 
-	// Garantir que temos pelo menos 3 partes
-	for len(parts1) < 3 {
-		parts1 = append(parts1, "0")
-	}
-	for len(parts2) < 3 {
-		parts2 = append(parts2, "0")
-	}
-
-	// Comparar major
-	if parts1[0] > parts2[0] {
-		return true
-	}
-	if parts1[0] < parts2[0] {
-		return false
-	}
-
-	// Comparar minor
-	if parts1[1] > parts2[1] {
-		return true
-	}
-	if parts1[1] < parts2[1] {
-		return false
+	// Comparar cada parte como inteiro (major, minor, patch)
+	for i := 0; i < 3; i++ {
+		var p1, p2 int
+		if i < len(parts1) {
+			p1, _ = strconv.Atoi(parts1[i])
+		}
+		if i < len(parts2) {
+			p2, _ = strconv.Atoi(parts2[i])
+		}
+		if p1 > p2 {
+			return true
+		}
+		if p1 < p2 {
+			return false
+		}
 	}
 
-	// Comparar patch
-	if parts1[2] > parts2[2] {
-		return true
-	}
-
-	// São iguais ou v1 é menor
+	// São iguais
 	return false
 }
 
