@@ -139,7 +139,7 @@ Por padrão, o deployment embutido no binário é utilizado.`,
 				fmt.Println("\nE inicie o serviço:")
 				fmt.Println("   sudo systemctl enable podman")
 				fmt.Println("   sudo systemctl start podman")
-				fmt.Println("\nOpicional: Após a instalação, para utilizar podman, rootless evitando sudo:")
+				fmt.Println("\nOpcional: Após a instalação, para utilizar podman, rootless evitando sudo:")
 				fmt.Println("   Siga as instruções do site oficial:")
 				fmt.Println("   https://github.com/containers/podman/blob/main/docs/tutorials/rootless_tutorial.md")
 			} else if containerEngine == "podman" {
