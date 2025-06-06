@@ -122,7 +122,7 @@ func (k *KubernetesClient) ScaleDeploy(ctx context.Context, namespace, name stri
 	return nil
 }
 
-// DeletePodGracefully remove o pod com grade period (permitindo que os containers terminem primeiro)
+// DeletePodGracefully remove o pod com grace period (permitindo que os containers terminem primeiro)
 func (k *KubernetesClient) DeleteDeployGracefully(ctx context.Context, namespace, podName string) error {
 	deletePolicy := metav1.DeletePropagationForeground
 	deleteOptions := metav1.DeleteOptions{
