@@ -8,62 +8,509 @@ metadata:
 data:
   lab.yaml: |
     name: docker-multi-stage-builds-es
-    title: "Multi-stage Builds no Docker"
-    description: "aprende a crear imagens Docker otimizadas usando multi-stage builds, reduzindo o tamanho final e melhorando a segurança. Este laboratorio guiado explora técnicas avançadas de construção de imagens Docker para aplicações modernas."
-    duration: 30m
+    title: "Docker: Multi-Stage Builds Avanzados"
+    description: "Aprende a crear imágenes Docker eficientes usando multi-stage builds, optimizando el tamaño final y mejorando la seguridad al separar el ambiente de build del runtime."
+    duration: 25m
     image: "linuxtips/girus-devops:0.1"
     privileged: true
     tasks:
-      - name: "creando un Multi-stage Build Básico"
-        description: "aprende os conceitos básicos de multi-stage builds."
+      - name: "Conceptos de Multi-Stage Builds"
+        description: "Comprende los fundamentos y beneficios de los multi-stage builds en Docker."
         steps:
-          - description: "crea un Dockerfile com multi-stage build"
-            command: "echo -e 'FROM golang:1.21 AS builder\nWORKDIR /app\nCOPY . .\nRUN go build -o main .\n\nFROM alpine:latest\nWORKDIR /app\nCOPY --from=builder /app/main .\nCMD [\"./main\"]' > Dockerfile"
-            expectedOutput: ""
-            hint: "crea un Dockerfile com dois estágios: build e runtime"
+          - "**¿Qué son los Multi-Stage Builds?**"
+          - "Los multi-stage builds permiten usar múltiples imágenes base en un único Dockerfile, manteniendo solo lo necesario en la imagen final."
+          - "**Beneficios principales:**"
+          - "- Reducción significativa del tamaño de imagen"
+          - "- Separación de ambiente de build y runtime"
+          - "- Mayor seguridad (no incluye herramientas de build en la imagen final)"
+          - "- Mejor organización del proceso de construcción"
+          - "Vamos a ver primero cómo se vería un enfoque tradicional vs multi-stage:"
+          - "Crea un directorio para el proyecto:"
+          - "`mkdir -p ~/docker-multistage && cd ~/docker-multistage`"
+          - "Vamos a simular una aplicación Go. Crea un archivo simple de Go:"
+          - "`cat > main.go << 'EOF'
+package main
 
-          - description: "crea un archivo Go simples"
-            command: "echo -e 'package main\n\nimport \"fmt\"\n\nfunc main() {\n    fmt.Println(\"Hello from multi-stage build!\")\n}' > main.go"
-            expectedOutput: ""
-            hint: "crea un programa Go básico"
+import (
+    \"fmt\"
+    \"net/http\"
+    \"log\"
+)
 
-          - description: "Construa a imagen"
-            command: "docker build -t multi-stage-app ."
-            expectedOutput: "Successfully built"
-            hint: "Use o comando docker build para construir a imagen"
+func main() {
+    http.HandleFunc(\"/\", func(w http.ResponseWriter, r *http.Request) {
+        fmt.Fprintf(w, \"¡Hola desde Docker Multi-Stage Build!\\n\")
+        fmt.Fprintf(w, \"Versión: 1.0\\n\")
+        fmt.Fprintf(w, \"Runtime: Go\\n\")
+    })
+    
+    fmt.Println(\"Servidor iniciado en puerto 8080\")
+    log.Fatal(http.ListenAndServe(\":8080\", nil))
+}
+EOF`"
+          - "Ahora crea un Dockerfile tradicional (sin multi-stage):"
+          - "`cat > Dockerfile.tradicional << 'EOF'
+FROM golang:1.19
 
-      - name: "Otimização de Imagens"
-        description: "aprende técnicas para otimizar imagens Docker."
+WORKDIR /app
+COPY main.go .
+
+# Instalar dependencias y compilar
+RUN go mod init hello-app
+RUN go build -o hello-app main.go
+
+EXPOSE 8080
+CMD [\"./hello-app\"]
+EOF`"
+          - "Construye la imagen tradicional:"
+          - "`docker build -f Dockerfile.tradicional -t hello-app-tradicional .`"
+          - "Verifica el tamaño de la imagen:"
+          - "`docker images hello-app-tradicional`"
+          - "Observa que la imagen incluye todo el toolkit de Go (~800MB+), aunque solo necesitamos el binario compilado."
+        tips:
+          - type: "info"
+            title: "Problemática del Enfoque Tradicional"
+            content: "En el enfoque tradicional, la imagen final contiene todas las herramientas de build (compiladores, librerías de desarrollo, etc.) que no son necesarias en runtime, resultando en imágenes grandes y con mayor superficie de ataque."
+          - type: "warning"
+            title: "Implicaciones de Seguridad"
+            content: "Imágenes grandes con herramientas de desarrollo pueden exponer vulnerabilidades innecesarias en producción. Multi-stage builds mitigan este riesgo."
+        validation:
+          - command: "docker images hello-app-tradicional | grep -q hello-app-tradicional && echo 'success' || echo 'error'"
+            expectedOutput: "success"
+            errorMessage: "La imagen tradicional no fue construida correctamente."
+
+      - name: "Implementando Multi-Stage Build Básico"
+        description: "Crea tu primer multi-stage build para optimizar el tamaño de imagen."
         steps:
-          - description: "verifique o tamanho da imagen"
-            command: "docker images multi-stage-app"
-            expectedOutput: "multi-stage-app"
-            hint: "Use o comando docker images para ver o tamanho"
+          - "Ahora vamos a implementar el mismo proyecto usando multi-stage builds:"
+          - "`cat > Dockerfile.multistage << 'EOF'
+# Primera etapa: Builder (ambiente de construcción)
+FROM golang:1.19 AS builder
 
-          - description: "crea uma versão otimizada do Dockerfile"
-            command: "echo -e 'FROM golang:1.21-alpine AS builder\nWORKDIR /app\nCOPY . .\nRUN go build -ldflags=\"-s -w\" -o main .\n\nFROM scratch\nCOPY --from=builder /app/main .\nCMD [\"./main\"]' > Dockerfile.optimized"
-            expectedOutput: ""
-            hint: "crea un Dockerfile otimizado usando alpine e scratch"
+WORKDIR /app
+COPY main.go .
 
-          - description: "Construa a versão otimizada"
-            command: "docker build -t multi-stage-app-optimized -f Dockerfile.optimized ."
-            expectedOutput: "Successfully built"
-            hint: "Construa a versão otimizada da imagen"
+# Compilar la aplicación
+RUN go mod init hello-app
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o hello-app main.go
 
-      - name: "Multi-stage Builds com Dependências"
-        description: "Implemente multi-stage builds com administración de dependências."
+# Segunda etapa: Runtime (imagen final)
+FROM alpine:latest
+
+# Instalar ca-certificates para HTTPS
+RUN apk --no-cache add ca-certificates
+
+WORKDIR /root/
+
+# Copiar el binario compilado desde la etapa builder
+COPY --from=builder /app/hello-app .
+
+EXPOSE 8080
+CMD [\"./hello-app\"]
+EOF`"
+          - "Construye la nueva imagen multi-stage:"
+          - "`docker build -f Dockerfile.multistage -t hello-app-multistage .`"
+          - "Compara los tamaños de las imágenes:"
+          - "`docker images | grep hello-app`"
+          - "Observa la diferencia dramática en tamaño. Normalmente verás una reducción de ~800MB a ~15MB."
+          - "Ejecuta ambas imágenes para verificar que funcionan igual:"
+          - "`docker run -d --name app-tradicional -p 8080:8080 hello-app-tradicional`"
+          - "`docker run -d --name app-multistage -p 8081:8080 hello-app-multistage`"
+          - "Prueba ambas aplicaciones:"
+          - "`curl localhost:8080`"
+          - "`curl localhost:8081`"
+          - "Ambas deben funcionar idénticamente, pero con tamaños muy diferentes."
+          - "Detén los contenedores:"
+          - "`docker stop app-tradicional app-multistage`"
+          - "`docker rm app-tradicional app-multistage`"
+          - "Analiza las capas de cada imagen:"
+          - "`docker history hello-app-tradicional | head -10`"
+          - "`docker history hello-app-multistage | head -10`"
+        tips:
+          - type: "info"
+            title: "Sintaxis AS"
+            content: "La palabra clave AS en 'FROM golang:1.19 AS builder' nombra la etapa para poder referenciarla posteriormente con --from=builder."
+          - type: "tip"
+            title: "Optimizaciones de Compilación"
+            content: "CGO_ENABLED=0 y -a -installsuffix cgo son flags de Go que crean binarios estáticos, ideales para imágenes mínimas como Alpine."
+          - type: "warning"
+            title: "Imagen Base Runtime"
+            content: "Alpine es popular por su tamaño mínimo, pero considera distroless o scratch para aplicaciones que no necesitan un shell o herramientas del sistema."
+        validation:
+          - command: "docker images hello-app-multistage | grep -q hello-app-multistage && echo 'success' || echo 'error'"
+            expectedOutput: "success"
+            errorMessage: "La imagen multi-stage no fue construida correctamente."
+
+      - name: "Multi-Stage Avanzado con Múltiples Etapas"
+        description: "Implementa un multi-stage build complejo con múltiples etapas especializadas."
         steps:
-          - description: "crea un Dockerfile para uma aplicación Node.js"
-            command: "echo -e 'FROM node:18 AS deps\nWORKDIR /app\nCOPY package*.json ./\nRUN npm ci\n\nFROM node:18-alpine AS builder\nWORKDIR /app\nCOPY --from=deps /app/node_modules ./node_modules\nCOPY . .\nRUN npm run build\n\nFROM node:18-alpine\nWORKDIR /app\nCOPY --from=builder /app/dist ./dist\nCOPY --from=deps /app/node_modules ./node_modules\nCMD [\"node\", \"dist/index.js\"]' > Dockerfile.node"
-            expectedOutput: ""
-            hint: "crea un Dockerfile para uma aplicación Node.js com três estágios"
+          - "Vamos a crear un ejemplo más complejo simulando una aplicación web con frontend y backend:"
+          - "Primero, crea archivos para simular un proyecto web completo:"
+          - "`mkdir -p frontend backend`"
+          - "Crea un archivo HTML simple:"
+          - "`cat > frontend/index.html << 'EOF'
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Multi-Stage Demo</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .container { max-width: 600px; margin: 0 auto; }
+        .status { background: #f0f0f0; padding: 10px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class=\"container\">
+        <h1>Aplicación Multi-Stage</h1>
+        <p>Esta página fue construida usando Docker Multi-Stage Builds</p>
+        <div class=\"status\">
+            <strong>Status:</strong> Funcionando correctamente
+        </div>
+    </div>
+</body>
+</html>
+EOF`"
+          - "Crea un archivo CSS:"
+          - "`cat > frontend/styles.css << 'EOF'
+/* Estilos para la aplicación */
+body {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    margin: 0;
+    padding: 20px;
+}
 
-          - description: "crea un package.json básico"
-            command: "echo -e '{\n  \"name\": \"node-app\",\n  \"version\": \"1.0.0\",\n  \"scripts\": {\n    \"build\": \"echo \\\"Build completed\\\"\"\n  },\n  \"dependencies\": {\n    \"express\": \"^4.18.2\"\n  }\n}' > package.json"
-            expectedOutput: ""
-            hint: "crea un package.json com uma dependência"
+.container {
+    background: rgba(255,255,255,0.1);
+    padding: 20px;
+    border-radius: 10px;
+    backdrop-filter: blur(10px);
+}
 
-          - description: "Construa a imagen Node.js"
-            command: "docker build -t node-multi-stage -f Dockerfile.node ."
-            expectedOutput: "Successfully built"
-            hint: "Construa a imagen Node.js com multi-stage build"
+.status {
+    background: rgba(0,255,0,0.2);
+    border: 1px solid rgba(0,255,0,0.5);
+}
+EOF`"
+          - "Ahora crea un Dockerfile avanzado con múltiples etapas:"
+          - "`cat > Dockerfile.avanzado << 'EOF'
+# Etapa 1: Preparación de dependencias
+FROM alpine:latest AS deps
+RUN apk add --no-cache curl
+WORKDIR /deps
+
+# Simular descarga de dependencias
+RUN echo \"Dependencia 1\" > dep1.txt
+RUN echo \"Dependencia 2\" > dep2.txt
+
+# Etapa 2: Procesamiento de frontend
+FROM node:16-alpine AS frontend-builder
+WORKDIR /frontend
+
+# Copiar archivos de frontend
+COPY frontend/ .
+
+# Simular un proceso de build de frontend (minificación, etc.)
+RUN cat index.html | tr -d '\\n' > index.min.html
+RUN cat styles.css | tr -d '\\n' > styles.min.css
+
+# Crear un bundle
+RUN echo \"<!DOCTYPE html><html><head><title>Multi-Stage Demo</title><style>\" > bundle.html
+RUN cat styles.min.css >> bundle.html
+RUN echo \"</style></head><body>\" >> bundle.html
+RUN cat index.min.html | sed 's/<head>.*<\\/head>//g' | sed 's/<\\/body><\\/html>//g' >> bundle.html
+RUN echo \"</body></html>\" >> bundle.html
+
+# Etapa 3: Construcción del backend
+FROM golang:1.19-alpine AS backend-builder
+WORKDIR /app
+
+# Crear un servidor web simple que sirva archivos estáticos
+RUN cat > server.go << 'GOEOF'
+package main
+
+import (
+    \"fmt\"
+    \"net/http\"
+    \"log\"
+    \"os\"
+)
+
+func main() {
+    http.HandleFunc(\"/\", func(w http.ResponseWriter, r *http.Request) {
+        if r.URL.Path == \"/\" {
+            content, err := os.ReadFile(\"/static/bundle.html\")
+            if err != nil {
+                http.Error(w, \"Error loading page\", 500)
+                return
+            }
+            w.Header().Set(\"Content-Type\", \"text/html\")
+            w.Write(content)
+        } else {
+            http.NotFound(w, r)
+        }
+    })
+    
+    http.HandleFunc(\"/health\", func(w http.ResponseWriter, r *http.Request) {
+        fmt.Fprintf(w, \"{\\\"status\\\": \\\"healthy\\\", \\\"stage\\\": \\\"multi-stage\\\"}\")
+    })
+    
+    fmt.Println(\"Servidor iniciado en puerto 8080\")
+    log.Fatal(http.ListenAndServe(\":8080\", nil))
+}
+GOEOF
+
+# Compilar el servidor
+RUN go mod init web-server
+RUN CGO_ENABLED=0 GOOS=linux go build -o web-server server.go
+
+# Etapa 4: Testing (opcional - puedes usarla para ejecutar tests)
+FROM backend-builder AS tester
+RUN echo \"Ejecutando tests...\" && \\
+    echo \"✓ Test 1: Compilación exitosa\" && \\
+    echo \"✓ Test 2: Archivos presentes\" && \\
+    ls -la web-server && \\
+    echo \"Tests completados\"
+
+# Etapa 5: Imagen final de producción
+FROM alpine:latest AS production
+
+# Instalar dependencias mínimas
+RUN apk --no-cache add ca-certificates
+WORKDIR /app
+
+# Crear directorio para archivos estáticos
+RUN mkdir -p /static
+
+# Copiar binario del backend
+COPY --from=backend-builder /app/web-server .
+
+# Copiar frontend procesado
+COPY --from=frontend-builder /frontend/bundle.html /static/
+
+# Copiar dependencias si son necesarias
+COPY --from=deps /deps/*.txt /deps/
+
+# Metadatos
+LABEL version=\"1.0\"
+LABEL description=\"Aplicación web multi-stage\"
+LABEL maintainer=\"DevOps Team\"
+
+EXPOSE 8080
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \\
+    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
+
+CMD [\"./web-server\"]
+EOF`"
+          - "Construye la imagen avanzada:"
+          - "`docker build -f Dockerfile.avanzado -t webapp-multistage .`"
+          - "Verifica el tamaño final:"
+          - "`docker images webapp-multistage`"
+          - "Ejecuta la aplicación:"
+          - "`docker run -d --name webapp-demo -p 8082:8080 webapp-multistage`"
+          - "Prueba la aplicación:"
+          - "`curl localhost:8082`"
+          - "Prueba el endpoint de health:"
+          - "`curl localhost:8082/health`"
+          - "Verifica el health check:"
+          - "`docker ps`"
+          - "Debe mostrar el status de health del contenedor."
+          - "Inspecciona las etapas intermedias disponibles:"
+          - "`docker images -a | grep none`"
+          - "Detén y limpia:"
+          - "`docker stop webapp-demo && docker rm webapp-demo`"
+        tips:
+          - type: "info"
+            title: "Etapas Intermedias"
+            content: "Las etapas intermedias se mantienen como cache para builds subsequentes. Esto acelera el proceso cuando solo cambias código específico de una etapa."
+          - type: "tip"
+            title: "Optimización de Cache"
+            content: "Ordena las instrucciones de menos a más cambiantes. Por ejemplo, instala dependencias antes de copiar código fuente para aprovechar mejor el cache de Docker."
+          - type: "warning"
+            title: "Gestión de Secretos"
+            content: "Nunca incluyas secretos en etapas intermedias, ya que pueden ser accesibles. Usa Docker secrets o mount secrets para información sensible."
+        validation:
+          - command: "docker images webapp-multistage | grep -q webapp-multistage && echo 'success' || echo 'error'"
+            expectedOutput: "success"
+            errorMessage: "La aplicación web multi-stage no fue construida correctamente."
+
+      - name: "Optimizaciones y Mejores Prácticas"
+        description: "Aplica técnicas avanzadas de optimización en multi-stage builds."
+        steps:
+          - "Vamos a explorar técnicas avanzadas de optimización:"
+          - "**1. Using Specific Tags vs Latest**"
+          - "Crea un Dockerfile optimizado con tags específicos:"
+          - "`cat > Dockerfile.optimizado << 'EOF'
+# Usar tags específicos para reproducibilidad
+FROM golang:1.19.13-alpine3.18 AS builder
+
+# Instalar dependencias del sistema solo lo necesario
+RUN apk add --no-cache git ca-certificates
+
+WORKDIR /app
+
+# Copiar solo go.mod y go.sum primero (mejor cache)
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Luego copiar el código fuente
+COPY main.go .
+
+# Build optimizado con flags específicos
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \\
+    -ldflags='-w -s -extldflags \"-static\"' \\
+    -a -installsuffix cgo \\
+    -o app main.go
+
+# Etapa final: usar distroless para máxima seguridad
+FROM gcr.io/distroless/static:nonroot
+
+# Copiar ca-certificates desde la etapa builder
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+
+# Copiar binario
+COPY --from=builder /app/app /app
+
+# Usar usuario no-root
+USER nonroot:nonroot
+
+EXPOSE 8080
+ENTRYPOINT [\"/app\"]
+EOF`"
+          - "Crea archivos go.mod y go.sum para el ejemplo:"
+          - "`cat > go.mod << 'EOF'
+module hello-app
+
+go 1.19
+EOF`"
+          - "`touch go.sum`"
+          - "**2. Multi-Platform Build**"
+          - "Crea un Dockerfile que soporte múltiples arquitecturas:"
+          - "`cat > Dockerfile.multiplatform << 'EOF'
+FROM --platform=$BUILDPLATFORM golang:1.19-alpine AS builder
+
+# Argumentos para cross-compilation
+ARG TARGETPLATFORM
+ARG BUILDPLATFORM
+ARG TARGETOS
+ARG TARGETARCH
+
+WORKDIR /app
+COPY go.mod go.sum main.go ./
+
+RUN go mod download
+
+# Build para la plataforma target
+RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH \\
+    go build -ldflags='-w -s' -o app main.go
+
+FROM alpine:3.18
+RUN apk --no-cache add ca-certificates
+COPY --from=builder /app/app /app
+ENTRYPOINT [\"/app\"]
+EOF`"
+          - "**3. Build con argumentos y secretos**"
+          - "Crea un Dockerfile que use build arguments de forma segura:"
+          - "`cat > Dockerfile.build-args << 'EOF'
+FROM golang:1.19-alpine AS builder
+
+# Build arguments
+ARG VERSION=dev
+ARG BUILD_DATE
+ARG GIT_COMMIT
+
+WORKDIR /app
+COPY . .
+
+# Inyectar información de build
+RUN go build -ldflags=\"-X main.Version=$VERSION -X main.BuildDate=$BUILD_DATE -X main.GitCommit=$GIT_COMMIT\" -o app main.go
+
+FROM alpine:3.18
+RUN apk --no-cache add ca-certificates
+COPY --from=builder /app/app /app
+
+# Labels para metadatos
+LABEL version=\"$VERSION\"
+LABEL build-date=\"$BUILD_DATE\"
+LABEL git-commit=\"$GIT_COMMIT\"
+
+ENTRYPOINT [\"/app\"]
+EOF`"
+          - "Construye con argumentos de build:"
+          - "`docker build -f Dockerfile.build-args \\
+  --build-arg VERSION=1.2.3 \\
+  --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') \\
+  --build-arg GIT_COMMIT=abc123 \\
+  -t app-with-metadata .`"
+          - "**4. Análisis de capas y optimización**"
+          - "Usa herramientas para analizar capas:"
+          - "`docker history app-with-metadata`"
+          - "Crea un script para comparar tamaños:"
+          - "`cat > compare-images.sh << 'EOF'
+#!/bin/bash
+echo \"=== COMPARACIÓN DE IMÁGENES ===\"
+echo \"Imagen                    | Tamaño\"
+echo \"-------------------------|--------\"
+docker images --format \"{{.Repository}}:{{.Tag}} | {{.Size}}\" | grep -E \"hello-app|webapp\"
+EOF`"
+          - "`chmod +x compare-images.sh && ./compare-images.sh`"
+          - "**5. Linting y security scanning**"
+          - "Crea un Dockerfile con mejores prácticas:"
+          - "`cat > Dockerfile.best-practices << 'EOF'
+# Usar imagen base específica y confiable
+FROM golang:1.19.13-alpine3.18 AS builder
+
+# Instalar dependencias como un layer separado
+RUN apk add --no-cache git ca-certificates tzdata
+
+# Crear usuario no-privilegiado
+RUN adduser -D -s /bin/sh appuser
+
+WORKDIR /app
+
+# Copiar manifiestos de dependencias primero
+COPY go.mod go.sum ./
+RUN go mod download && go mod verify
+
+# Copiar código fuente
+COPY . .
+
+# Build con optimizaciones de seguridad
+RUN CGO_ENABLED=0 GOOS=linux go build \\
+    -ldflags='-w -s -extldflags \"-static\"' \\
+    -a -installsuffix cgo \\
+    -o app .
+
+# Usar imagen scratch para tamaño mínimo
+FROM scratch
+
+# Copiar archivos necesarios desde builder
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
+COPY --from=builder /etc/passwd /etc/passwd
+COPY --from=builder /app/app /app
+
+# Usar usuario no-root
+USER appuser
+
+EXPOSE 8080
+ENTRYPOINT [\"/app\"]
+EOF`"
+          - "Construye la imagen optimizada:"
+          - "`docker build -f Dockerfile.best-practices -t app-optimized .`"
+          - "Compara todas las imágenes creadas:"
+          - "`./compare-images.sh`"
+        tips:
+          - type: "info"
+            title: "Distroless vs Alpine vs Scratch"
+            content: "Scratch (0MB) < Distroless (~2MB) < Alpine (~5MB). Elige según necesidades: scratch para binarios estáticos, distroless para seguridad, alpine para flexibilidad."
+          - type: "tip"
+            title: "Build Cache Optimization"
+            content: "Ordena los COPY commands: dependencias primero, código después. Usa .dockerignore para excluir archivos innecesarios y acelerar el contexto de build."
+          - type: "warning"
+            title: "Secretos en Multi-Stage"
+            content: "Usa Docker BuildKit con --mount=type=secret para manejar secretos sin incluirlos en capas intermedias. Evita ARG para información sensible."
+        validation:
+          - command: "docker images app-optimized | grep -q app-optimized && echo 'success' || echo 'error'"
+            expectedOutput: "success"
+            errorMessage: "La imagen optimizada no fue construida correctamente."
