@@ -1,0 +1,69 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: aws-s3-iam-lab-es
+  namespace: girus
+  labels:
+    app: girus-lab-template
+data:
+  lab.yaml: |
+    name: aws-s3-iam-es
+    title: "S3 e IAM na AWS"
+    description: "aprende a administrar buckets S3 e políticas IAM na AWS. Este laboratorio guiado explora conceitos de armazenamento de objetos e controle de acesso na nuvem."
+    duration: 40m
+    image: "linuxtips/girus-devops:0.1"
+    privileged: true
+    tasks:
+      - name: "administración de Buckets S3"
+        description: "aprende a crear e configurar buckets S3."
+        steps:
+          - description: "crea un bucket S3"
+            command: "aws s3api create-bucket --bucket lab-bucket-$(date +%s) --region us-east-1"
+            expectedOutput: "Location"
+            hint: "Use o comando aws s3api create-bucket"
+
+          - description: "Configure o bucket para hospedagem de site estático"
+            command: "aws s3api put-bucket-website --bucket $(aws s3api list-buckets --query 'Buckets[0].Name' --output text) --website-configuration '{\"IndexDocument\":{\"Suffix\":\"index.html\"},\"ErrorDocument\":{\"Key\":\"error.html\"}}'"
+            expectedOutput: ""
+            hint: "Use o comando aws s3api put-bucket-website"
+
+          - description: "Configure a política de bucket"
+            command: "aws s3api put-bucket-policy --bucket $(aws s3api list-buckets --query 'Buckets[0].Name' --output text) --policy '{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"PublicReadGetObject\",\"Effect\":\"Allow\",\"Principal\":\"*\",\"Action\":\"s3:GetObject\",\"Resource\":\"arn:aws:s3:::$(aws s3api list-buckets --query \"Buckets[0].Name\" --output text)/*\"}]}'"
+            expectedOutput: ""
+            hint: "Use o comando aws s3api put-bucket-policy"
+
+      - name: "Operações com Objetos S3"
+        description: "aprende a administrar objetos em buckets S3."
+        steps:
+          - description: "crea un archivo de teste"
+            command: "echo '<html><body><h1>Hello from S3!</h1></body></html>' > index.html"
+            expectedOutput: ""
+            hint: "crea un archivo HTML simples"
+
+          - description: "Faça upload do archivo para o bucket"
+            command: "aws s3 cp index.html s3://$(aws s3api list-buckets --query 'Buckets[0].Name' --output text)/"
+            expectedOutput: "upload:"
+            hint: "Use o comando aws s3 cp"
+
+          - description: "verifique o conteúdo do bucket"
+            command: "aws s3 ls s3://$(aws s3api list-buckets --query 'Buckets[0].Name' --output text)/"
+            expectedOutput: "index.html"
+            hint: "Use o comando aws s3 ls"
+
+      - name: "administración de IAM"
+        description: "aprende a crear e administrar usuários e políticas IAM."
+        steps:
+          - description: "crea un usuário IAM"
+            command: "aws iam create-user --user-name lab-user"
+            expectedOutput: "User"
+            hint: "Use o comando aws iam create-user"
+
+          - description: "crea uma política de acesso ao S3"
+            command: "aws iam create-policy --policy-name S3AccessPolicy --policy-document '{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Action\":[\"s3:GetObject\",\"s3:PutObject\"],\"Resource\":\"arn:aws:s3:::$(aws s3api list-buckets --query \"Buckets[0].Name\" --output text)/*\"}]}'"
+            expectedOutput: "Policy"
+            hint: "Use o comando aws iam create-policy"
+
+          - description: "Anexe a política ao usuário"
+            command: "aws iam attach-user-policy --user-name lab-user --policy-arn $(aws iam list-policies --query 'Policies[0].Arn' --output text)"
+            expectedOutput: ""
+            hint: "Use o comando aws iam attach-user-policy"

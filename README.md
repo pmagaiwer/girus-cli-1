@@ -1,5 +1,7 @@
 ![GIRUS](girus-logo.png)
 
+**Escolha seu idioma / Elija su idioma:** [Português](README.md) | [Español](README.es.md)
+
 # GIRUS: Plataforma de Laboratórios Interativos
 
 Versão 0.3.0 Codename: "Maracatu" - Maio de 2025
@@ -19,7 +21,7 @@ Desenvolvida pela LINUXtips, a plataforma GIRUS se diferencia por ser executada 
 - **Atualização Simplificada**: Comando `update` integrado que verifica, baixa e instala novas versões automaticamente
 - **Laboratórios Personalizáveis**: Sistema de templates baseado em ConfigMaps do Kubernetes que facilita a criação de novos laboratórios
 - **Open Source**: Projeto totalmente aberto para contribuições da comunidade
-- **Multilíngue**: Criado originalmente para o português, mas com um sistema de templates flexível, é possível criar laboratórios em outros idiomas. Nas versões futuras, o sistema de templates será expandido para suportar múltiplos idiomas.
+- **Multilíngue**: Além do português, o GIRUS agora oferece suporte oficial ao espanhol. O sistema de templates permite adicionar facilmente novos idiomas.
 
 ## Gerenciamento de Repositórios e Laboratórios
 

@@ -1,0 +1,68 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: linux-seguranca-criptografia-lab-es
+  namespace: girus
+  labels:
+    app: girus-lab-template
+data:
+  lab.yaml: |
+    name: linux-seguranca-criptografia-es
+    title: "Segurança e Criptografia no Linux"
+    description: "aprende os fundamentos de segurança e criptografia no Linux, incluindo administración de chaves SSH, criptografia de archivos e boas práticas de segurança. Este laboratorio guiado explora as ferramentas e técnicas essenciais para proteger sistemas Linux e dados sensíveis."
+    duration: 35m
+    image: "linuxtips/girus-devops:0.1"
+    tasks:
+      - name: "administración de Chaves SSH"
+        description: "aprende a crear, administrar e usar chaves SSH para autenticação segura."
+        steps:
+          - description: "Gere un par de chaves SSH"
+            command: "ssh-keygen -t rsa -b 4096 -f ~/.ssh/id_rsa -N ''"
+            expectedOutput: "Your identification has been saved"
+            hint: "Use o comando ssh-keygen para gerar un par de chaves"
+
+          - description: "verifique as permissões das chaves"
+            command: "ls -l ~/.ssh/id_rsa*"
+            expectedOutput: "-rw-------"
+            hint: "verifique se as permissões estão corretas (600 para chave privada)"
+
+          - description: "Configure o SSH para usar apenas autenticação por chave"
+            command: "echo 'PasswordAuthentication no' | sudo tee -a /etc/ssh/sshd_config"
+            expectedOutput: "PasswordAuthentication no"
+            hint: "Desative a autenticação por senha no SSH"
+
+      - name: "Criptografia de archivos"
+        description: "Explore técnicas de criptografia de archivos usando GPG e outras ferramentas."
+        steps:
+          - description: "Gere un par de chaves GPG"
+            command: "gpg --full-generate-key"
+            expectedOutput: "Please select what kind of key you want"
+            hint: "Use o comando gpg para gerar un par de chaves"
+
+          - description: "crea un archivo de teste e criptografe-o"
+            command: "echo 'Dados sensíveis' > secreto.txt && gpg -e -r $(gpg --list-secret-keys --keyid-format LONG | grep sec | cut -d' ' -f4) secreto.txt"
+            expectedOutput: ""
+            hint: "Use o comando gpg -e para criptografar un archivo"
+
+          - description: "Descriptografe o archivo"
+            command: "gpg -d secreto.txt.gpg"
+            expectedOutput: "Dados sensíveis"
+            hint: "Use o comando gpg -d para descriptografar"
+
+      - name: "Auditoria de Segurança"
+        description: "aprende a realizar auditorias básicas de segurança no sistema."
+        steps:
+          - description: "verifique puertos abertas"
+            command: "netstat -tuln"
+            expectedOutput: "Active Internet connections"
+            hint: "Use o comando netstat para ver puertos abertas"
+
+          - description: "verifique usuários com privilégios"
+            command: "grep -Po '^sudo.+:\K.*$' /etc/group"
+            expectedOutput: ""
+            hint: "verifique os usuários no grupo sudo"
+
+          - description: "Analise logs de segurança"
+            command: "sudo tail -n 50 /var/log/auth.log"
+            expectedOutput: ""
+            hint: "verifique os logs de autenticação"

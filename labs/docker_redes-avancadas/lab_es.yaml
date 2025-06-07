@@ -1,0 +1,69 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: docker-redes-avancadas-lab-es
+  namespace: girus
+  labels:
+    app: girus-lab-template
+data:
+  lab.yaml: |
+    name: docker-redes-avancadas-es
+    title: "Redes Avançadas no Docker"
+    description: "aprende a configurar e administrar redes avançadas no Docker, incluindo redes personalizadas, comunicação entre containers e isolamento de rede. Este laboratorio guiado explora os conceitos avançados de networking no Docker e como implementar arquiteturas de rede complexas."
+    duration: 35m
+    image: "linuxtips/girus-devops:0.1"
+    privileged: true
+    tasks:
+      - name: "Criação de Redes Personalizadas"
+        description: "aprende a crear e administrar redes Docker personalizadas."
+        steps:
+          - description: "crea uma rede bridge personalizada"
+            command: "docker network create --driver bridge minha-rede"
+            expectedOutput: ""
+            hint: "Use o comando docker network create para crear uma rede"
+
+          - description: "verifique as redes disponíveis"
+            command: "docker network ls"
+            expectedOutput: "minha-rede"
+            hint: "Use o comando docker network ls para listar as redes"
+
+          - description: "Inspecione a rede criada"
+            command: "docker network inspect minha-rede"
+            expectedOutput: "Name: minha-rede"
+            hint: "Use o comando docker network inspect para ver detalhes da rede"
+
+      - name: "Comunicação entre Containers"
+        description: "Configure a comunicação entre containers em diferentes redes."
+        steps:
+          - description: "crea un container na rede personalizada"
+            command: "docker run -d --name web --network minha-rede nginx"
+            expectedOutput: ""
+            hint: "Use o comando docker run com --network para conectar à rede"
+
+          - description: "crea outro container na mesma rede"
+            command: "docker run -d --name db --network minha-rede mysql:5.7"
+            expectedOutput: ""
+            hint: "crea outro container na mesma rede"
+
+          - description: "Teste a comunicação entre containers"
+            command: "docker exec web ping -c 4 db"
+            expectedOutput: "4 packets transmitted"
+            hint: "Use o comando docker exec para testar a conectividade"
+
+      - name: "Isolamento e Segurança de Rede"
+        description: "Implemente isolamento e segurança em redes Docker."
+        steps:
+          - description: "crea uma rede isolada"
+            command: "docker network create --internal rede-isolada"
+            expectedOutput: ""
+            hint: "Use a opção --internal para crear uma rede isolada"
+
+          - description: "crea un container na rede isolada"
+            command: "docker run -d --name app-isolado --network rede-isolada nginx"
+            expectedOutput: ""
+            hint: "crea un container na rede isolada"
+
+          - description: "verifique o isolamento"
+            command: "docker exec app-isolado ping -c 4 8.8.8.8"
+            expectedOutput: "Network is unreachable"
+            hint: "Tente acessar a internet do container isolado"

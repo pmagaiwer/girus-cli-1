@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: linux-comandos-basicos-lab-es
+  namespace: girus
+  labels:
+    app: girus-lab-template
+data:
+  lab.yaml: |
+    name: linux-comandos-basicos-es
+    title: "Fundamentos de Linux: Navegación y Comandos Esenciales"
+    description: "Aprende los comandos básicos y los conceptos fundamentales de Linux para moverte y administrar archivos desde la terminal."
+    duration: 20m
+    image: "linuxtips/girus-devops:0.1"
+    tasks:
+      - name: "Navegación en el Sistema de Archivos"
+        description: "Explora la estructura de directorios de Linux y practica cómo desplazarte entre ellos."
+        steps:
+          - "Ejecuta `pwd` para mostrar el directorio actual"
+          - "Utiliza `ls` para listar los archivos del directorio"

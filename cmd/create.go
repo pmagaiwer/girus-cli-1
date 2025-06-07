@@ -34,7 +34,7 @@ var (
 
 var createCmd = &cobra.Command{
 	Use:   "create [subcommand]",
-	Short: "Comandos para criar recursos",
+	Short: common.T("Comandos para criar recursos", "Comandos para crear recursos"),
 	Run: func(cmd *cobra.Command, args []string) {
 		cmd.Help()
 	},
@@ -57,19 +57,19 @@ Por padrão, o deployment embutido no binário é utilizado.`,
 
 		// Exibir cabeçalho
 		fmt.Println(strings.Repeat("─", 80))
-		fmt.Println(headerColor("GIRUS CREATE"))
+		fmt.Println(headerColor(common.T("GIRUS CREATE", "GIRUS CREAR")))
 		fmt.Println(strings.Repeat("─", 80))
 
 		// Verificar se há atualização disponível para o CLI
-		fmt.Println(headerColor("Verificando atualizações..."))
+		fmt.Println(headerColor(common.T("Verificando atualizações...", "Verificando actualizaciones...")))
 
 		currentVersion := common.Version
 
 		latestVersion, err := GetLatestGitHubVersion("badtuxx/girus-cli")
 
 		if err == nil && IsNewerVersion(latestVersion, currentVersion) {
-			fmt.Printf("%s versão %s disponível (atual: %s)\n", yellow("AVISO:"), magenta(latestVersion), magenta(currentVersion))
-			fmt.Print("Deseja atualizar antes de criar o cluster? [S/n]: ")
+			fmt.Printf(common.T("%s versão %s disponível (atual: %s)\n", "%s versión %s disponible (actual: %s)\n"), yellow("AVISO:"), magenta(latestVersion), magenta(currentVersion))
+			fmt.Print(common.T("Deseja atualizar antes de criar o cluster? [S/n]: ", "¿Desea actualizar antes de crear el cluster? [S/n]: "))
 
 			reader := bufio.NewReader(os.Stdin)
 			response, _ := reader.ReadString('\n')
@@ -84,20 +84,20 @@ Por padrão, o deployment embutido no binário é utilizado.`,
 
 				if err := updateCmd.Run(); err != nil {
 					fmt.Fprintf(os.Stderr, "%s erro ao executar atualização: %v\n", red("ERRO:"), err)
-					fmt.Println("Continuando com a versão atual...")
+					fmt.Println(common.T("Continuando com a versão atual...", "Continuando con la versión actual..."))
 				} else {
-					fmt.Printf("%s Atualização concluída. Por favor, execute o comando novamente.\n", green("SUCESSO:"))
+					fmt.Printf(common.T("%s Atualização concluída. Por favor, execute o comando novamente.\n", "%s Actualización completada. Por favor, ejecute el comando de nuevo.\n"), green("SUCESSO:"))
 					os.Exit(0)
 				}
 			}
 		}
 
 		// Verificar se o containerEngine está instalado e funcionando
-		fmt.Println("\n" + headerColor("Verificando pré-requisitos..."))
+		fmt.Println("\n" + headerColor(common.T("Verificando pré-requisitos...", "Verificando requisitos previos...")))
 		containerEngineCmd := exec.Command(containerEngine, "--version")
 		if err := containerEngineCmd.Run(); err != nil {
-			fmt.Printf("%s %s não encontrado ou não está em execução\n", red("ERRO:"), containerEngine)
-			fmt.Println("\nO " + containerEngine + " é necessário para criar um cluster Kind. Instruções de instalação:")
+			fmt.Printf(common.T("%s %s não encontrado ou não está em execução\n", "%s %s no encontrado o no está en ejecución\n"), red("ERRO:"), containerEngine)
+			fmt.Println(common.T("\nO "+containerEngine+" é necessário para criar um cluster Kind. Instruções de instalação:", "\n"+containerEngine+" es necesario para crear un cluster Kind. Instrucciones de instalación:"))
 
 			// Detectar o sistema operacional para instruções específicas
 			if runtime.GOOS == "darwin" && containerEngine == "docker" {
@@ -157,7 +157,7 @@ Por padrão, o deployment embutido no binário é utilizado.`,
 		// Verificar se o serviço containerEngine está rodando
 		containerEngineInfoCmd := exec.Command(containerEngine, "info")
 		if err := containerEngineInfoCmd.Run(); err != nil {
-			fmt.Printf("%s O serviço %s não está em execução\n", red("ERRO:"), containerEngine)
+			fmt.Printf(common.T("%s O serviço %s não está em execução\n", "%s El servicio %s no está en ejecución\n"), red("ERRO:"), containerEngine)
 
 			if runtime.GOOS == "darwin" && containerEngine == "docker" {
 				fmt.Println("\nPara macOS com Colima:")
@@ -201,15 +201,15 @@ Por padrão, o deployment embutido no binário é utilizado.`,
 			}
 
 			if clusterExists {
-				fmt.Printf("%s Cluster Girus já existe.\n", yellow("AVISO:"))
-				fmt.Print("Deseja substituí-lo? [s/N]: ")
+				fmt.Printf("%s %s\n", yellow(common.T("AVISO:", "AVISO:")), common.T("Cluster Girus já existe.", "El cluster Girus ya existe."))
+				fmt.Print(common.T("Deseja substituí-lo? [s/N]: ", "¿Desea reemplazarlo? [s/N]: "))
 
 				reader := bufio.NewReader(os.Stdin)
 				response, _ := reader.ReadString('\n')
 				response = strings.ToLower(strings.TrimSpace(response))
 
 				if response != "s" && response != "sim" && response != "y" && response != "yes" {
-					fmt.Println("Operação cancelada.")
+					fmt.Println(common.T("Operação cancelada.", "Operación cancelada."))
 					return
 				}
 
@@ -276,12 +276,12 @@ Por padrão, o deployment embutido no binário é utilizado.`,
 					}
 				}
 
-				fmt.Println("\n" + green("SUCESSO:") + " Cluster existente excluído com sucesso.")
+				fmt.Println("\n" + green(common.T("SUCESSO:", "ÉXITO:")) + " " + common.T("Cluster existente excluído com sucesso.", "Cluster existente eliminado con éxito."))
 			}
 		}
 
 		// Criar o cluster Kind
-		fmt.Println("\n" + headerColor("Criando cluster Girus..."))
+		fmt.Println("\n" + headerColor(common.T("Criando cluster Girus...", "Creando cluster Girus...")))
 
 		if verboseMode {
 			// Executar normalmente mostrando o output
@@ -301,7 +301,7 @@ Por padrão, o deployment embutido no binário é utilizado.`,
 			// Usar barra de progresso (padrão)
 			barConfig := helpers.ProgressBarConfig{
 				Total:            100,
-				Description:      "Criando cluster...",
+				Description:      common.T("Criando cluster...", "Creando cluster..."),
 				Width:            80,
 				Throttle:         65,
 				SpinnerType:      14,
@@ -454,7 +454,7 @@ Por padrão, o deployment embutido no binário é utilizado.`,
 				}
 			}
 
-			fmt.Println("\n" + green("SUCESSO:") + " Infraestrutura e template de laboratório aplicados com sucesso!")
+			fmt.Println("\n" + green(common.T("SUCESSO:", "ÉXITO:")) + " " + common.T("Infraestrutura e template de laboratório aplicados com sucesso!", "¡Infraestructura y plantilla de laboratorio aplicadas con éxito!"))
 		} else {
 			// Usar o deployment embutido como fallback
 			// fmt.Println("⚠️  Arquivo girus-kind-deploy.yaml não encontrado, usando deployment embutido.")
@@ -543,10 +543,10 @@ Por padrão, o deployment embutido no binário é utilizado.`,
 				}
 			}
 
-			fmt.Println("\n" + green("SUCESSO:") + " Infraestrutura básica aplicada com sucesso!")
+			fmt.Println("\n" + green(common.T("SUCESSO:", "ÉXITO:")) + " " + common.T("Infraestrutura básica aplicada com sucesso!", "¡Infraestructura básica aplicada con éxito!"))
 
 			// Agora vamos aplicar o template de laboratório que está embutido no binário
-			fmt.Println("\n" + headerColor("Aplicando templates de laboratório..."))
+			fmt.Println("\n" + headerColor(common.T("Aplicando templates de laboratório...", "Aplicando plantillas de laboratorio...")))
 
 			// Listar todos os arquivos YAML dentro de manifests/
 			manifestFiles, err := templates.ListManifests()
@@ -604,16 +604,16 @@ Por padrão, o deployment embutido no binário é utilizado.`,
 					}
 
 					if allTemplatesApplied {
-						fmt.Printf("%s Todos os templates de laboratório embutidos aplicados com sucesso!\n", green("SUCESSO:"))
+						fmt.Printf(common.T("%s Todos os templates de laboratório embutidos aplicados com sucesso!\n", "%s ¡Todas las plantillas de laboratorio embebidas aplicadas con éxito!\n"), green(common.T("SUCESSO:", "ÉXITO:")))
 					} else {
-						fmt.Printf("%s Alguns templates de laboratório não puderam ser aplicados.\n", yellow("AVISO:"))
+						fmt.Printf(common.T("%s Alguns templates de laboratório não puderam ser aplicados.\n", "%s Algunas plantillas de laboratorio no se pudieron aplicar.\n"), yellow(common.T("AVISO:", "AVISO:")))
 					}
 
 				} else {
 					// Modo com barra de progresso: Aplicar cada template individualmente
 					barConfig := helpers.ProgressBarConfig{
 						Total:            len(manifestFiles),
-						Description:      "Aplicando templates de laboratório...",
+						Description:      common.T("Aplicando templates de laboratório...", "Aplicando plantillas de laboratorio..."),
 						Width:            80,
 						Throttle:         65,
 						SpinnerType:      14,
@@ -669,13 +669,13 @@ Por padrão, o deployment embutido no binário é utilizado.`,
 					bar.Finish()
 
 					if allSuccess {
-						fmt.Println("\n" + green("SUCESSO:") + " Todos os templates de laboratório aplicados com sucesso!")
+						fmt.Println("\n" + green(common.T("SUCESSO:", "ÉXITO:")) + " " + common.T("Todos os templates de laboratório aplicados com sucesso!", "¡Todas las plantillas de laboratorio aplicadas con éxito!"))
 					} else {
-						fmt.Println("\n" + yellow("AVISO:") + " Alguns templates de laboratório não puderam ser aplicados. Use --verbose para detalhes.")
+						fmt.Println("\n" + yellow(common.T("AVISO:", "AVISO:")) + " " + common.T("Alguns templates de laboratório não puderam ser aplicados. Use --verbose para detalhes.", "Algunas plantillas de laboratorio no se pudieron aplicar. Use --verbose para más detalles."))
 					}
 
 					// Verificação de diagnóstico para confirmar que os templates estão visíveis
-					fmt.Println("\n" + headerColor("Verificando templates de laboratório instalados:"))
+					fmt.Println("\n" + headerColor(common.T("Verificando templates de laboratório instalados:", "Verificando plantillas de laboratorio instaladas:")))
 					listLabsCmd := exec.Command("kubectl", "get", "configmap", "-n", "girus", "-l", "app=girus-lab-template", "-o", "custom-columns=NAME:.metadata.name")
 					var labsOutput bytes.Buffer
 					listLabsCmd.Stdout = &labsOutput
@@ -684,27 +684,27 @@ Por padrão, o deployment embutido no binário é utilizado.`,
 					if err := listLabsCmd.Run(); err == nil {
 						labs := strings.Split(strings.TrimSpace(labsOutput.String()), "\n")
 						if len(labs) > 1 { // Primeira linha é o cabeçalho "NAME"
-							fmt.Println("   Templates encontrados:")
+							fmt.Println(common.T("   Templates encontrados:", "   Plantillas encontradas:"))
 							for i, lab := range labs {
 								if i > 0 { // Pular o cabeçalho
 									fmt.Printf("   %s %s\n", green("ATIVO"), strings.TrimSpace(lab))
 								}
 							}
 						} else {
-							fmt.Printf("   %s Nenhum template de laboratório encontrado!\n", yellow("AVISO:"))
+							fmt.Printf("   %s %s\n", yellow(common.T("AVISO:", "AVISO:")), common.T("Nenhum template de laboratório encontrado!", "¡Ninguna plantilla de laboratorio encontrada!"))
 						}
 					} else {
-						fmt.Printf("   %s Não foi possível verificar os templates instalados\n", yellow("AVISO:"))
+						fmt.Printf("   %s %s\n", yellow(common.T("AVISO:", "AVISO:")), common.T("Não foi possível verificar os templates instalados", "No fue posible verificar las plantillas instaladas"))
 					}
 				}
 
 				// Reiniciar o backend para carregar os templates
-				fmt.Println("\n" + headerColor("Reiniciando o backend para carregar os templates..."))
+				fmt.Println("\n" + headerColor(common.T("Reiniciando o backend para carregar os templates...", "Reiniciando el backend para cargar las plantillas...")))
 				restartCmd := exec.Command("kubectl", "rollout", "restart", "deployment/girus-backend", "-n", "girus")
 				restartCmd.Run()
 
 				// Aguardar o reinício completar
-				fmt.Println("   Aguardando o reinício do backend completar...")
+				fmt.Println(common.T("   Aguardando o reinício do backend completar...", "   Esperando a que el backend reinicie..."))
 				waitCmd := exec.Command("kubectl", "rollout", "status", "deployment/girus-backend", "-n", "girus", "--timeout=60s")
 				// Redirecionar saída para não exibir detalhes do rollout
 				var waitOutput bytes.Buffer
@@ -731,10 +731,10 @@ Por padrão, o deployment embutido no binário é utilizado.`,
 				// Executar e aguardar
 				waitCmd.Run()
 				close(done)
-				fmt.Printf("\r   %s Backend reiniciado com sucesso!            \n", green("SUCESSO:"))
+				fmt.Printf("\r   %s %s            \n", green(common.T("SUCESSO:", "ÉXITO:")), common.T("Backend reiniciado com sucesso!", "¡Backend reiniciado con éxito!"))
 
 				// Aguardar mais alguns segundos para o backend inicializar completamente
-				fmt.Println("   Aguardando inicialização completa...")
+				fmt.Println(common.T("   Aguardando inicialização completa...", "   Esperando a que la inicialización complete..."))
 				time.Sleep(5 * time.Second)
 			}
 		}
@@ -751,17 +751,17 @@ Por padrão, o deployment embutido no binário é utilizado.`,
 
 		// Configurar port-forward automaticamente (a menos que --skip-port-forward tenha sido especificado)
 		if !skipPortForward {
-			fmt.Print("\n" + headerColor("Configurando acesso aos serviços do Girus...") + " ")
+			fmt.Print("\n" + headerColor(common.T("Configurando acesso aos serviços do Girus...", "Configurando el acceso a los servicios de Girus...")) + " ")
 
 			if err := k8s.SetupPortForward("girus"); err != nil {
-				fmt.Printf("%s\n", yellow("AVISO:"))
-				fmt.Printf("%s Não foi possível configurar o acesso automático: %v\n", yellow("AVISO:"), err)
-				fmt.Println("\nVocê pode tentar configurar manualmente com os comandos:")
+				fmt.Printf("%s\n", yellow(common.T("AVISO:", "AVISO:")))
+				fmt.Printf(common.T("%s Não foi possível configurar o acesso automático: %v\n", "%s No fue posible configurar el acceso automático: %v\n"), yellow(common.T("AVISO:", "AVISO:")), err)
+				fmt.Println(common.T("\nVocê pode tentar configurar manualmente com os comandos:", "\nPuede intentar configurar manualmente con los comandos:"))
 				fmt.Println("kubectl port-forward -n girus svc/girus-backend 8080:8080 --address 0.0.0.0")
 				fmt.Println("kubectl port-forward -n girus svc/girus-frontend 8000:80 --address 0.0.0.0")
 			} else {
-				fmt.Printf("%s\n", green("SUCESSO:"))
-				fmt.Println("Acesso configurado com sucesso!")
+				fmt.Printf("%s\n", green(common.T("SUCESSO:", "ÉXITO:")))
+				fmt.Println(common.T("Acesso configurado com sucesso!", "¡Acceso configurado con éxito!"))
 				fmt.Println(bold("Backend:") + " http://localhost:8080")
 				fmt.Println(bold("Frontend:") + " http://localhost:8000")
 
@@ -775,27 +775,27 @@ Por padrão, o deployment embutido no binário é utilizado.`,
 				}
 			}
 		} else {
-			fmt.Println("\n" + yellow("AVISO:") + " Port-forward ignorado conforme solicitado")
-			fmt.Println("\nPara acessar o Girus posteriormente, execute:")
+			fmt.Println("\n" + yellow(common.T("AVISO:", "AVISO:")) + " " + common.T("Port-forward ignorado conforme solicitado", "Port-forward ignorado según lo solicitado"))
+			fmt.Println(common.T("\nPara acessar o Girus posteriormente, execute:", "\nPara acceder a Girus más tarde, ejecute:"))
 			fmt.Println("kubectl port-forward -n girus svc/girus-backend 8080:8080 --address 0.0.0.0")
 			fmt.Println("kubectl port-forward -n girus svc/girus-frontend 8000:80 --address 0.0.0.0")
 		}
 
 		// Exibir mensagem de conclusão
 		fmt.Println("\n" + strings.Repeat("─", 60))
-		fmt.Println(headerColor("GIRUS PRONTO PARA USO!"))
+		fmt.Println(headerColor(common.T("GIRUS PRONTO PARA USO!", "GIRUS LISTO PARA USARSE!")))
 		fmt.Println(strings.Repeat("─", 60))
 
 		// Exibir acesso ao navegador como próximo passo
-		fmt.Println(bold("PRÓXIMOS PASSOS:"))
-		fmt.Println("  • Acesse o Girus no navegador:")
+		fmt.Println(bold(common.T("PRÓXIMOS PASSOS:", "PRÓXIMOS PASOS:")))
+		fmt.Println(common.T("  • Acesse o Girus no navegador:", "  • Acceda a Girus en el navegador:"))
 		fmt.Println("    http://localhost:8000")
 
 		// Instruções para laboratórios
-		fmt.Println("\n  • Para aplicar mais templates de laboratórios com o Girus:")
-		fmt.Println("    girus create lab -f caminho/para/lab.yaml")
+		fmt.Println(common.T("\n  • Para aplicar mais templates de laboratórios com o Girus:", "\n  • Para aplicar más plantillas de laboratorio con Girus:"))
+		fmt.Println(common.T("    girus create lab -f caminho/para/lab.yaml", "    girus create lab -f ruta/al/lab.yaml"))
 
-		fmt.Println("\n  • Para ver todos os laboratórios disponíveis:")
+		fmt.Println(common.T("\n  • Para ver todos os laboratórios disponíveis:", "\n  • Para ver todos los laboratorios disponibles:"))
 		fmt.Println("    girus list labs")
 
 		fmt.Println(strings.Repeat("─", 60))
@@ -819,10 +819,10 @@ var createLabCmd = &cobra.Command{
 			labID := args[0]
 			createLabFromRepo(labID, repoIndexURL, verboseMode)
 		} else {
-			fmt.Fprintf(os.Stderr, "%s Você deve especificar um ID de laboratório ou um arquivo com a flag -f\n", red("ERRO:"))
-			fmt.Println("\nExemplos:")
-			fmt.Println("  girus create lab linux-monitoramento-sistema  # Instala um laboratório do repositório remoto")
-			fmt.Println("  girus create lab -f meulaboratorio.yaml       # Adiciona um novo template a partir do arquivo")
+			fmt.Fprintf(os.Stderr, "%s %s\n", red("ERRO:"), common.T("Você deve especificar um ID de laboratório ou um arquivo com a flag -f", "Debe especificar un ID de laboratorio o un archivo con la opción -f"))
+			fmt.Println(common.T("\nExemplos:", "\nEjemplos:"))
+			fmt.Println(common.T("  girus create lab linux-monitoramento-sistema  # Instala um laboratório do repositório remoto", "  girus create lab linux-monitoramento-sistema  # Instala un laboratorio del repositorio remoto"))
+			fmt.Println(common.T("  girus create lab -f meulaboratorio.yaml       # Adiciona um novo template a partir do arquivo", "  girus create lab -f mi-lab.yaml             # Añade una nueva plantilla desde el archivo"))
 			os.Exit(1)
 		}
 	},
@@ -836,18 +836,18 @@ func createLabFromRepo(labID string, indexURL string, verboseMode bool) {
 	magenta := color.New(color.FgMagenta).SprintFunc()
 	headerColor := color.New(color.FgCyan, color.Bold).SprintFunc()
 
-	fmt.Printf("%s Buscando laboratório '%s'...\n", cyan("INFO:"), magenta(labID))
+	fmt.Printf(common.T("%s Buscando laboratório '%s'...\n", "%s Buscando laboratorio '%s'...\n"), cyan("INFO:"), magenta(labID))
 
 	// Buscar o laboratório no index.yaml
 	labInfo, err := repo.FindLabByID(labID, indexURL)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s %v\n", red("ERRO:"), err)
-		fmt.Println("\nPara ver os laboratórios disponíveis, use:")
+		fmt.Println(common.T("\nPara ver os laboratórios disponíveis, use:", "\nPara ver los laboratorios disponibles, use:"))
 		fmt.Println("  girus list repo-labs")
 		os.Exit(1)
 	}
 
-	fmt.Printf("%s Baixando o template de '%s'...\n", cyan("INFO:"), magenta(labInfo.Title))
+	fmt.Printf(common.T("%s Baixando o template de '%s'...\n", "%s Descargando la plantilla de '%s'...\n"), cyan("INFO:"), magenta(labInfo.Title))
 
 	// Fazer o download do lab.yaml
 	tempFile, err := repo.DownloadLabYAML(labInfo.URL)
@@ -858,7 +858,7 @@ func createLabFromRepo(labID string, indexURL string, verboseMode bool) {
 	defer os.Remove(tempFile) // Garantir que o arquivo temporário seja removido ao final
 
 	// Aplicar o laboratório
-	fmt.Println(headerColor("Aplicando laboratório no cluster GIRUS..."))
+	fmt.Println(headerColor(common.T("Aplicando laboratório no cluster GIRUS...", "Aplicando laboratorio en el cluster GIRUS...")))
 	lab.AddLabFromFile(tempFile, verboseMode)
 }
 
