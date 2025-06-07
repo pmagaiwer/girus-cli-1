@@ -103,5 +103,5 @@ func init() {
 	// Não adicionar updateCmd aqui, pois já é adicionado no update.go
 
 	// Configura flags globais
-	rootCmd.PersistentFlags().StringP("config", "c", "", "arquivo de configuração (padrão: $HOME/.girus/config.yaml)")
+	rootCmd.PersistentFlags().StringP("config", "c", "", common.T("arquivo de configuração (padrão: $HOME/.girus/config.yaml)", "archivo de configuración (predeterminado: $HOME/.girus/config.yaml)"))
 }
