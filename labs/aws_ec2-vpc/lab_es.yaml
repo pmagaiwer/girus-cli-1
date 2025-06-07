@@ -9,33 +9,33 @@ data:
   lab.yaml: |
     name: aws-ec2-vpc-es
     title: "EC2 e VPC na AWS"
-    description: "Aprenda a configurar e gerenciar instâncias EC2 e Virtual Private Cloud (VPC) na AWS. Este laboratório guiado explora conceitos fundamentais de computação em nuvem e networking na AWS."
+    description: "aprende a configurar e administrar instâncias EC2 e Virtual Private Cloud (VPC) na AWS. Este laboratorio guiado explora conceitos fundamentais de computação em nuvem e networking na AWS."
     duration: 45m
     image: "linuxtips/girus-devops:0.1"
     privileged: true
     tasks:
-      - name: "Criando uma VPC"
-        description: "Aprenda a criar e configurar uma VPC na AWS."
+      - name: "creando uma VPC"
+        description: "aprende a crear e configurar uma VPC na AWS."
         steps:
-          - description: "Crie uma VPC com CIDR 10.0.0.0/16"
+          - description: "crea uma VPC com CIDR 10.0.0.0/16"
             command: "aws ec2 create-vpc --cidr-block 10.0.0.0/16 --tag-specifications 'ResourceType=vpc,Tags=[{Key=Name,Value=LabVPC}]'"
             expectedOutput: "VpcId"
             hint: "Use o comando aws ec2 create-vpc com --cidr-block"
 
-          - description: "Crie subnets públicas e privadas"
+          - description: "crea subnets públicas e privadas"
             command: "aws ec2 create-subnet --vpc-id $(aws ec2 describe-vpcs --filters 'Name=tag:Name,Values=LabVPC' --query 'Vpcs[0].VpcId' --output text) --cidr-block 10.0.1.0/24 --availability-zone us-east-1a --tag-specifications 'ResourceType=subnet,Tags=[{Key=Name,Value=PublicSubnet1}]'"
             expectedOutput: "SubnetId"
-            hint: "Use o comando aws ec2 create-subnet para criar subnets"
+            hint: "Use o comando aws ec2 create-subnet para crear subnets"
 
           - description: "Configure a tabela de rotas"
             command: "aws ec2 create-route-table --vpc-id $(aws ec2 describe-vpcs --filters 'Name=tag:Name,Values=LabVPC' --query 'Vpcs[0].VpcId' --output text) --tag-specifications 'ResourceType=route-table,Tags=[{Key=Name,Value=PublicRouteTable}]'"
             expectedOutput: "RouteTableId"
-            hint: "Use o comando aws ec2 create-route-table para criar a tabela de rotas"
+            hint: "Use o comando aws ec2 create-route-table para crear a tabela de rotas"
 
       - name: "Configurando Instâncias EC2"
-        description: "Aprenda a criar e configurar instâncias EC2."
+        description: "aprende a crear e configurar instâncias EC2."
         steps:
-          - description: "Crie um security group"
+          - description: "crea un security group"
             command: "aws ec2 create-security-group --group-name LabSecurityGroup --description 'Security group for lab instances' --vpc-id $(aws ec2 describe-vpcs --filters 'Name=tag:Name,Values=LabVPC' --query 'Vpcs[0].VpcId' --output text)"
             expectedOutput: "GroupId"
             hint: "Use o comando aws ec2 create-security-group"
@@ -50,10 +50,10 @@ data:
             expectedOutput: "InstanceId"
             hint: "Use o comando aws ec2 run-instances"
 
-      - name: "Gerenciamento de Instâncias"
-        description: "Aprenda a gerenciar e monitorar instâncias EC2."
+      - name: "administración de Instâncias"
+        description: "aprende a administrar e monitorar instâncias EC2."
         steps:
-          - description: "Verifique o status da instância"
+          - description: "verifique o status da instância"
             command: "aws ec2 describe-instances --filters 'Name=tag:Name,Values=LabInstance' --query 'Reservations[0].Instances[0].State.Name' --output text"
             expectedOutput: "running"
             hint: "Use o comando aws ec2 describe-instances"

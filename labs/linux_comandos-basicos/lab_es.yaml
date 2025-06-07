@@ -8,7 +8,7 @@ metadata:
 data:
   lab.yaml: |
     name: linux-comandos-basicos-es
-    title: "Fundamentos de Linux: Navegación y Comandos Esenciales"
+    title: "Fundamentos de Linux: Navegación y comandos Esenciales"
     description: "Aprende los comandos básicos y conceptos fundamentales de Linux para operar de manera eficiente en la línea de comandos."
     duration: 20m
     image: "linuxtips/girus-devops:0.1"

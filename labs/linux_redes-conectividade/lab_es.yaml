@@ -9,32 +9,32 @@ data:
   lab.yaml: |
     name: linux-redes-conectividade-es
     title: "Redes e Conectividade no Linux"
-    description: "Aprenda a configurar e gerenciar redes no Linux, incluindo interfaces de rede, roteamento, firewall e diagnóstico de problemas de conectividade. Este laboratório guiado explora os comandos e ferramentas essenciais para administração de redes em sistemas Linux, fornecendo uma base sólida para solução de problemas de conectividade."
+    description: "aprende a configurar e administrar redes no Linux, incluindo interfaces de rede, enrutamiento, firewall e diagnóstico de problemas de conectividade. Este laboratorio guiado explora os comandos e ferramentas essenciais para administração de redes em sistemas Linux, fornecendo uma base sólida para solução de problemas de conectividade."
     duration: 30m
     image: "linuxtips/girus-devops:0.1"
     tasks:
       - name: "Configuração de Interfaces de Rede"
-        description: "Aprenda a configurar e gerenciar interfaces de rede no Linux, incluindo endereçamento IP, máscaras de sub-rede e gateways."
+        description: "aprende a configurar e administrar interfaces de rede no Linux, incluindo endereçamento IP, máscaras de sub-rede e gateways."
         steps:
-          - description: "Verifique as interfaces de rede disponíveis"
+          - description: "verifique as interfaces de rede disponíveis"
             command: "ip addr show"
             expectedOutput: "eth0"
             hint: "Use o comando ip addr show para listar todas as interfaces de rede"
 
-          - description: "Configure um endereço IP estático"
+          - description: "Configure un endereço IP estático"
             command: "ip addr add 192.168.1.100/24 dev eth0"
             expectedOutput: ""
-            hint: "Use o comando ip addr add para configurar um endereço IP"
+            hint: "Use o comando ip addr add para configurar un endereço IP"
 
-          - description: "Verifique a conectividade de rede"
+          - description: "verifique a conectividade de rede"
             command: "ping -c 4 8.8.8.8"
             expectedOutput: "4 packets transmitted"
             hint: "Use o comando ping para testar a conectividade"
 
-      - name: "Roteamento e Firewall"
-        description: "Explore o roteamento e configuração de firewall no Linux usando iptables e ferramentas de diagnóstico."
+      - name: "enrutamiento e Firewall"
+        description: "Explore o enrutamiento e configuração de firewall no Linux usando iptables e ferramentas de diagnóstico."
         steps:
-          - description: "Verifique a tabela de roteamento"
+          - description: "verifique a tabela de enrutamiento"
             command: "ip route show"
             expectedOutput: "default via"
             hint: "Use o comando ip route show para ver as rotas configuradas"
@@ -44,15 +44,15 @@ data:
             expectedOutput: ""
             hint: "Use o comando iptables para configurar regras de firewall"
 
-          - description: "Verifique as regras de firewall"
+          - description: "verifique as regras de firewall"
             command: "iptables -L"
             expectedOutput: "Chain INPUT"
             hint: "Use o comando iptables -L para listar as regras"
 
       - name: "Diagnóstico de Problemas"
-        description: "Aprenda a diagnosticar e resolver problemas comuns de rede no Linux."
+        description: "aprende a diagnosticar e resolver problemas comuns de rede no Linux."
         steps:
-          - description: "Verifique o status da rede"
+          - description: "verifique o status da rede"
             command: "netstat -tuln"
             expectedOutput: "Active Internet connections"
             hint: "Use o comando netstat para ver conexões ativas"

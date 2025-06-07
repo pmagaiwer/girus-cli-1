@@ -1,9 +1,9 @@
 apiVersion: girus.linuxtips.io/v1
 kind: Lab
 metadata:
-  name: exemplo-lab-es
+  name: ejemplo-lab-es
   version: "1.0.0"
-  description: "Laboratório de exemplo do GIRUS CLI"
+  description: "laboratorio de ejemplo do GIRUS CLI"
   author: "Seu Nome"
   created: "2024-06-01T10:00:00Z"
 spec:
@@ -17,10 +17,10 @@ spec:
         mountPath: /workspace
         size: "512Mi"
   tasks:
-    - name: "Primeiro Comando"
-      description: "Aprenda a rodar comandos básicos no Linux"
+    - name: "Primeiro comando"
+      description: "aprende a ejecutar comandos básicos no Linux"
       steps:
-        - description: "Mostre o diretório atual"
+        - description: "Mostre o directorio atual"
           command: "pwd"
           expectedOutput: "/workspace"
           hint: "Use o comando pwd"
@@ -30,4 +30,4 @@ spec:
       checks:
         - command: "pwd"
           expectedOutput: "/workspace"
-          errorMessage: "O diretório não está correto"
+          errorMessage: "O directorio não está correto"

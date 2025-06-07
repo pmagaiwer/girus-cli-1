@@ -9,56 +9,56 @@ data:
   lab.yaml: |
     name: kubernetes-deployments-replicasets-es
     title: "Deployments e ReplicaSets no Kubernetes"
-    description: "Aprenda a gerenciar aplicações no Kubernetes usando Deployments e ReplicaSets. Este laboratório guiado explora conceitos fundamentais de orquestração de containers, escalabilidade e alta disponibilidade."
+    description: "aprende a administrar aplicações no Kubernetes usando Deployments e ReplicaSets. Este laboratorio guiado explora conceitos fundamentais de orquestração de containers, escalabilidade e alta disponibilidade."
     duration: 40m
     image: "linuxtips/girus-devops:0.1"
     privileged: true
     tasks:
-      - name: "Criando um Deployment Básico"
-        description: "Aprenda a criar e gerenciar Deployments no Kubernetes."
+      - name: "creando un Deployment Básico"
+        description: "aprende a crear e administrar Deployments no Kubernetes."
         steps:
-          - description: "Crie um Deployment do nginx"
+          - description: "crea un Deployment do nginx"
             command: "kubectl create deployment nginx-deployment --image=nginx:1.21"
             expectedOutput: "deployment.apps/nginx-deployment created"
             hint: "Use o comando kubectl create deployment"
 
-          - description: "Verifique o status do Deployment"
+          - description: "verifique o status do Deployment"
             command: "kubectl get deployments"
             expectedOutput: "nginx-deployment"
             hint: "Use o comando kubectl get deployments"
 
-          - description: "Verifique os Pods criados"
+          - description: "verifique os Pods criados"
             command: "kubectl get pods"
             expectedOutput: "nginx-deployment"
             hint: "Use o comando kubectl get pods"
 
       - name: "Escalando Deployments"
-        description: "Aprenda a escalar aplicações no Kubernetes."
+        description: "aprende a escalar aplicações no Kubernetes."
         steps:
           - description: "Escale o Deployment para 3 réplicas"
             command: "kubectl scale deployment nginx-deployment --replicas=3"
             expectedOutput: "deployment.apps/nginx-deployment scaled"
             hint: "Use o comando kubectl scale deployment"
 
-          - description: "Verifique as réplicas"
+          - description: "verifique as réplicas"
             command: "kubectl get pods"
             expectedOutput: "nginx-deployment"
-            hint: "Verifique os pods em execução"
+            hint: "verifique os pods em execução"
 
-          - description: "Verifique o ReplicaSet"
+          - description: "verifique o ReplicaSet"
             command: "kubectl get rs"
             expectedOutput: "nginx-deployment"
             hint: "Use o comando kubectl get rs para ver o ReplicaSet"
 
       - name: "Atualizações e Rollbacks"
-        description: "Implemente estratégias de atualização e rollback."
+        description: "Implemente estratégias de actualización e rollback."
         steps:
-          - description: "Atualize a imagem do Deployment"
+          - description: "Atualize a imagen do Deployment"
             command: "kubectl set image deployment/nginx-deployment nginx=nginx:1.22"
             expectedOutput: "deployment.apps/nginx-deployment image updated"
             hint: "Use o comando kubectl set image"
 
-          - description: "Verifique o histórico de revisões"
+          - description: "verifique o histórico de revisões"
             command: "kubectl rollout history deployment/nginx-deployment"
             expectedOutput: "deployment.apps/nginx-deployment"
             hint: "Use o comando kubectl rollout history"

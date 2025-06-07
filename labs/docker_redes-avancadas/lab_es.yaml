@@ -9,20 +9,20 @@ data:
   lab.yaml: |
     name: docker-redes-avancadas-es
     title: "Redes Avançadas no Docker"
-    description: "Aprenda a configurar e gerenciar redes avançadas no Docker, incluindo redes personalizadas, comunicação entre containers e isolamento de rede. Este laboratório guiado explora os conceitos avançados de networking no Docker e como implementar arquiteturas de rede complexas."
+    description: "aprende a configurar e administrar redes avançadas no Docker, incluindo redes personalizadas, comunicação entre containers e isolamento de rede. Este laboratorio guiado explora os conceitos avançados de networking no Docker e como implementar arquiteturas de rede complexas."
     duration: 35m
     image: "linuxtips/girus-devops:0.1"
     privileged: true
     tasks:
       - name: "Criação de Redes Personalizadas"
-        description: "Aprenda a criar e gerenciar redes Docker personalizadas."
+        description: "aprende a crear e administrar redes Docker personalizadas."
         steps:
-          - description: "Crie uma rede bridge personalizada"
+          - description: "crea uma rede bridge personalizada"
             command: "docker network create --driver bridge minha-rede"
             expectedOutput: ""
-            hint: "Use o comando docker network create para criar uma rede"
+            hint: "Use o comando docker network create para crear uma rede"
 
-          - description: "Verifique as redes disponíveis"
+          - description: "verifique as redes disponíveis"
             command: "docker network ls"
             expectedOutput: "minha-rede"
             hint: "Use o comando docker network ls para listar as redes"
@@ -35,15 +35,15 @@ data:
       - name: "Comunicação entre Containers"
         description: "Configure a comunicação entre containers em diferentes redes."
         steps:
-          - description: "Crie um container na rede personalizada"
+          - description: "crea un container na rede personalizada"
             command: "docker run -d --name web --network minha-rede nginx"
             expectedOutput: ""
             hint: "Use o comando docker run com --network para conectar à rede"
 
-          - description: "Crie outro container na mesma rede"
+          - description: "crea outro container na mesma rede"
             command: "docker run -d --name db --network minha-rede mysql:5.7"
             expectedOutput: ""
-            hint: "Crie outro container na mesma rede"
+            hint: "crea outro container na mesma rede"
 
           - description: "Teste a comunicação entre containers"
             command: "docker exec web ping -c 4 db"
@@ -53,17 +53,17 @@ data:
       - name: "Isolamento e Segurança de Rede"
         description: "Implemente isolamento e segurança em redes Docker."
         steps:
-          - description: "Crie uma rede isolada"
+          - description: "crea uma rede isolada"
             command: "docker network create --internal rede-isolada"
             expectedOutput: ""
-            hint: "Use a opção --internal para criar uma rede isolada"
+            hint: "Use a opção --internal para crear uma rede isolada"
 
-          - description: "Crie um container na rede isolada"
+          - description: "crea un container na rede isolada"
             command: "docker run -d --name app-isolado --network rede-isolada nginx"
             expectedOutput: ""
-            hint: "Crie um container na rede isolada"
+            hint: "crea un container na rede isolada"
 
-          - description: "Verifique o isolamento"
+          - description: "verifique o isolamento"
             command: "docker exec app-isolado ping -c 4 8.8.8.8"
             expectedOutput: "Network is unreachable"
             hint: "Tente acessar a internet do container isolado"

@@ -9,15 +9,15 @@ data:
   lab.yaml: |
     name: aws-s3-iam-es
     title: "S3 e IAM na AWS"
-    description: "Aprenda a gerenciar buckets S3 e políticas IAM na AWS. Este laboratório guiado explora conceitos de armazenamento de objetos e controle de acesso na nuvem."
+    description: "aprende a administrar buckets S3 e políticas IAM na AWS. Este laboratorio guiado explora conceitos de armazenamento de objetos e controle de acesso na nuvem."
     duration: 40m
     image: "linuxtips/girus-devops:0.1"
     privileged: true
     tasks:
-      - name: "Gerenciamento de Buckets S3"
-        description: "Aprenda a criar e configurar buckets S3."
+      - name: "administración de Buckets S3"
+        description: "aprende a crear e configurar buckets S3."
         steps:
-          - description: "Crie um bucket S3"
+          - description: "crea un bucket S3"
             command: "aws s3api create-bucket --bucket lab-bucket-$(date +%s) --region us-east-1"
             expectedOutput: "Location"
             hint: "Use o comando aws s3api create-bucket"
@@ -33,32 +33,32 @@ data:
             hint: "Use o comando aws s3api put-bucket-policy"
 
       - name: "Operações com Objetos S3"
-        description: "Aprenda a gerenciar objetos em buckets S3."
+        description: "aprende a administrar objetos em buckets S3."
         steps:
-          - description: "Crie um arquivo de teste"
+          - description: "crea un archivo de teste"
             command: "echo '<html><body><h1>Hello from S3!</h1></body></html>' > index.html"
             expectedOutput: ""
-            hint: "Crie um arquivo HTML simples"
+            hint: "crea un archivo HTML simples"
 
-          - description: "Faça upload do arquivo para o bucket"
+          - description: "Faça upload do archivo para o bucket"
             command: "aws s3 cp index.html s3://$(aws s3api list-buckets --query 'Buckets[0].Name' --output text)/"
             expectedOutput: "upload:"
             hint: "Use o comando aws s3 cp"
 
-          - description: "Verifique o conteúdo do bucket"
+          - description: "verifique o conteúdo do bucket"
             command: "aws s3 ls s3://$(aws s3api list-buckets --query 'Buckets[0].Name' --output text)/"
             expectedOutput: "index.html"
             hint: "Use o comando aws s3 ls"
 
-      - name: "Gerenciamento de IAM"
-        description: "Aprenda a criar e gerenciar usuários e políticas IAM."
+      - name: "administración de IAM"
+        description: "aprende a crear e administrar usuários e políticas IAM."
         steps:
-          - description: "Crie um usuário IAM"
+          - description: "crea un usuário IAM"
             command: "aws iam create-user --user-name lab-user"
             expectedOutput: "User"
             hint: "Use o comando aws iam create-user"
 
-          - description: "Crie uma política de acesso ao S3"
+          - description: "crea uma política de acesso ao S3"
             command: "aws iam create-policy --policy-name S3AccessPolicy --policy-document '{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Action\":[\"s3:GetObject\",\"s3:PutObject\"],\"Resource\":\"arn:aws:s3:::$(aws s3api list-buckets --query \"Buckets[0].Name\" --output text)/*\"}]}'"
             expectedOutput: "Policy"
             hint: "Use o comando aws iam create-policy"

@@ -9,7 +9,7 @@ data:
   lab.yaml: |
     name: terraform-provisioners-modulos-es
     title: "Terraform: Provisioners e Módulos"
-    description: "Aprenda a utilizar provisioners para configuração de recursos após sua criação e organize seu código Terraform com módulos reutilizáveis."
+    description: "aprende a utilizar provisioners para configuração de recursos após sua criação e organize seu código Terraform com módulos reutilizáveis."
     duration: 25m
     image: "linuxtips/girus-localstack:0.1"
     privileged: true
@@ -23,23 +23,23 @@ data:
           - "`apt update`"
           - "Instale o editor Vim:"
           - "`apt install -y vim`"
-          - "Verifique se o Vim foi instalado corretamente:"
+          - "verifique se o Vim foi instalado corretamente:"
           - "`vim --version | head -n 1`"
         tips:
           - type: "info"
-            title: "Comandos básicos do Vim"
-            content: "Para abrir um arquivo use 'vim arquivo.tf'. Para inserir texto, pressione 'i'. Para salvar e sair, pressione 'ESC' e digite ':wq'. Para sair sem salvar, pressione 'ESC' e digite ':q!'."
+            title: "comandos básicos do Vim"
+            content: "Para abrir un archivo use 'vim archivo.tf'. Para inserir texto, pressione 'i'. Para salvar e sair, pressione 'ESC' e digite ':wq'. Para sair sem salvar, pressione 'ESC' e digite ':q!'."
         validation:
           - command: "which vim > /dev/null && echo 'success' || echo 'error'"
             expectedOutput: "success"
             errorMessage: "O Vim não foi instalado corretamente. Tente executar 'apt install -y vim' novamente."
 
-      - name: "Utilizando Provisioners para configuração local"
-        description: "Aprenda como utilizar provisioners para executar comandos locais e criar arquivos após a criação de recursos"
+      - name: "utilizando Provisioners para configuração local"
+        description: "aprende como utilizar provisioners para executar comandos locais e crear archivos após a criação de recursos"
         steps:
-          - "Crie um diretório para o projeto:"
+          - "crea un directorio para o projeto:"
           - "`mkdir -p ~/terraform-provisioners && cd ~/terraform-provisioners`"
-          - "Crie o arquivo principal do Terraform usando vim:"
+          - "crea o archivo principal do Terraform usando vim:"
           - "`vim main.tf`"
           - "No editor vim, pressione 'i' para entrar no modo de inserção e adicione o seguinte conteúdo:"
           - "```terraform
@@ -77,46 +77,46 @@ data:
               }
             }
 
-            # Recurso de arquivo local
+            # Recurso de archivo local
             resource \"local_file\" \"bucket_details\" {
               content  = \"Informações do bucket:\\nNome: ${aws_s3_bucket.log_bucket.bucket}\\nARN: ${aws_s3_bucket.log_bucket.arn}\"
               filename = \"${path.module}/bucket_details.txt\"
             }
             ```"
-          - "Para salvar o arquivo e sair do vim, pressione 'ESC' e digite ':wq'"
+          - "Para salvar o archivo e sair do vim, pressione 'ESC' e digite ':wq'"
           - "Inicialize o Terraform:"
           - "`terraform init`"
-          - "Verifique o plano de execução:"
+          - "verifique o plano de execução:"
           - "`terraform plan`"
           - "Aplique a configuração:"
           - "`terraform apply -auto-approve`"
-          - "Verifique os arquivos criados pelo provisioner e pelo recurso local_file:"
+          - "verifique os archivos criados pelo provisioner e pelo recurso local_file:"
           - "`ls -la *.txt`"
-          - "Examine o conteúdo do arquivo bucket_info.txt:"
+          - "Examine o conteúdo do archivo bucket_info.txt:"
           - "`cat bucket_info.txt`"
-          - "Examine o conteúdo do arquivo bucket_details.txt:"
+          - "Examine o conteúdo do archivo bucket_details.txt:"
           - "`cat bucket_details.txt`"
         tips:
           - type: "info"
             title: "Tipos de Provisioners"
-            content: "O Terraform suporta vários tipos de provisioners, incluindo 'local-exec' para executar comandos na máquina local, 'remote-exec' para executar comandos em recursos remotos, e 'file' para copiar arquivos."
+            content: "O Terraform supuerto vários tipos de provisioners, incluindo 'local-exec' para executar comandos na máquina local, 'remote-exec' para executar comandos em recursos remotos, e 'file' para copiar archivos."
           - type: "warning"
             title: "Uso cauteloso de provisioners"
-            content: "Os provisioners devem ser usados com cautela, pois são considerados um último recurso no Terraform. Sempre que possível, prefira recursos nativos ou configuração baseada em imagens."
+            content: "Os provisioners debem ser usados com cautela, pois são considerados un último recurso no Terraform. Sempre que possível, prefira recursos nativos ou configuração baseada em imagens."
         validation:
           - command: "test -f bucket_info.txt && echo 'success' || echo 'error'"
             expectedOutput: "success"
-            errorMessage: "O arquivo bucket_info.txt não foi criado pelo provisioner local-exec."
+            errorMessage: "O archivo bucket_info.txt não foi criado pelo provisioner local-exec."
           - command: "test -f bucket_details.txt && echo 'success' || echo 'error'"
             expectedOutput: "success"
-            errorMessage: "O arquivo bucket_details.txt não foi criado pelo recurso local_file."
+            errorMessage: "O archivo bucket_details.txt não foi criado pelo recurso local_file."
 
       - name: "Implementando Provisioners Remote-exec"
         description: "Utilize provisioners remote-exec para configurar recursos remotos após sua criação"
         steps:
-          - "Crie um novo diretório para esta etapa:"
+          - "crea un novo directorio para esta etapa:"
           - "`mkdir -p ~/terraform-remote-exec && cd ~/terraform-remote-exec`"
-          - "Crie um arquivo para a chave SSH:"
+          - "crea un archivo para a chave SSH:"
           - "`vim ssh_key.tf`"
           - "No editor vim, pressione 'i' para entrar no modo de inserção e adicione o seguinte conteúdo:"
           - "```terraform
@@ -144,8 +144,8 @@ data:
               public_key = tls_private_key.example.public_key_openssh
             }
             ```"
-          - "Para salvar o arquivo e sair do vim, pressione 'ESC' e digite ':wq'"
-          - "Agora, crie o arquivo para a instância EC2:"
+          - "Para salvar o archivo e sair do vim, pressione 'ESC' e digite ':wq'"
+          - "Agora, crea o archivo para a instância EC2:"
           - "`vim ec2_instance.tf`"
           - "No editor vim, pressione 'i' para entrar no modo de inserção e adicione o seguinte conteúdo:"
           - "```terraform
@@ -214,8 +214,8 @@ data:
 
               provisioner \"remote-exec\" {
                 inline = [
-                  \"sudo yum update -y\",
-                  \"sudo yum install -y httpd\",
+                  \"sudo yun update -y\",
+                  \"sudo yun install -y httpd\",
                   \"sudo systemctl start httpd\",
                   \"sudo systemctl enable httpd\",
                   \"echo '<h1>Configurado via Terraform Remote-exec Provisioner</h1>' | sudo tee /var/www/html/index.html\",
@@ -228,35 +228,35 @@ data:
               value       = aws_instance.example.public_ip
             }
             ```"
-          - "Para salvar o arquivo e sair do vim, pressione 'ESC' e digite ':wq'"
+          - "Para salvar o archivo e sair do vim, pressione 'ESC' e digite ':wq'"
           - "Inicialize o Terraform:"
           - "`terraform init`"
-          - "Verifique o plano de execução (Obs: em ambiente de lab, não podemos realmente criar instâncias EC2):"
+          - "verifique o plano de execução (Obs: em ambiente de lab, não podemos realmente crear instâncias EC2):"
           - "`terraform plan`"
-          - "Neste ponto, em um ambiente AWS real, você aplicaria a configuração e poderia acessar o servidor web."
+          - "Neste ponto, em un ambiente AWS real, usted aplicaria a configuração e poderia acessar o servidor web."
         tips:
           - type: "info"
             title: "Connection block"
             content: "O bloco 'connection' configura como o Terraform se conectará ao recurso remoto. É necessário para provisioners remote-exec."
           - type: "warning"
             title: "Alternativas a provisioners"
-            content: "Considere alternativas como user_data para EC2, cloud-init, ou ferramentas de gerenciamento de configuração como Ansible ao invés de provisioners remote-exec."
+            content: "Considere alternativas como user_data para EC2, cloud-init, ou ferramentas de administración de configuração como Ansible ao invés de provisioners remote-exec."
         validation:
           - command: "test -f ssh_key.tf && echo 'success' || echo 'error'"
             expectedOutput: "success"
-            errorMessage: "O arquivo ssh_key.tf não foi criado corretamente."
+            errorMessage: "O archivo ssh_key.tf não foi criado corretamente."
           - command: "test -f ec2_instance.tf && echo 'success' || echo 'error'"
             expectedOutput: "success"
-            errorMessage: "O arquivo ec2_instance.tf não foi criado corretamente."
+            errorMessage: "O archivo ec2_instance.tf não foi criado corretamente."
 
-      - name: "Criando e utilizando módulos Terraform"
-        description: "Aprenda a organizar seu código Terraform em módulos reutilizáveis"
+      - name: "creando e utilizando módulos Terraform"
+        description: "aprende a organizar seu código Terraform em módulos reutilizáveis"
         steps:
-          - "Crie um diretório para o projeto com módulos:"
+          - "crea un directorio para o projeto com módulos:"
           - "`mkdir -p ~/terraform-modulos && cd ~/terraform-modulos`"
-          - "Crie a estrutura de diretórios para os módulos:"
+          - "crea a estrutura de directorios para os módulos:"
           - "`mkdir -p modules/s3 modules/vpc`"
-          - "Crie o arquivo principal do módulo S3:"
+          - "crea o archivo principal do módulo S3:"
           - "`vim modules/s3/main.tf`"
           - "No editor vim, pressione 'i' para entrar no modo de inserção e adicione o seguinte conteúdo:"
           - "```terraform
@@ -283,8 +283,8 @@ data:
               restrict_public_buckets = true
             }
             ```"
-          - "Para salvar o arquivo e sair do vim, pressione 'ESC' e digite ':wq'"
-          - "Crie o arquivo de variáveis para o módulo S3:"
+          - "Para salvar o archivo e sair do vim, pressione 'ESC' e digite ':wq'"
+          - "crea o archivo de variáveis para o módulo S3:"
           - "`vim modules/s3/variables.tf`"
           - "No editor vim, pressione 'i' para entrar no modo de inserção e adicione o seguinte conteúdo:"
           - "```terraform
@@ -305,8 +305,8 @@ data:
               default     = {}
             }
             ```"
-          - "Para salvar o arquivo e sair do vim, pressione 'ESC' e digite ':wq'"
-          - "Crie o arquivo de outputs para o módulo S3:"
+          - "Para salvar o archivo e sair do vim, pressione 'ESC' e digite ':wq'"
+          - "crea o archivo de outputs para o módulo S3:"
           - "`vim modules/s3/outputs.tf`"
           - "No editor vim, pressione 'i' para entrar no modo de inserção e adicione o seguinte conteúdo:"
           - "```terraform
@@ -325,8 +325,8 @@ data:
               value       = aws_s3_bucket.this.bucket_domain_name
             }
             ```"
-          - "Para salvar o arquivo e sair do vim, pressione 'ESC' e digite ':wq'"
-          - "Agora, crie o arquivo principal do módulo VPC:"
+          - "Para salvar o archivo e sair do vim, pressione 'ESC' e digite ':wq'"
+          - "Agora, crea o archivo principal do módulo VPC:"
           - "`vim modules/vpc/main.tf`"
           - "No editor vim, pressione 'i' para entrar no modo de inserção e adicione o seguinte conteúdo:"
           - "```terraform
@@ -408,8 +408,8 @@ data:
               route_table_id = aws_route_table.public.id
             }
             ```"
-          - "Para salvar o arquivo e sair do vim, pressione 'ESC' e digite ':wq'"
-          - "Crie o arquivo de variáveis para o módulo VPC:"
+          - "Para salvar o archivo e sair do vim, pressione 'ESC' e digite ':wq'"
+          - "crea o archivo de variáveis para o módulo VPC:"
           - "`vim modules/vpc/variables.tf`"
           - "No editor vim, pressione 'i' para entrar no modo de inserção e adicione o seguinte conteúdo:"
           - "```terraform
@@ -448,8 +448,8 @@ data:
               default     = {}
             }
             ```"
-          - "Para salvar o arquivo e sair do vim, pressione 'ESC' e digite ':wq'"
-          - "Crie o arquivo de outputs para o módulo VPC:"
+          - "Para salvar o archivo e sair do vim, pressione 'ESC' e digite ':wq'"
+          - "crea o archivo de outputs para o módulo VPC:"
           - "`vim modules/vpc/outputs.tf`"
           - "No editor vim, pressione 'i' para entrar no modo de inserção e adicione o seguinte conteúdo:"
           - "```terraform
@@ -473,8 +473,8 @@ data:
               value       = aws_subnet.private[*].id
             }
             ```"
-          - "Para salvar o arquivo e sair do vim, pressione 'ESC' e digite ':wq'"
-          - "Agora crie o arquivo principal que utilizará os módulos:"
+          - "Para salvar o archivo e sair do vim, pressione 'ESC' e digite ':wq'"
+          - "Agora crea o archivo principal que utilizará os módulos:"
           - "`vim main.tf`"
           - "No editor vim, pressione 'i' para entrar no modo de inserção e adicione o seguinte conteúdo:"
           - "```terraform
@@ -547,8 +547,8 @@ data:
               upper   = false
             }
             ```"
-          - "Para salvar o arquivo e sair do vim, pressione 'ESC' e digite ':wq'"
-          - "Crie o arquivo de outputs:"
+          - "Para salvar o archivo e sair do vim, pressione 'ESC' e digite ':wq'"
+          - "crea o archivo de outputs:"
           - "`vim outputs.tf`"
           - "No editor vim, pressione 'i' para entrar no modo de inserção e adicione o seguinte conteúdo:"
           - "```terraform
@@ -577,10 +577,10 @@ data:
               value       = module.data_bucket.bucket_id
             }
             ```"
-          - "Para salvar o arquivo e sair do vim, pressione 'ESC' e digite ':wq'"
+          - "Para salvar o archivo e sair do vim, pressione 'ESC' e digite ':wq'"
           - "Inicialize o Terraform:"
           - "`terraform init`"
-          - "Verifique o plano de execução:"
+          - "verifique o plano de execução:"
           - "`terraform plan`"
           - "Aplique a configuração:"
           - "`terraform apply -auto-approve`"
@@ -589,14 +589,14 @@ data:
         tips:
           - type: "info"
             title: "Estrutura de Módulos"
-            content: "Um módulo bem projetado tem três partes principais: main.tf (recursos principais), variables.tf (entrada) e outputs.tf (saída). Isso permite reutilização e encapsulamento."
+            content: "un módulo bem projetado tem três partes principais: main.tf (recursos principais), variables.tf (entrada) e outputs.tf (saída). Isso permite reutilização e encapsulamento."
           - type: "tip"
             title: "Módulos Públicos"
             content: "O Terraform Registry (registry.terraform.io) oferece módulos comunitários prontos para uso. Eles podem acelerar o desenvolvimento, mas sempre revise o código antes de usar."
         validation:
           - command: "test -d modules/s3 -a -d modules/vpc && echo 'success' || echo 'error'"
             expectedOutput: "success"
-            errorMessage: "A estrutura de diretórios de módulos não foi criada corretamente."
+            errorMessage: "A estrutura de directorios de módulos não foi criada corretamente."
           - command: "terraform state list | grep -q module.vpc && terraform state list | grep -q module.logs_bucket && echo 'success' || echo 'error'"
             expectedOutput: "success"
-            errorMessage: "Os módulos não foram aplicados corretamente. Verifique se executou 'terraform apply'."
+            errorMessage: "Os módulos não foram aplicados corretamente. verifique se executou 'terraform apply'."

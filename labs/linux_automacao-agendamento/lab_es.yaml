@@ -9,24 +9,24 @@ data:
   lab.yaml: |
     name: linux-automacao-agendamento-es
     title: "Automação e Agendamento no Linux"
-    description: "Aprenda a automatizar tarefas e agendar execuções no Linux usando cron, systemd timers e scripts de automação. Este laboratório guiado explora as ferramentas e técnicas para criar sistemas automatizados e agendar tarefas de forma eficiente."
+    description: "aprende a automatizar tarefas e agendar execuções no Linux usando cron, systemd timers e scripts de automação. Este laboratorio guiado explora as ferramentas e técnicas para crear sistemas automatizados e agendar tarefas de forma eficiente."
     duration: 30m
     image: "linuxtips/girus-devops:0.1"
     tasks:
       - name: "Agendamento com Cron"
-        description: "Aprenda a usar o cron para agendar tarefas recorrentes."
+        description: "aprende a usar o cron para agendar tarefas recorrentes."
         steps:
-          - description: "Verifique o status do serviço cron"
+          - description: "verifique o status do servicio cron"
             command: "systemctl status cron"
             expectedOutput: "Active: active"
-            hint: "Use o comando systemctl para verificar o status do serviço"
+            hint: "Use o comando systemctl para verificar o status do servicio"
 
-          - description: "Crie uma tarefa cron para backup"
+          - description: "crea uma tarefa cron para backup"
             command: "echo '0 2 * * * tar -czf /backup/home_$(date +%Y%m%d).tar.gz /home' | crontab -"
             expectedOutput: ""
             hint: "Use o comando crontab para adicionar uma tarefa"
 
-          - description: "Verifique as tarefas agendadas"
+          - description: "verifique as tarefas agendadas"
             command: "crontab -l"
             expectedOutput: "0 2 * * *"
             hint: "Use o comando crontab -l para listar as tarefas"
@@ -34,15 +34,15 @@ data:
       - name: "Systemd Timers"
         description: "Explore o uso de systemd timers para agendamento de tarefas."
         steps:
-          - description: "Crie um serviço systemd"
+          - description: "crea un servicio systemd"
             command: "echo -e '[Unit]\nDescription=Backup Service\n\n[Service]\nType=oneshot\nExecStart=/usr/bin/tar -czf /backup/system_$(date +%Y%m%d).tar.gz /etc\n\n[Install]\nWantedBy=multi-user.target' | sudo tee /etc/systemd/system/backup.service"
             expectedOutput: ""
-            hint: "Crie um arquivo de serviço systemd"
+            hint: "crea un archivo de servicio systemd"
 
-          - description: "Crie um timer para o serviço"
+          - description: "crea un timer para o servicio"
             command: "echo -e '[Unit]\nDescription=Run backup daily\n\n[Timer]\nOnCalendar=daily\nPersistent=true\n\n[Install]\nWantedBy=timers.target' | sudo tee /etc/systemd/system/backup.timer"
             expectedOutput: ""
-            hint: "Crie um arquivo de timer systemd"
+            hint: "crea un archivo de timer systemd"
 
           - description: "Ative e inicie o timer"
             command: "sudo systemctl enable --now backup.timer"
@@ -50,12 +50,12 @@ data:
             hint: "Use systemctl para ativar o timer"
 
       - name: "Scripts de Automação"
-        description: "Aprenda a criar e executar scripts de automação."
+        description: "aprende a crear e executar scripts de automação."
         steps:
-          - description: "Crie um script de monitoramento"
+          - description: "crea un script de monitoramento"
             command: "echo -e '#!/bin/bash\n\necho \"Monitoramento do Sistema\"\necho \"==================\"\ndf -h\necho \"\"\nfree -h\necho \"\"\nps aux | grep -v grep' > monitor.sh && chmod +x monitor.sh"
             expectedOutput: ""
-            hint: "Crie um script shell com permissões de execução"
+            hint: "crea un script shell com permissões de execução"
 
           - description: "Execute o script"
             command: "./monitor.sh"
