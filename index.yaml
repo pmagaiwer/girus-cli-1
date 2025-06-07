@@ -37,7 +37,7 @@ entries:
         - storage
       maintainers:
         - "Jeferson <jeferson@linuxtips.io>"
-      url: "https://raw.githubusercontent.com/badtuxx/girus-cli/main/labs/es/aws_s3_storage/lab.yaml"
+      url: "https://raw.githubusercontent.com/badtuxx/girus-cli/main/labs/aws_s3_storage/lab_es.yaml"
       created: "2024-06-01T10:00:00Z"
       digest: "sha256:47640be45d13fd9adc6c9280d6f1c59ab33a9823d841fc207daeecc0505fb4de"
   aws_dynamodb_nosql:
@@ -137,7 +137,7 @@ entries:
         - deployment
       maintainers:
         - "Jeferson <jeferson@linuxtips.io>"
-      url: "https://raw.githubusercontent.com/badtuxx/girus-cli/main/labs/es/kubernetes_deployment/lab.yaml"
+      url: "https://raw.githubusercontent.com/badtuxx/girus-cli/main/labs/kubernetes_deployment/lab_es.yaml"
       created: "2024-06-01T10:00:00Z"
       digest: "sha256:11eea5ec3f0a43d77125a0fe728f744802b98fd72026711c84571346bcd816d8"
   docker_fundamentos-redes:
@@ -185,7 +185,7 @@ entries:
         - compose
       maintainers:
         - "Jeferson <jeferson@linuxtips.io>"
-      url: "https://raw.githubusercontent.com/badtuxx/girus-cli/main/labs/es/docker_compose/lab.yaml"
+      url: "https://raw.githubusercontent.com/badtuxx/girus-cli/main/labs/docker_compose/lab_es.yaml"
       created: "2024-06-01T10:00:00Z"
       digest: "sha256:745a2d44a20f9f6450c92e9413b8af9aea32c92d6f1ceb517a30c0c1262c8198"
   kubernetes_exploracao-recursos:
@@ -259,7 +259,7 @@ entries:
         - comandos
       maintainers:
         - "Jeferson <jeferson@linuxtips.io>"
-      url: "https://raw.githubusercontent.com/badtuxx/girus-cli/main/labs/es/linux_comandos_basicos/lab.yaml"
+      url: "https://raw.githubusercontent.com/badtuxx/girus-cli/main/labs/linux_comandos-basicos/lab_es.yaml"
       created: "2024-06-01T10:00:00Z"
       digest: "sha256:70a8f941c8379cb76c44ae1fd2d5b461440394ababdc255225d78545fbab7bc5"
   linux_gerenciamento-usuarios:

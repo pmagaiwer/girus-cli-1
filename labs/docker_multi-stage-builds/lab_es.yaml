@@ -1,0 +1,69 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: docker-multi-stage-builds-lab
+  namespace: girus
+  labels:
+    app: girus-lab-template
+data:
+  lab.yaml: |
+    name: docker-multi-stage-builds
+    title: "Multi-stage Builds no Docker"
+    description: "Aprenda a criar imagens Docker otimizadas usando multi-stage builds, reduzindo o tamanho final e melhorando a segurança. Este laboratório guiado explora técnicas avançadas de construção de imagens Docker para aplicações modernas."
+    duration: 30m
+    image: "linuxtips/girus-devops:0.1"
+    privileged: true
+    tasks:
+      - name: "Criando um Multi-stage Build Básico"
+        description: "Aprenda os conceitos básicos de multi-stage builds."
+        steps:
+          - description: "Crie um Dockerfile com multi-stage build"
+            command: "echo -e 'FROM golang:1.21 AS builder\nWORKDIR /app\nCOPY . .\nRUN go build -o main .\n\nFROM alpine:latest\nWORKDIR /app\nCOPY --from=builder /app/main .\nCMD [\"./main\"]' > Dockerfile"
+            expectedOutput: ""
+            hint: "Crie um Dockerfile com dois estágios: build e runtime"
+
+          - description: "Crie um arquivo Go simples"
+            command: "echo -e 'package main\n\nimport \"fmt\"\n\nfunc main() {\n    fmt.Println(\"Hello from multi-stage build!\")\n}' > main.go"
+            expectedOutput: ""
+            hint: "Crie um programa Go básico"
+
+          - description: "Construa a imagem"
+            command: "docker build -t multi-stage-app ."
+            expectedOutput: "Successfully built"
+            hint: "Use o comando docker build para construir a imagem"
+
+      - name: "Otimização de Imagens"
+        description: "Aprenda técnicas para otimizar imagens Docker."
+        steps:
+          - description: "Verifique o tamanho da imagem"
+            command: "docker images multi-stage-app"
+            expectedOutput: "multi-stage-app"
+            hint: "Use o comando docker images para ver o tamanho"
+
+          - description: "Crie uma versão otimizada do Dockerfile"
+            command: "echo -e 'FROM golang:1.21-alpine AS builder\nWORKDIR /app\nCOPY . .\nRUN go build -ldflags=\"-s -w\" -o main .\n\nFROM scratch\nCOPY --from=builder /app/main .\nCMD [\"./main\"]' > Dockerfile.optimized"
+            expectedOutput: ""
+            hint: "Crie um Dockerfile otimizado usando alpine e scratch"
+
+          - description: "Construa a versão otimizada"
+            command: "docker build -t multi-stage-app-optimized -f Dockerfile.optimized ."
+            expectedOutput: "Successfully built"
+            hint: "Construa a versão otimizada da imagem"
+
+      - name: "Multi-stage Builds com Dependências"
+        description: "Implemente multi-stage builds com gerenciamento de dependências."
+        steps:
+          - description: "Crie um Dockerfile para uma aplicação Node.js"
+            command: "echo -e 'FROM node:18 AS deps\nWORKDIR /app\nCOPY package*.json ./\nRUN npm ci\n\nFROM node:18-alpine AS builder\nWORKDIR /app\nCOPY --from=deps /app/node_modules ./node_modules\nCOPY . .\nRUN npm run build\n\nFROM node:18-alpine\nWORKDIR /app\nCOPY --from=builder /app/dist ./dist\nCOPY --from=deps /app/node_modules ./node_modules\nCMD [\"node\", \"dist/index.js\"]' > Dockerfile.node"
+            expectedOutput: ""
+            hint: "Crie um Dockerfile para uma aplicação Node.js com três estágios"
+
+          - description: "Crie um package.json básico"
+            command: "echo -e '{\n  \"name\": \"node-app\",\n  \"version\": \"1.0.0\",\n  \"scripts\": {\n    \"build\": \"echo \\\"Build completed\\\"\"\n  },\n  \"dependencies\": {\n    \"express\": \"^4.18.2\"\n  }\n}' > package.json"
+            expectedOutput: ""
+            hint: "Crie um package.json com uma dependência"
+
+          - description: "Construa a imagem Node.js"
+            command: "docker build -t node-multi-stage -f Dockerfile.node ."
+            expectedOutput: "Successfully built"
+            hint: "Construa a imagem Node.js com multi-stage build"
