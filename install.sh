@@ -450,6 +450,11 @@ verify_all_dependencies() {
 # Iniciar mensagem principal
 echo "=== Iniciando instalação do Girus CLI ==="
 
+# Escolher idioma e salvar em ~/.girus/config.yaml
+ask_user "Escolha o idioma (pt/es)" "pt" "CLI_LANG"
+mkdir -p "$HOME/.girus"
+echo "language: $CLI_LANG" > "$HOME/.girus/config.yaml"
+
 # Verificar e limpar instalações anteriores
 check_previous_install
 

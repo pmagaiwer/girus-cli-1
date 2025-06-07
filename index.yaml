@@ -27,6 +27,19 @@ entries:
       url: "https://raw.githubusercontent.com/badtuxx/girus-cli/main/labs/aws_s3_storage/lab.yaml"
       created: "2024-06-01T10:00:00Z"
       digest: "sha256:a4ea25c2d7909510592175825f01a4652956187e69a371271115f070f6c8d6b7"
+  aws_s3_storage-es:
+    - name: aws_s3_storage-es
+      version: "1.0.0"
+      description: "Laboratorio de AWS S3 Storage"
+      keywords:
+        - aws
+        - s3
+        - storage
+      maintainers:
+        - "Jeferson <jeferson@linuxtips.io>"
+      url: "https://raw.githubusercontent.com/badtuxx/girus-cli/main/labs/es/aws_s3_storage/lab.yaml"
+      created: "2024-06-01T10:00:00Z"
+      digest: "sha256:47640be45d13fd9adc6c9280d6f1c59ab33a9823d841fc207daeecc0505fb4de"
   aws_dynamodb_nosql:
     - name: aws_dynamodb_nosql
       version: "1.0.0"
@@ -115,6 +128,18 @@ entries:
       url: "https://raw.githubusercontent.com/badtuxx/girus-cli/main/labs/kubernetes_deployment/lab.yaml"
       created: "2024-06-01T10:00:00Z"
       digest: "sha256:15234db636c79593918d1365fea9fa5dad8a67da17ec58f18c9dff1b9b40bf8d"
+  kubernetes_deployment-es:
+    - name: kubernetes_deployment-es
+      version: "1.0.0"
+      description: "Laboratorio de Deployment en Kubernetes"
+      keywords:
+        - kubernetes
+        - deployment
+      maintainers:
+        - "Jeferson <jeferson@linuxtips.io>"
+      url: "https://raw.githubusercontent.com/badtuxx/girus-cli/main/labs/es/kubernetes_deployment/lab.yaml"
+      created: "2024-06-01T10:00:00Z"
+      digest: "sha256:11eea5ec3f0a43d77125a0fe728f744802b98fd72026711c84571346bcd816d8"
   docker_fundamentos-redes:
     - name: docker_fundamentos-redes
       version: "1.0.0"
@@ -151,6 +176,18 @@ entries:
       url: "https://raw.githubusercontent.com/badtuxx/girus-cli/main/labs/docker_compose/lab.yaml"
       created: "2024-06-01T10:00:00Z"
       digest: "sha256:d0462cbf6e274d611844f0e1299d0d4ff6c98c6d04ead759391e025a10c88245"
+  docker_compose-es:
+    - name: docker_compose-es
+      version: "1.0.0"
+      description: "Laboratorio de Docker Compose"
+      keywords:
+        - docker
+        - compose
+      maintainers:
+        - "Jeferson <jeferson@linuxtips.io>"
+      url: "https://raw.githubusercontent.com/badtuxx/girus-cli/main/labs/es/docker_compose/lab.yaml"
+      created: "2024-06-01T10:00:00Z"
+      digest: "sha256:745a2d44a20f9f6450c92e9413b8af9aea32c92d6f1ceb517a30c0c1262c8198"
   kubernetes_exploracao-recursos:
     - name: kubernetes_exploracao-recursos
       version: "1.0.0"
@@ -213,6 +250,18 @@ entries:
       url: "https://raw.githubusercontent.com/badtuxx/girus-cli/main/labs/linux_comandos-basicos/lab.yaml"
       created: "2024-06-01T10:00:00Z"
       digest: "sha256:740c745715232f106cd0ffbf23463fdd2c64d910c87d31d57db5d77528d7720b"
+  linux_comandos-basicos-es:
+    - name: linux_comandos-basicos-es
+      version: "1.0.0"
+      description: "Laboratorio de Comandos Básicos en Linux"
+      keywords:
+        - linux
+        - comandos
+      maintainers:
+        - "Jeferson <jeferson@linuxtips.io>"
+      url: "https://raw.githubusercontent.com/badtuxx/girus-cli/main/labs/es/linux_comandos_basicos/lab.yaml"
+      created: "2024-06-01T10:00:00Z"
+      digest: "sha256:70a8f941c8379cb76c44ae1fd2d5b461440394ababdc255225d78545fbab7bc5"
   linux_gerenciamento-usuarios:
     - name: linux_gerenciamento-usuarios
       version: "1.0.0"

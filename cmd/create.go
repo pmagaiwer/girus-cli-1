@@ -57,11 +57,11 @@ Por padrão, o deployment embutido no binário é utilizado.`,
 
 		// Exibir cabeçalho
 		fmt.Println(strings.Repeat("─", 80))
-		fmt.Println(headerColor("GIRUS CREATE"))
+		fmt.Println(headerColor(common.T("GIRUS CREATE", "GIRUS CREAR")))
 		fmt.Println(strings.Repeat("─", 80))
 
 		// Verificar se há atualização disponível para o CLI
-		fmt.Println(headerColor("Verificando atualizações..."))
+		fmt.Println(headerColor(common.T("Verificando atualizações...", "Verificando actualizaciones...")))
 
 		currentVersion := common.Version
 
@@ -93,7 +93,7 @@ Por padrão, o deployment embutido no binário é utilizado.`,
 		}
 
 		// Verificar se o containerEngine está instalado e funcionando
-		fmt.Println("\n" + headerColor("Verificando pré-requisitos..."))
+		fmt.Println("\n" + headerColor(common.T("Verificando pré-requisitos...", "Verificando requisitos previos...")))
 		containerEngineCmd := exec.Command(containerEngine, "--version")
 		if err := containerEngineCmd.Run(); err != nil {
 			fmt.Printf("%s %s não encontrado ou não está em execução\n", red("ERRO:"), containerEngine)
@@ -783,11 +783,11 @@ Por padrão, o deployment embutido no binário é utilizado.`,
 
 		// Exibir mensagem de conclusão
 		fmt.Println("\n" + strings.Repeat("─", 60))
-		fmt.Println(headerColor("GIRUS PRONTO PARA USO!"))
+		fmt.Println(headerColor(common.T("GIRUS PRONTO PARA USO!", "GIRUS LISTO PARA USARSE!")))
 		fmt.Println(strings.Repeat("─", 60))
 
 		// Exibir acesso ao navegador como próximo passo
-		fmt.Println(bold("PRÓXIMOS PASSOS:"))
+		fmt.Println(bold(common.T("PRÓXIMOS PASSOS:", "PRÓXIMOS PASOS:")))
 		fmt.Println("  • Acesse o Girus no navegador:")
 		fmt.Println("    http://localhost:8000")
 

@@ -30,6 +30,18 @@ func GetVersion() string {
 	goVersion := getDefaultIfEmpty(GoVersion, runtime.Version())
 	goOS := getDefaultIfEmpty(GoOS, runtime.GOOS)
 	goArch := getDefaultIfEmpty(GoArch, runtime.GOARCH)
+	if Lang() == "es" {
+		return fmt.Sprintf(
+			"versión de girus-cli: %s\n"+
+				"ID de commit: %s\n"+
+				"construido por: %s\n"+
+				"fecha de construcción: %s\n"+
+				"versión de Go: %s\n"+
+				"versión de GOOS: %s\n"+
+				"versión de GOARCH: %s\n",
+			version, commitID, buildUser, buildDate, goVersion, goOS, goArch,
+		)
+	}
 
 	return fmt.Sprintf(
 		"versão do girus-cli: %s\n"+

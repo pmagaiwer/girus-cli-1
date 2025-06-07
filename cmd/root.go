@@ -1,17 +1,24 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
+
+	"github.com/badtuxx/girus-cli/internal/common"
 )
 
 var rootCmd = &cobra.Command{
 	Use:   "girus",
-	Short: "GIRUS - Plataforma de Laboratórios Interativos",
-	Long: `GIRUS é uma plataforma open-source de laboratórios interativos que permite a criação,
+	Short: common.T("GIRUS - Plataforma de Laboratórios Interativos", "GIRUS - Plataforma de Laboratorios Interactivos"),
+	Long: common.T(`GIRUS é uma plataforma open-source de laboratórios interativos que permite a criação,
 gerenciamento e execução de ambientes de aprendizado prático para tecnologias como Linux,
 Docker, Kubernetes, Terraform e outras ferramentas essenciais para profissionais de DevOps,
 SRE, Dev e Platform Engineering.`,
+		`GIRUS es una plataforma de código abierto para laboratorios interactivos que permite crear,
+gestionar y ejecutar entornos de aprendizaje práctico para tecnologías como Linux,
+Docker, Kubernetes, Terraform y otras herramientas esenciales para profesionales de DevOps,
+SRE, Dev y Platform Engineering.`),
 }
 
 // Execute executa o comando raiz
@@ -39,7 +46,7 @@ func init() {
 	})
 
 	// Template personalizado para o help principal
-	rootCmd.SetUsageTemplate(`{{header "GIRUS - Plataforma de Laboratórios Interativos"}}
+	rootCmd.SetUsageTemplate(fmt.Sprintf(`{{header "%s"}}
 
 {{.Long}}
 
@@ -47,13 +54,13 @@ func init() {
   {{magenta .Use}}
 
 {{header "Available Commands:"}}{{range .Commands}}{{if (or .IsAvailableCommand (eq .Name "help"))}}
-  {{magenta .Name | printf "%-12s"}} {{.Short}}{{end}}{{end}}
+  {{magenta .Name | printf "%%-12s"}} {{.Short}}{{end}}{{end}}
 
 {{header "Flags:"}}
 {{.LocalFlags.FlagUsages | trimTrailingWhitespaces}}
 
-Use "{{magenta "girus [command] --help"}}" for more information about a command.
-`)
+Use "{{magenta "girus [command] --help"}}" for more information about a command.`,
+		common.T("GIRUS - Plataforma de Laboratórios Interativos", "GIRUS - Plataforma de Laboratorios Interactivos")))
 
 	// Template personalizado para o help de comandos
 	rootCmd.SetHelpTemplate(`{{header .Name}} - {{.Short}}
@@ -64,7 +71,7 @@ Use "{{magenta "girus [command] --help"}}" for more information about a command.
   {{magenta .UseLine}}
 
 {{if .HasAvailableSubCommands}}{{header "Available Commands:"}}{{range .Commands}}{{if .IsAvailableCommand}}
-  {{magenta .Name | printf "%-12s"}} {{.Short}}{{end}}{{end}}
+  {{magenta .Name | printf "%%-12s"}} {{.Short}}{{end}}{{end}}
 {{end}}
 
 {{if .HasAvailableLocalFlags}}{{header "Flags:"}}
