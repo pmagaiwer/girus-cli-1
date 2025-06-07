@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/badtuxx/girus-cli/internal/common"
 	"sigs.k8s.io/yaml"
 )
 
@@ -88,6 +89,22 @@ func GetLabsIndex(indexURL string) (*IndexFile, error) {
 	if err := yaml.Unmarshal(data, &index); err != nil {
 		return nil, fmt.Errorf("erro ao parsear o arquivo index.yaml: %w", err)
 	}
+
+	// Filtrar labs de acordo com o idioma selecionado
+	lang := common.Lang()
+	filtered := make([]Lab, 0, len(index.Labs))
+	for _, lab := range index.Labs {
+		if lang == "es" {
+			if strings.HasSuffix(lab.ID, "-es") || strings.Contains(lab.URL, "_es.yaml") {
+				filtered = append(filtered, lab)
+			}
+		} else { // pt ou padrão
+			if !strings.HasSuffix(lab.ID, "-es") && !strings.Contains(lab.URL, "_es.yaml") {
+				filtered = append(filtered, lab)
+			}
+		}
+	}
+	index.Labs = filtered
 
 	return &index, nil
 }
