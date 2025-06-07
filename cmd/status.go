@@ -41,14 +41,20 @@ type ResourceUsage struct {
 
 var statusCmd = &cobra.Command{
 	Use:   "status",
-	Short: "Exibe o status atual do GIRUS",
-	Long: `Exibe informações detalhadas sobre o estado atual do GIRUS, incluindo:
+	Short: common.T("Exibe o status atual do GIRUS", "Muestra el estado actual del GIRUS"),
+	Long: common.T(`Exibe informações detalhadas sobre o estado atual do GIRUS, incluindo:
 - Status do cluster
 - Pods em execução (backend e frontend)
 - Serviços expostos e portas
 - Laboratórios instalados
 - Uso de recursos
-- Versão do CLI`,
+- Versão do CLI`, `Muestra información detallada sobre el estado actual de GIRUS, incluyendo:
+- Estado del cluster
+- Pods en ejecución (backend y frontend)
+- Servicios expuestos y puertos
+- Laboratorios instalados
+- Uso de recursos
+- Versión de la CLI`),
 	Run: func(cmd *cobra.Command, args []string) {
 		// Criar formatadores de cores
 		green := color.New(color.FgGreen).SprintFunc()

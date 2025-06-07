@@ -34,7 +34,7 @@ var (
 
 var createCmd = &cobra.Command{
 	Use:   "create [subcommand]",
-	Short: "Comandos para criar recursos",
+	Short: common.T("Comandos para criar recursos", "Comandos para crear recursos"),
 	Run: func(cmd *cobra.Command, args []string) {
 		cmd.Help()
 	},
