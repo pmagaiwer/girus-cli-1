@@ -1,6 +1,6 @@
 ![GIRUS](girus-logo.png)
 
-**Escolha seu idioma / Choose your language:** [Português](README.md) | [Español](README.es.md)
+**Escolha seu idioma / Elija su idioma:** [Português](README.md) | [Español](README.es.md)
 
 # GIRUS: Plataforma de Laboratórios Interativos
 
