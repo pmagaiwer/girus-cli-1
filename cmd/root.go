@@ -50,36 +50,44 @@ func init() {
 
 {{.Long}}
 
-{{header "Usage:"}}
+{{header "%s"}}
   {{magenta .Use}}
 
-{{header "Available Commands:"}}{{range .Commands}}{{if (or .IsAvailableCommand (eq .Name "help"))}}
+{{header "%s"}}{{range .Commands}}{{if (or .IsAvailableCommand (eq .Name "help"))}}
   {{magenta .Name | printf "%%-12s"}} {{.Short}}{{end}}{{end}}
 
-{{header "Flags:"}}
+{{header "%s"}}
 {{.LocalFlags.FlagUsages | trimTrailingWhitespaces}}
 
-Use "{{magenta "girus [command] --help"}}" for more information about a command.`,
-		common.T("GIRUS - Plataforma de Laboratórios Interativos", "GIRUS - Plataforma de Laboratorios Interactivos")))
+%s`,
+		common.T("GIRUS - Plataforma de Laboratórios Interativos", "GIRUS - Plataforma de Laboratorios Interactivos"),
+		common.T("Usage:", "Uso:"),
+		common.T("Available Commands:", "Comandos Disponibles:"),
+		common.T("Flags:", "Flags:"),
+		common.T("Use \"girus [command] --help\" for more information about a command.", "Use \"girus [command] --help\" para obtener más información sobre un comando.")))
 
 	// Template personalizado para o help de comandos
-	rootCmd.SetHelpTemplate(`{{header .Name}} - {{.Short}}
+	rootCmd.SetHelpTemplate(fmt.Sprintf(`{{header .Name}} - {{.Short}}
 
 {{.Long}}
 
-{{header "Usage:"}}
+{{header "%s"}}
   {{magenta .UseLine}}
 
-{{if .HasAvailableSubCommands}}{{header "Available Commands:"}}{{range .Commands}}{{if .IsAvailableCommand}}
+{{if .HasAvailableSubCommands}}{{header "%s"}}{{range .Commands}}{{if .IsAvailableCommand}}
   {{magenta .Name | printf "%%-12s"}} {{.Short}}{{end}}{{end}}
 {{end}}
 
-{{if .HasAvailableLocalFlags}}{{header "Flags:"}}
+{{if .HasAvailableLocalFlags}}{{header "%s"}}
 {{.LocalFlags.FlagUsages | trimTrailingWhitespaces}}{{end}}
 
-{{if .HasAvailableInheritedFlags}}{{header "Global Flags:"}}
+{{if .HasAvailableInheritedFlags}}{{header "%s"}}
 {{.InheritedFlags.FlagUsages | trimTrailingWhitespaces}}{{end}}
-`)
+`,
+		common.T("Usage:", "Uso:"),
+		common.T("Available Commands:", "Comandos Disponibles:"),
+		common.T("Flags:", "Flags:"),
+		common.T("Global Flags:", "Flags Globales:")))
 
 	// Adiciona os comandos
 	rootCmd.AddCommand(createCmd)
