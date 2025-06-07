@@ -3,8 +3,8 @@ kind: Lab
 metadata:
   name: ejemplo-lab-es
   version: "1.0.0"
-  description: "laboratorio de ejemplo do GIRUS CLI"
-  author: "Seu Nome"
+  description: "laboratorio de ejemplo de GIRUS CLI"
+  author: "Su Nombre"
   created: "2024-06-01T10:00:00Z"
 spec:
   environment:
@@ -17,17 +17,17 @@ spec:
         mountPath: /workspace
         size: "512Mi"
   tasks:
-    - name: "Primeiro comando"
-      description: "aprende a ejecutar comandos básicos no Linux"
+    - name: "Primer comando"
+      description: "aprende a ejecutar comandos básicos en Linux"
       steps:
-        - description: "Mostre o directorio atual"
+        - description: "Muestre el directorio actual"
           command: "pwd"
           expectedOutput: "/workspace"
-          hint: "Use o comando pwd"
+          hint: "Use el comando pwd"
   validation:
-    - name: "Validação Final"
-      description: "Verifica se o usuário executou o comando pwd"
+    - name: "Validación Final"
+      description: "Verifica si el usuario ejecutó el comando pwd"
       checks:
         - command: "pwd"
           expectedOutput: "/workspace"
-          errorMessage: "O directorio não está correto"
+          errorMessage: "El directorio no está correcto"

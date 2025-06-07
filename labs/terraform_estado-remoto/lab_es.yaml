@@ -8,77 +8,77 @@ metadata:
 data:
   lab.yaml: |
     name: terraform-estado-remoto-es
-    title: "Estado Remoto e Workspaces no Terraform"
-    description: "aprende a configurar e administrar estado remoto no Terraform usando backends como S3 e DynamoDB, além de trabalhar com workspaces para diferentes ambientes."
+    title: "Estado Remoto y Workspaces en Terraform"
+    description: "Aprende a configurar y administrar estado remoto en Terraform usando backends como S3 y DynamoDB, además de trabajar con workspaces para diferentes ambientes."
     duration: 40m
     image: "linuxtips/girus-devops:0.1"
     privileged: true
     tasks:
       - name: "Configurando Backend S3"
-        description: "aprende a configurar un backend S3 para armazenar o estado do Terraform."
+        description: "Aprende a configurar un backend S3 para almacenar el estado de Terraform."
         steps:
-          - description: "crea un bucket S3 para o estado"
+          - description: "Crea un bucket S3 para el estado"
             command: "aws s3 mb s3://terraform-state-lab --region us-east-1"
             expectedOutput: "make_bucket: terraform-state-lab"
-            hint: "Use o comando aws s3 mb para crear o bucket"
+            hint: "Usa el comando aws s3 mb para crear el bucket"
 
-          - description: "crea uma tabela DynamoDB para locking"
+          - description: "Crea una tabla DynamoDB para locking"
             command: "aws dynamodb create-table --table-name terraform-locks --attribute-definitions AttributeName=LockID,AttributeType=S --key-schema AttributeName=LockID,KeyType=HASH --provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5 --region us-east-1"
             expectedOutput: "TableDescription"
-            hint: "Use o comando aws dynamodb create-table"
+            hint: "Usa el comando aws dynamodb create-table"
 
-          - description: "Configure o backend no archivo main.tf"
+          - description: "Configura el backend en el archivo main.tf"
             command: "echo -e 'terraform {\n  backend \"s3\" {\n    bucket         = \"terraform-state-lab\"\n    key            = \"terraform.tfstate\"\n    region         = \"us-east-1\"\n    dynamodb_table = \"terraform-locks\"\n    encrypt        = true\n  }\n\n  required_providers {\n    aws = {\n      source  = \"hashicorp/aws\"\n      version = \"~> 4.0\"\n    }\n  }\n}\n\nprovider \"aws\" {\n  region = \"us-east-1\"\n}\n\nresource \"aws_s3_bucket\" \"example\" {\n  bucket = \"terraform-example-${terraform.workspace}\"\n\n  tags = {\n    Name        = \"Example Bucket\"\n    Environment = terraform.workspace\n  }\n}' > main.tf"
             expectedOutput: ""
-            hint: "crea o archivo main.tf com a configuração do backend"
+            hint: "Crea el archivo main.tf con la configuración del backend"
 
-      - name: "Trabalhando com Workspaces"
-        description: "aprende a crear e administrar workspaces no Terraform."
+      - name: "Trabajando con Workspaces"
+        description: "Aprende a crear y administrar workspaces en Terraform."
         steps:
-          - description: "Inicialize o Terraform com o novo backend"
+          - description: "Inicializa Terraform con el nuevo backend"
             command: "terraform init"
             expectedOutput: "Terraform has been successfully initialized"
-            hint: "Use o comando terraform init"
+            hint: "Usa el comando terraform init"
 
-          - description: "crea un workspace para desenvolvimento"
+          - description: "Crea un workspace para desarrollo"
             command: "terraform workspace new dev"
             expectedOutput: "Created and switched to workspace \"dev\""
-            hint: "Use o comando terraform workspace new"
+            hint: "Usa el comando terraform workspace new"
 
-          - description: "Aplique a configuração no workspace dev"
+          - description: "Aplica la configuración en el workspace dev"
             command: "terraform apply -auto-approve"
             expectedOutput: "Apply complete!"
-            hint: "Use o comando terraform apply"
+            hint: "Usa el comando terraform apply"
 
-          - description: "crea un workspace para produção"
+          - description: "Crea un workspace para producción"
             command: "terraform workspace new prod"
             expectedOutput: "Created and switched to workspace \"prod\""
-            hint: "Use o comando terraform workspace new"
+            hint: "Usa el comando terraform workspace new"
 
-          - description: "Aplique a configuração no workspace prod"
+          - description: "Aplica la configuración en el workspace prod"
             command: "terraform apply -auto-approve"
             expectedOutput: "Apply complete!"
-            hint: "Use o comando terraform apply"
+            hint: "Usa el comando terraform apply"
 
-      - name: "administración de Estado"
-        description: "aprende a administrar e manipular o estado do Terraform."
+      - name: "Administración de Estado"
+        description: "Aprende a administrar y manipular el estado de Terraform."
         steps:
-          - description: "Liste todos os workspaces"
+          - description: "Lista todos los workspaces"
             command: "terraform workspace list"
             expectedOutput: "dev\nprod"
-            hint: "Use o comando terraform workspace list"
+            hint: "Usa el comando terraform workspace list"
 
-          - description: "verifique o estado atual"
+          - description: "Verifica el estado actual"
             command: "terraform state list"
             expectedOutput: "aws_s3_bucket.example"
-            hint: "Use o comando terraform state list"
+            hint: "Usa el comando terraform state list"
 
-          - description: "Visualize detalhes de un recurso"
+          - description: "Visualiza detalles de un recurso"
             command: "terraform state show aws_s3_bucket.example"
             expectedOutput: "resource \"aws_s3_bucket\" \"example\""
-            hint: "Use o comando terraform state show"
+            hint: "Usa el comando terraform state show"
 
-          - description: "Mova un recurso entre workspaces"
+          - description: "Mueve un recurso entre workspaces"
             command: "terraform workspace select dev && terraform state mv aws_s3_bucket.example aws_s3_bucket.dev_example"
             expectedOutput: "Move \"aws_s3_bucket.example\" to \"aws_s3_bucket.dev_example\""
-            hint: "Use o comando terraform state mv"
+            hint: "Usa el comando terraform state mv"

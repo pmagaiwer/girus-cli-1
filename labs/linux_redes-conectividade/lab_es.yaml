@@ -8,61 +8,61 @@ metadata:
 data:
   lab.yaml: |
     name: linux-redes-conectividade-es
-    title: "Redes e Conectividade no Linux"
-    description: "aprende a configurar e administrar redes no Linux, incluindo interfaces de rede, enrutamiento, firewall e diagnóstico de problemas de conectividade. Este laboratorio guiado explora os comandos e ferramentas essenciais para administração de redes em sistemas Linux, fornecendo uma base sólida para solução de problemas de conectividade."
+    title: "Redes y Conectividad en Linux"
+    description: "Aprende a configurar y administrar redes en Linux, incluyendo interfaces de red, enrutamiento, firewall y diagnóstico de problemas de conectividad. Este laboratorio guiado explora los comandos y herramientas esenciales para administración de redes en sistemas Linux, proporcionando una base sólida para solución de problemas de conectividad."
     duration: 30m
     image: "linuxtips/girus-devops:0.1"
     tasks:
-      - name: "Configuração de Interfaces de Rede"
-        description: "aprende a configurar e administrar interfaces de rede no Linux, incluindo endereçamento IP, máscaras de sub-rede e gateways."
+      - name: "Configuración de Interfaces de Red"
+        description: "Aprende a configurar y administrar interfaces de red en Linux, incluyendo direccionamiento IP, máscaras de subred y gateways."
         steps:
-          - description: "verifique as interfaces de rede disponíveis"
+          - description: "Verifica las interfaces de red disponibles"
             command: "ip addr show"
             expectedOutput: "eth0"
-            hint: "Use o comando ip addr show para listar todas as interfaces de rede"
+            hint: "Usa el comando ip addr show para listar todas las interfaces de red"
 
-          - description: "Configure un endereço IP estático"
+          - description: "Configura una dirección IP estática"
             command: "ip addr add 192.168.1.100/24 dev eth0"
             expectedOutput: ""
-            hint: "Use o comando ip addr add para configurar un endereço IP"
+            hint: "Usa el comando ip addr add para configurar una dirección IP"
 
-          - description: "verifique a conectividade de rede"
+          - description: "Verifica la conectividad de red"
             command: "ping -c 4 8.8.8.8"
             expectedOutput: "4 packets transmitted"
-            hint: "Use o comando ping para testar a conectividade"
+            hint: "Usa el comando ping para probar la conectividad"
 
-      - name: "enrutamiento e Firewall"
-        description: "Explore o enrutamiento e configuração de firewall no Linux usando iptables e ferramentas de diagnóstico."
+      - name: "Enrutamiento y Firewall"
+        description: "Explora el enrutamiento y configuración de firewall en Linux usando iptables y herramientas de diagnóstico."
         steps:
-          - description: "verifique a tabela de enrutamiento"
+          - description: "Verifica la tabla de enrutamiento"
             command: "ip route show"
             expectedOutput: "default via"
-            hint: "Use o comando ip route show para ver as rotas configuradas"
+            hint: "Usa el comando ip route show para ver las rutas configuradas"
 
-          - description: "Configure uma regra de firewall básica"
+          - description: "Configura una regla de firewall básica"
             command: "iptables -A INPUT -p tcp --dport 80 -j ACCEPT"
             expectedOutput: ""
-            hint: "Use o comando iptables para configurar regras de firewall"
+            hint: "Usa el comando iptables para configurar reglas de firewall"
 
-          - description: "verifique as regras de firewall"
+          - description: "Verifica las reglas de firewall"
             command: "iptables -L"
             expectedOutput: "Chain INPUT"
-            hint: "Use o comando iptables -L para listar as regras"
+            hint: "Usa el comando iptables -L para listar las reglas"
 
       - name: "Diagnóstico de Problemas"
-        description: "aprende a diagnosticar e resolver problemas comuns de rede no Linux."
+        description: "Aprende a diagnosticar y resolver problemas comunes de red en Linux."
         steps:
-          - description: "verifique o status da rede"
+          - description: "Verifica el estado de la red"
             command: "netstat -tuln"
             expectedOutput: "Active Internet connections"
-            hint: "Use o comando netstat para ver conexões ativas"
+            hint: "Usa el comando netstat para ver conexiones activas"
 
-          - description: "Teste a resolução DNS"
+          - description: "Prueba la resolución DNS"
             command: "dig google.com"
             expectedOutput: ";; ANSWER SECTION:"
-            hint: "Use o comando dig para testar a resolução DNS"
+            hint: "Usa el comando dig para probar la resolución DNS"
 
-          - description: "Analise o tráfego de rede"
+          - description: "Analiza el tráfico de red"
             command: "tcpdump -i eth0 -c 5"
             expectedOutput: "tcpdump: listening on eth0"
-            hint: "Use o comando tcpdump para capturar pacotes de rede"
+            hint: "Usa el comando tcpdump para capturar paquetes de red"

@@ -8,67 +8,67 @@ metadata:
 data:
   lab.yaml: |
     name: terraform-modulos-es
-    title: "Módulos e Reutilização de Código no Terraform"
-    description: "aprende a crear e utilizar módulos no Terraform para reutilizar código e manter sua infraestrutura organizada. Este laboratorio guiado explora boas práticas de modularização."
+    title: "Módulos y Reutilización de Código en Terraform"
+    description: "Aprende a crear y utilizar módulos en Terraform para reutilizar código y mantener tu infraestructura organizada. Este laboratorio guiado explora buenas prácticas de modularización."
     duration: 45m
     image: "linuxtips/girus-devops:0.1"
     privileged: true
     tasks:
-      - name: "creando un Módulo Básico"
-        description: "aprende a crear un módulo básico para provisionar recursos AWS."
+      - name: "Creando un Módulo Básico"
+        description: "Aprende a crear un módulo básico para provisionar recursos AWS."
         steps:
-          - description: "crea a estrutura de directorios para o módulo"
+          - description: "Crea la estructura de directorios para el módulo"
             command: "mkdir -p terraform-modules/modules/ec2 && cd terraform-modules"
             expectedOutput: ""
-            hint: "Use o comando mkdir para crear a estrutura de directorios"
+            hint: "Usa el comando mkdir para crear la estructura de directorios"
 
-          - description: "crea o archivo main.tf do módulo"
+          - description: "Crea el archivo main.tf del módulo"
             command: "echo -e 'resource \"aws_instance\" \"this\" {\n  ami           = var.ami_id\n  instance_type = var.instance_type\n\n  tags = merge(\n    var.tags,\n    {\n      Name = var.instance_name\n    }\n  )\n}' > modules/ec2/main.tf"
             expectedOutput: ""
-            hint: "crea o archivo main.tf com a definição do recurso EC2"
+            hint: "Crea el archivo main.tf con la definición del recurso EC2"
 
-          - description: "crea o archivo variables.tf do módulo"
-            command: "echo -e 'variable \"ami_id\" {\n  description = \"ID da AMI para a instância\"\n  type        = string\n}\n\nvariable \"instance_type\" {\n  description = \"Tipo da instância EC2\"\n  type        = string\n  default     = \"t2.micro\"\n}\n\nvariable \"instance_name\" {\n  description = \"Nome da instância EC2\"\n  type        = string\n}\n\nvariable \"tags\" {\n  description = \"Tags para a instância\"\n  type        = map(string)\n  default     = {}\n}' > modules/ec2/variables.tf"
+          - description: "Crea el archivo variables.tf del módulo"
+            command: "echo -e 'variable \"ami_id\" {\n  description = \"ID de la AMI para la instancia\"\n  type        = string\n}\n\nvariable \"instance_type\" {\n  description = \"Tipo de instancia EC2\"\n  type        = string\n  default     = \"t2.micro\"\n}\n\nvariable \"instance_name\" {\n  description = \"Nombre de la instancia EC2\"\n  type        = string\n}\n\nvariable \"tags\" {\n  description = \"Tags para la instancia\"\n  type        = map(string)\n  default     = {}\n}' > modules/ec2/variables.tf"
             expectedOutput: ""
-            hint: "crea o archivo variables.tf com as definições de variáveis"
+            hint: "Crea el archivo variables.tf con las definiciones de variables"
 
-      - name: "utilizando o Módulo"
-        description: "aprende a utilizar o módulo criado em un projeto Terraform."
+      - name: "Utilizando el Módulo"
+        description: "Aprende a utilizar el módulo creado en un proyecto Terraform."
         steps:
-          - description: "crea o archivo main.tf do projeto"
+          - description: "Crea el archivo main.tf del proyecto"
             command: "echo -e 'terraform {\n  required_providers {\n    aws = {\n      source  = \"hashicorp/aws\"\n      version = \"~> 4.0\"\n    }\n  }\n}\n\nprovider \"aws\" {\n  region = \"us-east-1\"\n}\n\nmodule \"web_server\" {\n  source = \"./modules/ec2\"\n\n  ami_id         = \"ami-0c55b159cbfafe1f0\"\n  instance_type  = \"t2.micro\"\n  instance_name  = \"web-server\"\n\n  tags = {\n    Environment = \"dev\"\n    Project     = \"terraform-modules\"\n  }\n}' > main.tf"
             expectedOutput: ""
-            hint: "crea o archivo main.tf do projeto usando o módulo"
+            hint: "Crea el archivo main.tf del proyecto usando el módulo"
 
-          - description: "crea o archivo outputs.tf do projeto"
-            command: "echo -e 'output \"instance_id\" {\n  description = \"ID da instância EC2\"\n  value       = module.web_server.instance_id\n}\n\noutput \"public_ip\" {\n  description = \"IP público da instância EC2\"\n  value       = module.web_server.public_ip\n}' > outputs.tf"
+          - description: "Crea el archivo outputs.tf del proyecto"
+            command: "echo -e 'output \"instance_id\" {\n  description = \"ID de la instancia EC2\"\n  value       = module.web_server.instance_id\n}\n\noutput \"public_ip\" {\n  description = \"IP pública de la instancia EC2\"\n  value       = module.web_server.public_ip\n}' > outputs.tf"
             expectedOutput: ""
-            hint: "crea o archivo outputs.tf para expor os outputs do módulo"
+            hint: "Crea el archivo outputs.tf para exponer los outputs del módulo"
 
-          - description: "Inicialize e aplique a configuração"
+          - description: "Inicializa y aplica la configuración"
             command: "terraform init && terraform apply -auto-approve"
             expectedOutput: "Apply complete!"
-            hint: "Use os comandos terraform init e apply"
+            hint: "Usa los comandos terraform init y apply"
 
-      - name: "Módulos Aninhados"
-        description: "aprende a crear e utilizar módulos aninhados para infraestrutura mais complexa."
+      - name: "Módulos Anidados"
+        description: "Aprende a crear y utilizar módulos anidados para infraestructura más compleja."
         steps:
-          - description: "crea un módulo para VPC"
+          - description: "Crea un módulo para VPC"
             command: "mkdir -p modules/vpc && echo -e 'resource \"aws_vpc\" \"this\" {\n  cidr_block = var.vpc_cidr\n\n  tags = merge(\n    var.tags,\n    {\n      Name = var.vpc_name\n    }\n  )\n}\n\nresource \"aws_subnet\" \"this\" {\n  vpc_id     = aws_vpc.this.id\n  cidr_block = var.subnet_cidr\n\n  tags = merge(\n    var.tags,\n    {\n      Name = \"${var.vpc_name}-subnet\"\n    }\n  )\n}' > modules/vpc/main.tf"
             expectedOutput: ""
-            hint: "crea o módulo VPC com recursos básicos"
+            hint: "Crea el módulo VPC con recursos básicos"
 
-          - description: "Atualize o módulo EC2 para usar a VPC"
+          - description: "Actualiza el módulo EC2 para usar la VPC"
             command: "echo -e 'resource \"aws_instance\" \"this\" {\n  ami           = var.ami_id\n  instance_type = var.instance_type\n  subnet_id     = var.subnet_id\n\n  tags = merge(\n    var.tags,\n    {\n      Name = var.instance_name\n    }\n  )\n}' > modules/ec2/main.tf"
             expectedOutput: ""
-            hint: "Atualize o módulo EC2 para incluir a subnet"
+            hint: "Actualiza el módulo EC2 para incluir la subnet"
 
-          - description: "Atualize o projeto principal"
+          - description: "Actualiza el proyecto principal"
             command: "echo -e 'module \"vpc\" {\n  source = \"./modules/vpc\"\n\n  vpc_cidr = \"10.0.0.0/16\"\n  vpc_name = \"terraform-vpc\"\n  subnet_cidr = \"10.0.1.0/24\"\n\n  tags = {\n    Environment = \"dev\"\n    Project     = \"terraform-modules\"\n  }\n}\n\nmodule \"web_server\" {\n  source = \"./modules/ec2\"\n\n  ami_id         = \"ami-0c55b159cbfafe1f0\"\n  instance_type  = \"t2.micro\"\n  instance_name  = \"web-server\"\n  subnet_id      = module.vpc.subnet_id\n\n  tags = {\n    Environment = \"dev\"\n    Project     = \"terraform-modules\"\n  }\n}' > main.tf"
             expectedOutput: ""
-            hint: "Atualize o projeto principal para usar os módulos aninhados"
+            hint: "Actualiza el proyecto principal para usar los módulos anidados"
 
-          - description: "Aplique a configuração atualizada"
+          - description: "Aplica la configuración actualizada"
             command: "terraform apply -auto-approve"
             expectedOutput: "Apply complete!"
-            hint: "Use o comando terraform apply"
+            hint: "Usa el comando terraform apply"

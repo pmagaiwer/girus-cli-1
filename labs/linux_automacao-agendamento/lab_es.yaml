@@ -8,61 +8,584 @@ metadata:
 data:
   lab.yaml: |
     name: linux-automacao-agendamento-es
-    title: "Automação e Agendamento no Linux"
-    description: "aprende a automatizar tarefas e agendar execuções no Linux usando cron, systemd timers e scripts de automação. Este laboratorio guiado explora as ferramentas e técnicas para crear sistemas automatizados e agendar tarefas de forma eficiente."
+    title: "Linux: Automatización y Programación de Tareas"
+    description: "Aprende a automatizar tareas en Linux usando cron, systemd timers y scripts, creando rutinas de backup, monitoreo y mantenimiento del sistema."
     duration: 30m
     image: "linuxtips/girus-devops:0.1"
+    privileged: true
     tasks:
-      - name: "Agendamento com Cron"
-        description: "aprende a usar o cron para agendar tarefas recorrentes."
+      - name: "Fundamentos de Cron y Crontab"
+        description: "Aprende a programar tareas usando cron, el programador de tareas más tradicional de Linux."
         steps:
-          - description: "verifique o status do servicio cron"
-            command: "systemctl status cron"
-            expectedOutput: "Active: active"
-            hint: "Use o comando systemctl para verificar o status do servicio"
+          - "Primero, vamos a verificar si el servicio cron está en ejecución:"
+          - "`systemctl status cron || systemctl status crond`"
+          - "Verifica la sintaxis del crontab. La estructura es: minuto hora día mes día_semana comando"
+          - "```"
+          - "# Formato: min hora día mes día_semana comando"
+          - "# *     *    *   *    *         comando"
+          - "# |     |    |   |    |"
+          - "# |     |    |   |    +--- Día de la semana (0-7, 0 y 7 = domingo)"
+          - "# |     |    |   +-------- Mes (1-12)"
+          - "# |     |    +------------ Día del mes (1-31)"
+          - "# |     +----------------- Hora (0-23)"
+          - "# +--------------------- Minuto (0-59)"
+          - "```"
+          - "Vamos a crear nuestro primer trabajo cron. Abre el editor de crontab:"
+          - "`crontab -e`"
+          - "Si es la primera vez, selecciona el editor nano (opción 1). Agrega las siguientes líneas:"
+          - "```"
+          - "# Ejecuta cada minuto"
+          - "* * * * * echo \"$(date): Cron funcionando\" >> /tmp/cron-test.log"
+          - ""
+          - "# Ejecuta todos los días a las 6:30 AM"
+          - "30 6 * * * echo \"$(date): Buenos días!\" >> /tmp/daily-message.log"
+          - ""
+          - "# Ejecuta cada lunes a las 9:00 AM"
+          - "0 9 * * 1 echo \"$(date): Inicio de semana\" >> /tmp/weekly-message.log"
+          - "```"
+          - "Guarda y cierra el editor (Ctrl+X, luego Y, luego Enter)"
+          - "Verifica que las tareas fueron agregadas:"
+          - "`crontab -l`"
+          - "Espera un minuto y verifica si el archivo de log fue creado:"
+          - "`ls -la /tmp/cron-test.log`"
+          - "`cat /tmp/cron-test.log`"
+          - "Lista todos los trabajos cron del sistema:"
+          - "`for user in $(cut -f1 -d: /etc/passwd); do echo \"Usuario: $user\"; crontab -u $user -l 2>/dev/null || echo \"Sin crontab\"; echo; done`"
+          - "Verifica los logs del sistema cron:"
+          - "`grep CRON /var/log/syslog | tail -5`"
+        tips:
+          - type: "info"
+            title: "Expresiones Especiales"
+            content: "Puedes usar expresiones especiales como @daily, @weekly, @monthly, @yearly, @reboot en lugar de la sintaxis completa. Por ejemplo: @daily echo 'Tarea diaria' >> /tmp/daily.log"
+          - type: "warning"
+            title: "Variables de Entorno"
+            content: "Cron ejecuta tareas con un entorno limitado. Define variables como PATH, SHELL y MAILTO al inicio del crontab si es necesario."
+          - type: "tip"
+            title: "Testing de Cron"
+            content: "Para probar un trabajo cron, primero ejecútalo manualmente para verificar que funciona. También puedes usar herramientas online para validar expresiones cron."
+        validation:
+          - command: "crontab -l | grep -q 'cron-test.log' && echo 'success' || echo 'error'"
+            expectedOutput: "success"
+            errorMessage: "La tarea cron no fue configurada correctamente. Verifica el comando 'crontab -e'."
 
-          - description: "crea uma tarefa cron para backup"
-            command: "echo '0 2 * * * tar -czf /backup/home_$(date +%Y%m%d).tar.gz /home' | crontab -"
-            expectedOutput: ""
-            hint: "Use o comando crontab para adicionar uma tarefa"
-
-          - description: "verifique as tarefas agendadas"
-            command: "crontab -l"
-            expectedOutput: "0 2 * * *"
-            hint: "Use o comando crontab -l para listar as tarefas"
-
-      - name: "Systemd Timers"
-        description: "Explore o uso de systemd timers para agendamento de tarefas."
+      - name: "Scripts de Automatización Avanzados"
+        description: "Crea scripts robustos para automatización de tareas complejas del sistema."
         steps:
-          - description: "crea un servicio systemd"
-            command: "echo -e '[Unit]\nDescription=Backup Service\n\n[Service]\nType=oneshot\nExecStart=/usr/bin/tar -czf /backup/system_$(date +%Y%m%d).tar.gz /etc\n\n[Install]\nWantedBy=multi-user.target' | sudo tee /etc/systemd/system/backup.service"
-            expectedOutput: ""
-            hint: "crea un archivo de servicio systemd"
+          - "Crea un directorio para tus scripts de automatización:"
+          - "`mkdir -p ~/automation-scripts && cd ~/automation-scripts`"
+          - "Vamos a crear un script de backup automatizado:"
+          - "`cat > backup-script.sh << 'EOF'
+#!/bin/bash
 
-          - description: "crea un timer para o servicio"
-            command: "echo -e '[Unit]\nDescription=Run backup daily\n\n[Timer]\nOnCalendar=daily\nPersistent=true\n\n[Install]\nWantedBy=timers.target' | sudo tee /etc/systemd/system/backup.timer"
-            expectedOutput: ""
-            hint: "crea un archivo de timer systemd"
+# Script de backup automatizado
+# Versión: 1.0
+# Autor: DevOps Team
 
-          - description: "Ative e inicie o timer"
-            command: "sudo systemctl enable --now backup.timer"
-            expectedOutput: ""
-            hint: "Use systemctl para ativar o timer"
+# Configuraciones
+BACKUP_SOURCE=\"/home\"
+BACKUP_DEST=\"/backup\"
+LOG_FILE=\"/var/log/backup.log\"
+DATE=$(date +%Y%m%d_%H%M%S)
+BACKUP_NAME=\"backup_$DATE.tar.gz\"
+RETENTION_DAYS=7
 
-      - name: "Scripts de Automação"
-        description: "aprende a crear e executar scripts de automação."
+# Función para logging
+log_message() {
+    echo \"$(date '+%Y-%m-%d %H:%M:%S') - $1\" | tee -a \"$LOG_FILE\"
+}
+
+# Función para verificar espacio en disco
+check_disk_space() {
+    local required_space=1000000  # 1GB en KB
+    local available_space=$(df \"$BACKUP_DEST\" | awk 'NR==2 {print $4}')
+    
+    if [ \"$available_space\" -lt \"$required_space\" ]; then
+        log_message \"ERROR: Espacio insuficiente en disco. Disponible: ${available_space}KB, Requerido: ${required_space}KB\"
+        exit 1
+    fi
+    
+    log_message \"Espacio en disco OK. Disponible: ${available_space}KB\"
+}
+
+# Función para limpieza de backups antiguos
+cleanup_old_backups() {
+    log_message \"Limpiando backups de más de $RETENTION_DAYS días...\"
+    find \"$BACKUP_DEST\" -name \"backup_*.tar.gz\" -type f -mtime +$RETENTION_DAYS -delete
+    local deleted_count=$(find \"$BACKUP_DEST\" -name \"backup_*.tar.gz\" -type f -mtime +$RETENTION_DAYS | wc -l)
+    log_message \"Backups antiguos eliminados: $deleted_count archivos\"
+}
+
+# Función principal de backup
+perform_backup() {
+    log_message \"Iniciando backup de $BACKUP_SOURCE\"
+    
+    # Crear directorio de destino si no existe
+    mkdir -p \"$BACKUP_DEST\"
+    
+    # Verificar espacio
+    check_disk_space
+    
+    # Crear backup
+    if tar -czf \"$BACKUP_DEST/$BACKUP_NAME\" \"$BACKUP_SOURCE\" 2>/dev/null; then
+        local backup_size=$(du -h \"$BACKUP_DEST/$BACKUP_NAME\" | cut -f1)
+        log_message \"Backup completado exitosamente: $BACKUP_NAME (Tamaño: $backup_size)\"
+        
+        # Limpiar backups antiguos
+        cleanup_old_backups
+        
+        # Verificar integridad del backup
+        if tar -tzf \"$BACKUP_DEST/$BACKUP_NAME\" >/dev/null 2>&1; then
+            log_message \"Verificación de integridad: OK\"
+        else
+            log_message \"ERROR: Backup corrupto\"
+            return 1
+        fi
+    else
+        log_message \"ERROR: Fallo al crear backup\"
+        return 1
+    fi
+}
+
+# Script principal
+log_message \"=== INICIO DEL BACKUP ===\"
+perform_backup
+exit_code=$?
+log_message \"=== FIN DEL BACKUP (Código de salida: $exit_code) ===\"
+
+exit $exit_code
+EOF`"
+          - "Da permisos de ejecución al script:"
+          - "`chmod +x backup-script.sh`"
+          - "Crea el directorio de backup para testing:"
+          - "`sudo mkdir -p /backup`"
+          - "Crea un archivo de log:"
+          - "`sudo touch /var/log/backup.log && sudo chmod 666 /var/log/backup.log`"
+          - "Ejecuta el script para probarlo:"
+          - "`sudo ./backup-script.sh`"
+          - "Verifica el resultado:"
+          - "`cat /var/log/backup.log`"
+          - "Lista los archivos de backup creados:"
+          - "`ls -la /backup/`"
+          - "Ahora vamos a crear un script de monitoreo del sistema:"
+          - "`cat > system-monitor.sh << 'EOF'
+#!/bin/bash
+
+# Script de monitoreo del sistema
+REPORT_FILE=\"/tmp/system-report-$(date +%Y%m%d).txt\"
+EMAIL_ALERT=\"admin@empresa.com\"
+CPU_THRESHOLD=80
+MEMORY_THRESHOLD=85
+DISK_THRESHOLD=90
+
+# Función para escribir header del reporte
+write_header() {
+    cat > \"$REPORT_FILE\" << HEADER
+====================================
+REPORTE DE SISTEMA - $(date)
+====================================
+
+HEADER
+}
+
+# Función para monitorear CPU
+check_cpu() {
+    echo \"=== USO DE CPU ===\" >> \"$REPORT_FILE\"
+    local cpu_usage=$(top -bn1 | grep \"Cpu(s)\" | awk '{print $2}' | cut -d'%' -f1)
+    echo \"Uso actual de CPU: ${cpu_usage}%\" >> \"$REPORT_FILE\"
+    
+    if (( $(echo \"$cpu_usage > $CPU_THRESHOLD\" | bc -l) )); then
+        echo \"ALERTA: Uso de CPU alto (${cpu_usage}% > ${CPU_THRESHOLD}%)\" >> \"$REPORT_FILE\"
+    fi
+    echo >> \"$REPORT_FILE\"
+}
+
+# Función para monitorear memoria
+check_memory() {
+    echo \"=== USO DE MEMORIA ===\" >> \"$REPORT_FILE\"
+    local mem_info=$(free | grep '^Mem:')
+    local total=$(echo $mem_info | awk '{print $2}')
+    local used=$(echo $mem_info | awk '{print $3}')
+    local mem_percentage=$(echo \"scale=2; $used/$total*100\" | bc)
+    
+    echo \"Memoria total: $(echo \"scale=2; $total/1024/1024\" | bc) GB\" >> \"$REPORT_FILE\"
+    echo \"Memoria usada: $(echo \"scale=2; $used/1024/1024\" | bc) GB (${mem_percentage}%)\" >> \"$REPORT_FILE\"
+    
+    if (( $(echo \"$mem_percentage > $MEMORY_THRESHOLD\" | bc -l) )); then
+        echo \"ALERTA: Uso de memoria alto (${mem_percentage}% > ${MEMORY_THRESHOLD}%)\" >> \"$REPORT_FILE\"
+    fi
+    echo >> \"$REPORT_FILE\"
+}
+
+# Función para monitorear disco
+check_disk() {
+    echo \"=== USO DE DISCO ===\" >> \"$REPORT_FILE\"
+    df -h | grep -vE '^Filesystem|tmpfs|cdrom' | awk '{print $5 \" \" $1}' | while read output; do
+        usage=$(echo $output | awk '{print $1}' | cut -d'%' -f1)
+        partition=$(echo $output | awk '{print $2}')
+        echo \"$partition: ${usage}%\" >> \"$REPORT_FILE\"
+        
+        if [ $usage -ge $DISK_THRESHOLD ]; then
+            echo \"ALERTA: Disco $partition con uso alto (${usage}% >= ${DISK_THRESHOLD}%)\" >> \"$REPORT_FILE\"
+        fi
+    done
+    echo >> \"$REPORT_FILE\"
+}
+
+# Función para procesos que más consumen recursos
+check_top_processes() {
+    echo \"=== TOP 5 PROCESOS (CPU) ===\" >> \"$REPORT_FILE\"
+    ps aux --sort=-%cpu | head -6 >> \"$REPORT_FILE\"
+    echo >> \"$REPORT_FILE\"
+    
+    echo \"=== TOP 5 PROCESOS (MEMORIA) ===\" >> \"$REPORT_FILE\"
+    ps aux --sort=-%mem | head -6 >> \"$REPORT_FILE\"
+    echo >> \"$REPORT_FILE\"
+}
+
+# Función principal
+main() {
+    write_header
+    check_cpu
+    check_memory
+    check_disk
+    check_top_processes
+    
+    echo \"Reporte generado en: $REPORT_FILE\"
+    echo \"Para ver el reporte completo, ejecuta: cat $REPORT_FILE\"
+}
+
+# Ejecutar script principal
+main
+EOF`"
+          - "Da permisos de ejecución:"
+          - "`chmod +x system-monitor.sh`"
+          - "Ejecuta el script de monitoreo:"
+          - "`./system-monitor.sh`"
+          - "Verifica el reporte generado:"
+          - "`cat /tmp/system-report-$(date +%Y%m%d).txt`"
+        tips:
+          - type: "info"
+            title: "Gestión de Errores"
+            content: "Siempre incluye gestión de errores en tus scripts. Usa 'set -e' para que el script se detenga ante errores, o gestiona errores manualmente con verificaciones apropiadas."
+          - type: "tip"
+            title: "Logging Estructurado"
+            content: "Usa un formato consistente para logs, incluyendo timestamp, nivel de severidad y mensaje. Considera usar syslog para logs del sistema."
+          - type: "warning"
+            title: "Permisos y Seguridad"
+            content: "Scripts que ejecutan como root deben estar protegidos con permisos restrictivos. Nunca hardcodees credenciales; usa archivos de configuración protegidos."
+        validation:
+          - command: "test -x backup-script.sh && test -x system-monitor.sh && echo 'success' || echo 'error'"
+            expectedOutput: "success"
+            errorMessage: "Los scripts de automatización no fueron creados o no tienen permisos de ejecución."
+
+      - name: "Systemd Timers - Alternativa Moderna a Cron"
+        description: "Aprende a usar systemd timers, una alternativa moderna y potente a cron."
         steps:
-          - description: "crea un script de monitoramento"
-            command: "echo -e '#!/bin/bash\n\necho \"Monitoramento do Sistema\"\necho \"==================\"\ndf -h\necho \"\"\nfree -h\necho \"\"\nps aux | grep -v grep' > monitor.sh && chmod +x monitor.sh"
-            expectedOutput: ""
-            hint: "crea un script shell com permissões de execução"
+          - "Primero, vamos a crear un servicio systemd para nuestro script de backup:"
+          - "`sudo cat > /etc/systemd/system/backup-automatico.service << 'EOF'
+[Unit]
+Description=Script de Backup Automatizado
+Wants=backup-automatico.timer
 
-          - description: "Execute o script"
-            command: "./monitor.sh"
-            expectedOutput: "Monitoramento do Sistema"
-            hint: "Execute o script com ./monitor.sh"
+[Service]
+Type=oneshot
+User=root
+ExecStart=/home/$(whoami)/automation-scripts/backup-script.sh
+StandardOutput=journal
+StandardError=journal
 
-          - description: "Agende o script para execução periódica"
-            command: "echo '*/30 * * * * /workspace/monitor.sh >> /workspace/monitor.log 2>&1' | crontab -"
-            expectedOutput: ""
-            hint: "Use crontab para agendar a execução do script"
+[Install]
+WantedBy=multi-user.target
+EOF`"
+          - "Ahora crea el timer que programará la ejecución del servicio:"
+          - "`sudo cat > /etc/systemd/system/backup-automatico.timer << 'EOF'
+[Unit]
+Description=Ejecuta backup automatizado diariamente
+Requires=backup-automatico.service
+
+[Timer]
+OnCalendar=daily
+Persistent=true
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target
+EOF`"
+          - "Recarga la configuración de systemd:"
+          - "`sudo systemctl daemon-reload`"
+          - "Habilita y inicia el timer:"
+          - "`sudo systemctl enable backup-automatico.timer`"
+          - "`sudo systemctl start backup-automatico.timer`"
+          - "Verifica el estado del timer:"
+          - "`sudo systemctl status backup-automatico.timer`"
+          - "Lista todos los timers activos:"
+          - "`sudo systemctl list-timers --all`"
+          - "Vamos a crear un timer para monitoreo cada hora:"
+          - "`sudo cat > /etc/systemd/system/monitoreo-sistema.service << 'EOF'
+[Unit]
+Description=Monitoreo del Sistema
+After=network.target
+
+[Service]
+Type=oneshot
+User=root
+ExecStart=/home/$(whoami)/automation-scripts/system-monitor.sh
+StandardOutput=journal
+StandardError=journal
+EOF`"
+          - "`sudo cat > /etc/systemd/system/monitoreo-sistema.timer << 'EOF'
+[Unit]
+Description=Ejecuta monitoreo del sistema cada hora
+Requires=monitoreo-sistema.service
+
+[Timer]
+OnCalendar=hourly
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+EOF`"
+          - "Recarga, habilita e inicia el nuevo timer:"
+          - "`sudo systemctl daemon-reload`"
+          - "`sudo systemctl enable monitoreo-sistema.timer`"
+          - "`sudo systemctl start monitoreo-sistema.timer`"
+          - "Ejecuta manualmente el servicio para probarlo:"
+          - "`sudo systemctl start backup-automatico.service`"
+          - "Verifica los logs del servicio:"
+          - "`sudo journalctl -u backup-automatico.service -n 20`"
+          - "Verifica cuándo será la próxima ejecución:"
+          - "`sudo systemctl list-timers backup-automatico.timer`"
+        tips:
+          - type: "info"
+            title: "Ventajas de Systemd Timers"
+            content: "Los timers de systemd ofrecen mejor logging, gestión de dependencias, capacidad de recovery, y configuración más flexible que cron tradicional."
+          - type: "tip"
+            title: "Sintaxis OnCalendar"
+            content: "Usa 'systemd-analyze calendar \"expresión\"' para validar expresiones de calendario. Ejemplos: 'Mon *-*-* 09:00:00', '*-*-01 06:00:00' (primer día del mes)."
+          - type: "warning"
+            title: "Persistent=true"
+            content: "La opción Persistent=true hace que el timer se ejecute inmediatamente si el sistema estaba apagado durante la hora programada."
+        validation:
+          - command: "sudo systemctl is-active backup-automatico.timer | grep -q 'active' && echo 'success' || echo 'error'"
+            expectedOutput: "success"
+            errorMessage: "El timer de systemd no está activo. Verifica la configuración."
+
+      - name: "Tareas de Mantenimiento Automatizado"
+        description: "Implementa tareas comunes de mantenimiento del sistema usando automatización."
+        steps:
+          - "Vamos a crear un script de limpieza y mantenimiento del sistema:"
+          - "`cat > ~/automation-scripts/maintenance-script.sh << 'EOF'
+#!/bin/bash
+
+# Script de mantenimiento automatizado del sistema
+LOG_FILE=\"/var/log/maintenance.log\"
+
+log() {
+    echo \"$(date '+%Y-%m-%d %H:%M:%S') - $1\" | tee -a \"$LOG_FILE\"
+}
+
+# Limpieza de archivos temporales
+cleanup_temp_files() {
+    log \"Iniciando limpieza de archivos temporales...\"
+    
+    # Limpiar /tmp (archivos de más de 7 días)
+    find /tmp -type f -atime +7 -delete 2>/dev/null
+    log \"Archivos temporales en /tmp limpiados\"
+    
+    # Limpiar logs antiguos (más de 30 días)
+    find /var/log -name \"*.log\" -type f -mtime +30 -delete 2>/dev/null
+    log \"Logs antiguos limpiados\"
+    
+    # Limpiar caché de APT
+    apt-get clean &>/dev/null
+    log \"Caché de APT limpiado\"
+}
+
+# Actualización de base de datos de locate
+update_locate_db() {
+    log \"Actualizando base de datos de locate...\"
+    updatedb &>/dev/null
+    log \"Base de datos de locate actualizada\"
+}
+
+# Verificación y reparación de sistema de archivos
+check_filesystem() {
+    log \"Verificando sistema de archivos...\"
+    
+    # Verificar solo en modo lectura para evitar problemas
+    local root_device=$(df / | tail -1 | awk '{print $1}')
+    if fsck -n \"$root_device\" &>/dev/null; then
+        log \"Sistema de archivos OK\"
+    else
+        log \"ADVERTENCIA: Se detectaron problemas en el sistema de archivos\"
+    fi
+}
+
+# Rotación de logs
+rotate_logs() {
+    log \"Iniciando rotación de logs personalizada...\"
+    
+    for logfile in /var/log/backup.log /var/log/maintenance.log; do
+        if [ -f \"$logfile\" ] && [ $(stat -c%s \"$logfile\") -gt 10485760 ]; then  # 10MB
+            mv \"$logfile\" \"${logfile}.old\"
+            touch \"$logfile\"
+            chmod 666 \"$logfile\"
+            log \"Log rotado: $logfile\"
+        fi
+    done
+}
+
+# Verificación de espacio en disco
+check_disk_space() {
+    log \"Verificando espacio en disco...\"
+    
+    df -h | grep -vE '^Filesystem|tmpfs|cdrom' | awk '{print $5 \" \" $1}' | while read output; do
+        usage=$(echo $output | awk '{print $1}' | cut -d'%' -f1)
+        partition=$(echo $output | awk '{print $2}')
+        
+        if [ $usage -ge 90 ]; then
+            log \"ALERTA: Partición $partition con ${usage}% de uso\"
+        elif [ $usage -ge 80 ]; then
+            log \"ADVERTENCIA: Partición $partition con ${usage}% de uso\"
+        fi
+    done
+}
+
+# Verificación de servicios críticos
+check_services() {
+    log \"Verificando servicios críticos...\"
+    
+    critical_services=(\"ssh\" \"cron\" \"systemd-timesyncd\")
+    
+    for service in \"${critical_services[@]}\"; do
+        if systemctl is-active --quiet \"$service\"; then
+            log \"Servicio $service: OK\"
+        else
+            log \"ALERTA: Servicio $service no está activo\"
+        fi
+    done
+}
+
+# Función principal
+main() {
+    log \"=== INICIO DEL MANTENIMIENTO AUTOMATIZADO ===\"
+    
+    cleanup_temp_files
+    update_locate_db
+    check_filesystem
+    rotate_logs
+    check_disk_space
+    check_services
+    
+    log \"=== FIN DEL MANTENIMIENTO AUTOMATIZADO ===\"
+}
+
+# Ejecutar si se llama directamente
+if [ \"${BASH_SOURCE[0]}\" == \"${0}\" ]; then
+    main
+fi
+EOF`"
+          - "Da permisos de ejecución:"
+          - "`chmod +x ~/automation-scripts/maintenance-script.sh`"
+          - "Crea el archivo de log:"
+          - "`sudo touch /var/log/maintenance.log && sudo chmod 666 /var/log/maintenance.log`"
+          - "Ejecuta el script de mantenimiento:"
+          - "`sudo ~/automation-scripts/maintenance-script.sh`"
+          - "Verifica el log de mantenimiento:"
+          - "`cat /var/log/maintenance.log`"
+          - "Programa el script de mantenimiento para ejecutarse semanalmente usando cron:"
+          - "`(crontab -l 2>/dev/null; echo \"0 3 * * 0 sudo $HOME/automation-scripts/maintenance-script.sh\") | crontab -`"
+          - "Verifica que la tarea fue agregada:"
+          - "`crontab -l | grep maintenance`"
+          - "Crea un script de verificación de seguridad básica:"
+          - "`cat > ~/automation-scripts/security-check.sh << 'EOF'
+#!/bin/bash
+
+# Script de verificación de seguridad básica
+SECURITY_LOG=\"/var/log/security-check.log\"
+
+security_log() {
+    echo \"$(date '+%Y-%m-%d %H:%M:%S') - SECURITY - $1\" | tee -a \"$SECURITY_LOG\"
+}
+
+# Verificar intentos de login fallidos
+check_failed_logins() {
+    security_log \"Verificando intentos de login fallidos...\"
+    
+    local failed_logins=$(grep \"Failed password\" /var/log/auth.log 2>/dev/null | wc -l)
+    if [ \"$failed_logins\" -gt 10 ]; then
+        security_log \"ALERTA: $failed_logins intentos de login fallidos detectados\"
+    else
+        security_log \"Intentos de login fallidos: $failed_logins (OK)\"
+    fi
+}
+
+# Verificar conexiones de red sospechosas
+check_network_connections() {
+    security_log \"Verificando conexiones de red...\"
+    
+    local connections=$(netstat -tuln | wc -l)
+    security_log \"Conexiones de red activas: $connections\"
+    
+    # Verificar puertos en escucha no estándar
+    local unusual_ports=$(netstat -tuln | grep LISTEN | grep -v -E ':22|:80|:443|:53' | wc -l)
+    if [ \"$unusual_ports\" -gt 0 ]; then
+        security_log \"ADVERTENCIA: $unusual_ports puertos no estándar en escucha\"
+    fi
+}
+
+# Verificar archivos SUID sospechosos
+check_suid_files() {
+    security_log \"Verificando archivos SUID...\"
+    
+    local suid_count=$(find /usr /bin /sbin -perm -4000 -type f 2>/dev/null | wc -l)
+    security_log \"Archivos SUID encontrados: $suid_count\"
+    
+    # Guardar lista actual de archivos SUID
+    find /usr /bin /sbin -perm -4000 -type f 2>/dev/null > /tmp/current_suid.list
+    
+    if [ -f \"/tmp/previous_suid.list\" ]; then
+        local new_suid=$(comm -13 /tmp/previous_suid.list /tmp/current_suid.list)
+        if [ -n \"$new_suid\" ]; then
+            security_log \"ALERTA: Nuevos archivos SUID detectados: $new_suid\"
+        fi
+    fi
+    
+    mv /tmp/current_suid.list /tmp/previous_suid.list
+}
+
+# Función principal
+main() {
+    security_log \"=== INICIO DE VERIFICACIÓN DE SEGURIDAD ===\"
+    
+    check_failed_logins
+    check_network_connections
+    check_suid_files
+    
+    security_log \"=== FIN DE VERIFICACIÓN DE SEGURIDAD ===\"
+}
+
+main
+EOF`"
+          - "Da permisos de ejecución:"
+          - "`chmod +x ~/automation-scripts/security-check.sh`"
+          - "Crea el archivo de log de seguridad:"
+          - "`sudo touch /var/log/security-check.log && sudo chmod 666 /var/log/security-check.log`"
+          - "Ejecuta el script de verificación de seguridad:"
+          - "`sudo ~/automation-scripts/security-check.sh`"
+          - "Verifica el log de seguridad:"
+          - "`cat /var/log/security-check.log`"
+        tips:
+          - type: "info"
+            title: "Mantenimiento Preventivo"
+            content: "El mantenimiento automatizado ayuda a prevenir problemas antes de que ocurran. Ejecuta estas tareas regularmente para mantener el sistema saludable."
+          - type: "warning"
+            title: "Monitoreo de Alertas"
+            content: "Configura notificaciones por email o sistemas de alertas para ser notificado cuando los scripts detecten problemas críticos."
+          - type: "tip"
+            title: "Documentación"
+            content: "Mantén documentación actualizada de todas las tareas automatizadas, incluyendo qué hacen, cuándo se ejecutan y cómo interpretar sus resultados."
+        validation:
+          - command: "test -x ~/automation-scripts/maintenance-script.sh && test -f /var/log/maintenance.log && echo 'success' || echo 'error'"
+            expectedOutput: "success"
+            errorMessage: "El script de mantenimiento o su archivo de log no fueron creados correctamente."
