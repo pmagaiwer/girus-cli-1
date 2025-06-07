@@ -14,9 +14,19 @@ EOF
 # Perguntar idioma antes de qualquer saída relevante
 read -p "Escolha o idioma / Elija el idioma (pt/es) [pt]: " CLI_LANG
 CLI_LANG=${CLI_LANG:-pt}
+mkdir -p "$HOME/.girus"
+echo "language: $CLI_LANG" > "$HOME/.girus/config.yaml"
 
 # Função simples para traduzir mensagens
-t() { if [ "$CLI_LANG" = "es" ]; then echo "$2"; else echo "$1"; fi; }
+t() {
+    local pt="$1"
+    local es="$2"
+    if [ "$CLI_LANG" = "es" ]; then
+        eval echo "\"$es\""
+    else
+        eval echo "\"$pt\""
+    fi
+}
 
 echo -e "\n$(t 'Script de Instalação - Versão 0.3.0 - Codename: Maracatu' 'Script de Instalación - Versión 0.3.0 - Codename: Maracatu')\n"
 
@@ -456,11 +466,6 @@ verify_all_dependencies() {
 
 # Iniciar mensagem principal
 echo "$(t '=== Iniciando instalação do Girus CLI ===' '=== Iniciando instalación del Girus CLI ===')"
-
-# Escolher idioma e salvar em ~/.girus/config.yaml
-ask_user "$(t 'Escolha o idioma (pt/es)' 'Elija el idioma (pt/es)')" "pt" "CLI_LANG"
-mkdir -p "$HOME/.girus"
-echo "language: $CLI_LANG" > "$HOME/.girus/config.yaml"
 
 # Verificar e limpar instalações anteriores
 check_previous_install
