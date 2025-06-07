@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: kubernetes-deployment-lab-es-es
+  name: kubernetes-deployment-lab-es
   namespace: girus
   labels:
     app: girus-lab-template
 data:
   lab.yaml: |
-    name: kubernetes-deployment-es-es
+    name: kubernetes-deployment-es
     title: "Desafío: Deployments en Kubernetes"
     description: "En este desafío debes demostrar tu conocimiento práctico de Deployments en Kubernetes, creando y gestionando recursos según lo solicitado."
     duration: 15m

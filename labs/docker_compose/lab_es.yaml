@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: docker-compose-lab-es-es
+  name: docker-compose-lab-es
   namespace: girus
   labels:
     app: girus-lab-template
 data:
   lab.yaml: |
-    name: docker-compose-es-es
+    name: docker-compose-es
     title: "Introducción a Docker Compose"
     description: "Aprende a definir y ejecutar aplicaciones Docker multi-contenedor de forma declarativa con Docker Compose. Este laboratorio guiado explora los principios fundamentales de orquestación de contenedores para aplicaciones compuestas por múltiples servicios."
     duration: 25m

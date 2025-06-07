@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: aws-s3-storage-lab-es-es
+  name: aws-s3-storage-lab-es
   namespace: girus
   labels:
     app: girus-lab-template
 data:
   lab.yaml: |
-    name: aws-s3-storage-es-es
+    name: aws-s3-storage-es
     title: "AWS S3: Almacenamiento de Objetos en la Nube"
     description: "Explora Amazon S3 (Simple Storage Service), aprende a crear buckets, gestionar objetos, configurar permisos y utilizar funciones avanzadas"
     duration: 20m
