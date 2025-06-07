@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: linux-gerenciamento-processos-lab
+  name: linux-gerenciamento-processos-lab-es
   namespace: girus
   labels:
     app: girus-lab-template
 data:
   lab.yaml: |
-    name: linux-gerenciamento-processos
+    name: linux-gerenciamento-processos-es
     title: "Gerenciamento e Monitoramento de Processos no Linux"
     description: "Aprenda a monitorar, controlar e gerenciar processos no sistema Linux usando ferramentas nativas como ps, top, kill e pgrep. Este laboratório guiado explora conceitos fundamentais de processos em sistemas operacionais Linux, incluindo hierarquia de processos, estados, sinais e técnicas para identificação de problemas de desempenho."
     duration: 30m

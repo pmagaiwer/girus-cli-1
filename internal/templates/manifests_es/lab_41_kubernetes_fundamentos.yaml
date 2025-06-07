@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: kubernetes-fundamentos-lab
+  name: kubernetes-fundamentos-lab-es
   namespace: girus
   labels:
     app: girus-lab-template
 data:
   lab.yaml: |
-    name: kubernetes-fundamentos
+    name: kubernetes-fundamentos-es
     title: "Introdução ao Kubernetes-lab"
     description: "Aprenda comandos básicos do Kubernetes para gerenciar recursos em um cluster. Este laboratório guiado fornece uma introdução completa ao Kubernetes com explicações detalhadas de cada conceito."
     duration: 15m

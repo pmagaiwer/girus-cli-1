@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: kubernetes-exploracao-recursos-lab
+  name: kubernetes-exploracao-recursos-lab-es
   namespace: girus
   labels:
     app: girus-lab-template
 data:
   lab.yaml: |
-    name: kubernetes-exploracao-recursos
+    name: kubernetes-exploracao-recursos-es
     title: "Desafio: Explorando Recursos do Kubernetes com kubectl"
     description: "Neste desafio, você demonstrará suas habilidades na utilização do kubectl para gerenciar e inspecionar recursos em um cluster Kubernetes."
     duration: 15m

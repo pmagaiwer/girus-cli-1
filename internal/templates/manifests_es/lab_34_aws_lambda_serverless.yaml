@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: aws-lambda-serverless-lab
+  name: aws-lambda-serverless-lab-es
   namespace: girus
   labels:
     app: girus-lab-template
 data:
   lab.yaml: |
-    name: aws-lambda-serverless
+    name: aws-lambda-serverless-es
     title: "AWS Lambda: Computação Serverless"
     description: "Explore a AWS Lambda, o serviço de computação serverless da AWS. Aprenda a criar funções, configurar eventos e construir aplicações sem gerenciar servidores."
     duration: 20m

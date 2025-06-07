@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: docker-fundamentos-redes-lab
+  name: docker-fundamentos-redes-lab-es
   namespace: girus
   labels:
     app: girus-lab-template
 data:
   lab.yaml: |
-    name: docker-fundamentos-redes
+    name: docker-fundamentos-redes-es
     title: "Redes no Docker: Conceitos e Implementação"
     description: "Aprenda os fundamentos de redes no Docker, compreendendo os diferentes drivers de rede (bridge, host, none), os mecanismos de isolamento e comunicação entre containers, e como implementar redes personalizadas para aplicações multi-container. Este laboratório guiado explora conceitos práticos essenciais para criar arquiteturas de aplicações containerizadas eficientes e seguras."
     duration: 35m

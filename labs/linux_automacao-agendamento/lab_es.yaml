@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: linux-automacao-agendamento-lab
+  name: linux-automacao-agendamento-lab-es
   namespace: girus
   labels:
     app: girus-lab-template
 data:
   lab.yaml: |
-    name: linux-automacao-agendamento
+    name: linux-automacao-agendamento-es
     title: "Automação e Agendamento no Linux"
     description: "Aprenda a automatizar tarefas e agendar execuções no Linux usando cron, systemd timers e scripts de automação. Este laboratório guiado explora as ferramentas e técnicas para criar sistemas automatizados e agendar tarefas de forma eficiente."
     duration: 30m

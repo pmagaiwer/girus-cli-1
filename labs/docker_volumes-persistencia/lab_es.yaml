@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: docker-volumes-persistencia-lab
+  name: docker-volumes-persistencia-lab-es
   namespace: girus
   labels:
     app: girus-lab-template
 data:
   lab.yaml: |
-    name: docker-volumes-persistencia
+    name: docker-volumes-persistencia-es
     title: "Volumes e Persistência no Docker"
     description: "Aprenda a gerenciar dados persistentes em containers Docker usando volumes, bind mounts e tmpfs mounts. Este laboratório guiado explora diferentes técnicas de persistência de dados e suas aplicações práticas."
     duration: 35m

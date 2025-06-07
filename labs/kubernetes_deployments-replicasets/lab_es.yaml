@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: kubernetes-deployments-replicasets-lab
+  name: kubernetes-deployments-replicasets-lab-es
   namespace: girus
   labels:
     app: girus-lab-template
 data:
   lab.yaml: |
-    name: kubernetes-deployments-replicasets
+    name: kubernetes-deployments-replicasets-es
     title: "Deployments e ReplicaSets no Kubernetes"
     description: "Aprenda a gerenciar aplicações no Kubernetes usando Deployments e ReplicaSets. Este laboratório guiado explora conceitos fundamentais de orquestração de containers, escalabilidade e alta disponibilidade."
     duration: 40m

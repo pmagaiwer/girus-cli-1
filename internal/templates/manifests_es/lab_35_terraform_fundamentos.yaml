@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: terraform-fundamentos-lab
+  name: terraform-fundamentos-lab-es
   namespace: girus
   labels:
     app: girus-lab-template
 data:
   lab.yaml: |
-    name: terraform-fundamentos
+    name: terraform-fundamentos-es
     title: "Fundamentos do Terraform"
     description: "Aprenda os conceitos básicos do Terraform, incluindo sintaxe HCL, providers, recursos e estados. Este laboratório guiado explora os fundamentos da infraestrutura como código."
     duration: 40m

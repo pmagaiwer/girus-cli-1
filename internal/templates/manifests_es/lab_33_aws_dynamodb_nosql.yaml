@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: aws-dynamodb-nosql-lab
+  name: aws-dynamodb-nosql-lab-es
   namespace: girus
   labels:
     app: girus-lab-template
 data:
   lab.yaml: |
-    name: aws-dynamodb-nosql
+    name: aws-dynamodb-nosql-es
     title: "AWS DynamoDB: Banco de Dados NoSQL"
     description: "Explore o Amazon DynamoDB, um serviço de banco de dados NoSQL totalmente gerenciado. Aprenda a criar tabelas, gerenciar itens, realizar consultas e configurar índices secundários."
     duration: 25m

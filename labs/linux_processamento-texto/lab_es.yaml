@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: linux-processamento-texto-lab
+  name: linux-processamento-texto-lab-es
   namespace: girus
   labels:
     app: girus-lab-template
 data:
   lab.yaml: |
-    name: linux-processamento-texto
+    name: linux-processamento-texto-es
     title: "Processamento de Texto no Linux: grep, sed, awk"
     description: "Domine as ferramentas essenciais de manipulação de texto no Linux, aprendendo a buscar padrões com grep, editar fluxos de texto com sed e processar dados estruturados com awk. Este laboratório guiado fornece uma base sólida para automação, análise de logs e administração de sistemas Linux através do processamento eficiente de texto."
     duration: 25m

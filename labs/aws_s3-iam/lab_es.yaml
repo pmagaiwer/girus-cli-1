@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: aws-s3-iam-lab
+  name: aws-s3-iam-lab-es
   namespace: girus
   labels:
     app: girus-lab-template
 data:
   lab.yaml: |
-    name: aws-s3-iam
+    name: aws-s3-iam-es
     title: "S3 e IAM na AWS"
     description: "Aprenda a gerenciar buckets S3 e políticas IAM na AWS. Este laboratório guiado explora conceitos de armazenamento de objetos e controle de acesso na nuvem."
     duration: 40m

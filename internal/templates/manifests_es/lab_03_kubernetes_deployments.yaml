@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: kubernetes-deployments-lab
+  name: kubernetes-deployments-lab-es
   namespace: girus
   labels:
     app: girus-lab-template
 data:
   lab.yaml: |
-    name: kubernetes-deployments
+    name: kubernetes-deployments-es
     title: "Kubernetes: Gerenciando Aplicações com Deployments"
     description: "Aprenda a gerenciar aplicações em Kubernetes usando Deployments, um recurso essencial para garantir disponibilidade, escalabilidade e atualizações seguras de aplicações. Este laboratório guiado explora o ciclo de vida completo de Deployments, incluindo criação, atualização, rollback e escalonamento horizontal, com explicações detalhadas de conceitos fundamentais."
     duration: 35m

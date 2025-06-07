@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: aws-localstack-terraform-lab
+  name: aws-localstack-terraform-lab-es
   namespace: girus
   labels:
     app: girus-lab-template
 data:
   lab.yaml: |
-    name: aws-localstack-terraform
+    name: aws-localstack-terraform-es
     title: "Desafio: AWS com Terraform"
     description: "Neste desafio com tempo limitado, você deve demonstrar sua habilidade de usar o Terraform para criar e gerenciar recursos AWS localmente. O ambiente está configurado para simular a AWS real, e você precisa completar todas as tarefas dentro do prazo."
     duration: 30m

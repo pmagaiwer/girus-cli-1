@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: terraform-aws-infraestrutura-lab
+  name: terraform-aws-infraestrutura-lab-es
   namespace: girus
   labels:
     app: girus-lab-template
 data:
   lab.yaml: |
-    name: terraform-aws-infraestrutura
+    name: terraform-aws-infraestrutura-es
     title: "Terraform com AWS: Construindo Infraestrutura em Nuvem"
     description: "Aprenda a usar o Terraform para provisionar e gerenciar recursos na AWS, criando uma infraestrutura completa com recursos como VPC, EC2, RDS e S3."
     duration: 30m

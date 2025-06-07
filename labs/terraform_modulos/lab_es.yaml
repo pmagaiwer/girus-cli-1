@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: terraform-modulos-lab
+  name: terraform-modulos-lab-es
   namespace: girus
   labels:
     app: girus-lab-template
 data:
   lab.yaml: |
-    name: terraform-modulos
+    name: terraform-modulos-es
     title: "Módulos e Reutilização de Código no Terraform"
     description: "Aprenda a criar e utilizar módulos no Terraform para reutilizar código e manter sua infraestrutura organizada. Este laboratório guiado explora boas práticas de modularização."
     duration: 45m

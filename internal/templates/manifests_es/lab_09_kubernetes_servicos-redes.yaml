@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: kubernetes-servicos-redes-lab
+  name: kubernetes-servicos-redes-lab-es
   namespace: girus
   labels:
     app: girus-lab-template
 data:
   lab.yaml: |
-    name: kubernetes-servicos-redes
+    name: kubernetes-servicos-redes-es
     title: "Serviços e Redes no Kubernetes"
     description: "Aprenda como expor aplicações executando em Pods e implementar a comunicação entre os componentes da sua aplicação usando os tipos de Serviços do Kubernetes. Este laboratório guiado explorará os conceitos fundamentais de redes no Kubernetes e como eles possibilitam a comunicação interna e externa às suas aplicações."
     duration: 30m

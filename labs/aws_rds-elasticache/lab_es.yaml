@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: aws-rds-elasticache-lab
+  name: aws-rds-elasticache-lab-es
   namespace: girus
   labels:
     app: girus-lab-template
 data:
   lab.yaml: |
-    name: aws-rds-elasticache
+    name: aws-rds-elasticache-es
     title: "RDS e ElastiCache na AWS"
     description: "Aprenda a configurar e gerenciar bancos de dados gerenciados com RDS e caches com ElastiCache na AWS. Este laboratório guiado explora conceitos de banco de dados e cache em nuvem."
     duration: 45m

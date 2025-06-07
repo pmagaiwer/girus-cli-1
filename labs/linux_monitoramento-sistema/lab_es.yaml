@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: linux-monitoramento-sistema-lab
+  name: linux-monitoramento-sistema-lab-es
   namespace: girus
   labels:
     app: girus-lab-template
 data:
   lab.yaml: |
-    name: linux-monitoramento-sistema
+    name: linux-monitoramento-sistema-es
     title: "Monitoramento Básico do Sistema Linux"
     description: "Utilize ferramentas como vmstat, iostat, free e explore o /proc para obter informações sobre o desempenho do sistema."
     duration: 20m

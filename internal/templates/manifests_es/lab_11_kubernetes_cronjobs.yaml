@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: kubernetes-cronjobs-lab
+  name: kubernetes-cronjobs-lab-es
   namespace: girus
   labels:
     app: girus-lab-template
 data:
   lab.yaml: |
-    name: kubernetes-cronjobs
+    name: kubernetes-cronjobs-es
     title: "Kubernetes: Automatizando Tarefas com CronJobs"
     description: "Aprenda a criar e gerenciar CronJobs no Kubernetes, agendando tarefas para execução automática em intervalos definidos. Neste laboratório guiado, você aprenderá o conceito de CronJobs, sua sintaxe de agendamento, como configurar políticas de retenção de histórico e monitorar suas execuções."
     duration: 30m

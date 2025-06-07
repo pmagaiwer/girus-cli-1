@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: linux-redes-conectividade-lab
+  name: linux-redes-conectividade-lab-es
   namespace: girus
   labels:
     app: girus-lab-template
 data:
   lab.yaml: |
-    name: linux-redes-conectividade
+    name: linux-redes-conectividade-es
     title: "Redes e Conectividade no Linux"
     description: "Aprenda a configurar e gerenciar redes no Linux, incluindo interfaces de rede, roteamento, firewall e diagnóstico de problemas de conectividade. Este laboratório guiado explora os comandos e ferramentas essenciais para administração de redes em sistemas Linux, fornecendo uma base sólida para solução de problemas de conectividade."
     duration: 30m

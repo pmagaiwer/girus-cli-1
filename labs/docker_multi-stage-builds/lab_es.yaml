@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: docker-multi-stage-builds-lab
+  name: docker-multi-stage-builds-lab-es
   namespace: girus
   labels:
     app: girus-lab-template
 data:
   lab.yaml: |
-    name: docker-multi-stage-builds
+    name: docker-multi-stage-builds-es
     title: "Multi-stage Builds no Docker"
     description: "Aprenda a criar imagens Docker otimizadas usando multi-stage builds, reduzindo o tamanho final e melhorando a segurança. Este laboratório guiado explora técnicas avançadas de construção de imagens Docker para aplicações modernas."
     duration: 30m

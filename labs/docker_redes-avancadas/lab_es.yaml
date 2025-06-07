@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: docker-redes-avancadas-lab
+  name: docker-redes-avancadas-lab-es
   namespace: girus
   labels:
     app: girus-lab-template
 data:
   lab.yaml: |
-    name: docker-redes-avancadas
+    name: docker-redes-avancadas-es
     title: "Redes Avançadas no Docker"
     description: "Aprenda a configurar e gerenciar redes avançadas no Docker, incluindo redes personalizadas, comunicação entre containers e isolamento de rede. Este laboratório guiado explora os conceitos avançados de networking no Docker e como implementar arquiteturas de rede complexas."
     duration: 35m

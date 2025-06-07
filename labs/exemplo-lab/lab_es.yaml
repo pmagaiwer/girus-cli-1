@@ -1,7 +1,7 @@
 apiVersion: girus.linuxtips.io/v1
 kind: Lab
 metadata:
-  name: exemplo-lab
+  name: exemplo-lab-es
   version: "1.0.0"
   description: "Laboratório de exemplo do GIRUS CLI"
   author: "Seu Nome"

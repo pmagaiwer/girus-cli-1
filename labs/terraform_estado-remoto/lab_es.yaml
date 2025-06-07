@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: terraform-estado-remoto-lab
+  name: terraform-estado-remoto-lab-es
   namespace: girus
   labels:
     app: girus-lab-template
 data:
   lab.yaml: |
-    name: terraform-estado-remoto
+    name: terraform-estado-remoto-es
     title: "Estado Remoto e Workspaces no Terraform"
     description: "Aprenda a configurar e gerenciar estado remoto no Terraform usando backends como S3 e DynamoDB, além de trabalhar com workspaces para diferentes ambientes."
     duration: 40m

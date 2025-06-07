@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: docker-gerenciamento-containers-lab
+  name: docker-gerenciamento-containers-lab-es
   namespace: girus
   labels:
     app: girus-lab-template
 data:
   lab.yaml: |
-    name: docker-gerenciamento-containers
+    name: docker-gerenciamento-containers-es
     title: "Gerenciamento de Containers Docker"
     description: "Domine as técnicas de gerenciamento do ciclo de vida dos containers Docker, aprendendo a monitorar recursos, gerenciar logs e administrar múltiplos containers de forma eficiente. Este laboratório guiado explora os comandos fundamentais para o monitoramento e administração efetiva de containers em ambientes reais."
     duration: 30m

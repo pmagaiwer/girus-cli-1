@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: kubernetes-configmaps-secrets-lab
+  name: kubernetes-configmaps-secrets-lab-es
   namespace: girus
   labels:
     app: girus-lab-template
 data:
   lab.yaml: |
-    name: kubernetes-configmaps-secrets
+    name: kubernetes-configmaps-secrets-es
     title: "ConfigMaps e Secrets no Kubernetes"
     description: "Aprenda a gerenciar configurações e segredos no Kubernetes usando ConfigMaps e Secrets. Este laboratório guiado explora boas práticas de gerenciamento de configurações e dados sensíveis em aplicações containerizadas."
     duration: 35m

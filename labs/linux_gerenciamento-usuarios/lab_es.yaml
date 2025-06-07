@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: linux-gerenciamento-usuarios-lab
+  name: linux-gerenciamento-usuarios-lab-es
   namespace: girus
   labels:
     app: girus-lab-template
 data:
   lab.yaml: |
-    name: linux-gerenciamento-usuarios
+    name: linux-gerenciamento-usuarios-es
     title: "Administração de Usuários e Grupos no Linux"
     description: "Aprenda os fundamentos de gerenciamento de identidade no Linux, incluindo criação e configuração de contas de usuários, grupos, permissões de acesso e política de senhas. Este laboratório guiado apresenta conceitos essenciais para administradores de sistemas, explorando os arquivos de sistema relacionados e comandos fundamentais para gerenciar usuários e grupos de forma eficiente e segura."
     duration: 25m

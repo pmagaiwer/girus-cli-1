@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: linux-shell-script-lab
+  name: linux-shell-script-lab-es
   namespace: girus
   labels:
     app: girus-lab-template
 data:
   lab.yaml: |
-    name: linux-shell-script
+    name: linux-shell-script-es
     title: "Introdução ao Shell Script Bash"
     description: "Crie seus primeiros scripts Bash, aprendendo sobre variáveis, loops e condicionais neste laboratório detalhado e guiado. Ideal para iniciantes que querem dominar os conceitos básicos de automação no Linux."
     duration: 25m

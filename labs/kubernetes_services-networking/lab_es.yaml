@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: kubernetes-services-networking-lab
+  name: kubernetes-services-networking-lab-es
   namespace: girus
   labels:
     app: girus-lab-template
 data:
   lab.yaml: |
-    name: kubernetes-services-networking
+    name: kubernetes-services-networking-es
     title: "Services e Networking no Kubernetes"
     description: "Aprenda a configurar e gerenciar serviços e networking no Kubernetes. Este laboratório guiado explora diferentes tipos de Services, DNS interno, e conceitos de networking no cluster."
     duration: 35m
