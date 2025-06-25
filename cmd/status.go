@@ -165,7 +165,11 @@ var statusCmd = &cobra.Command{
 		}
 
 		// Reporta o status dos laboratories
-		client, _ := k8s.NewKubernetesClient()
+		client, err := k8s.NewKubernetesClient()
+		if err != nil {
+			fmt.Println("Erro ao criar o cliente Kubernetes:", err)
+			return
+		}
 		laboratorios, _ := client.GetAllLabs(context.Background())
 		fmt.Println()
 		fmt.Printf("%s\n", headerColor("Progresso dos Laboratórios:"))

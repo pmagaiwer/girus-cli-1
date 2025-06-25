@@ -17,9 +17,9 @@ func (p *Progress) AddLab(labName string, status string) {
 }
 
 func (p *Progress) GetLab(labName string) *Lab {
-	for _, lab := range p.Labs {
-		if lab.Name == labName {
-			return &lab
+	for i := range p.Labs {
+		if p.Labs[i].Name == labName {
+			return &p.Labs[i]
 		}
 	}
 	return nil
@@ -27,5 +27,9 @@ func (p *Progress) GetLab(labName string) *Lab {
 
 func (p *Progress) SetLabStatus(labName string, status string) {
 	lab := p.GetLab(labName)
+	if lab == nil {
+		// Lab not found, handle the error gracefully
+		return
+	}
 	lab.Status = status
 }
