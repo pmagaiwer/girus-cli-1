@@ -18,7 +18,7 @@ var progressCmd = &cobra.Command{
 		// Criando o cliente Kubernetes para conectar à API do cluster
 		client, err := k8s.NewKubernetesClient()
 		if err != nil {
-			fmt.Printf("erro ao criar o cliente Kubernetes: %w\n", err)
+			fmt.Printf("erro ao criar o cliente Kubernetes: %s\n", err)
 			return
 		}
 
@@ -27,7 +27,7 @@ var progressCmd = &cobra.Command{
 		progress := common.Progress{}
 		err = progress.SaveProgressToFile()
 		if err != nil {
-			fmt.Printf("erro ao salvar o progresso no arquivo yaml progress.yaml: %w\n", err)
+			fmt.Printf("erro ao salvar o progresso no arquivo yaml progress.yaml: %s\n", err)
 			return
 		}
 
