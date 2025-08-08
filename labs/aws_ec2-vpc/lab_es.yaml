@@ -1,0 +1,69 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: aws-ec2-vpc-lab-es
+  namespace: girus
+  labels:
+    app: girus-lab-template
+data:
+  lab.yaml: |
+    name: aws-ec2-vpc-es
+    title: "EC2 y VPC en AWS"
+    description: "Aprende a configurar y administrar instancias EC2 y Virtual Private Cloud (VPC) en AWS. Este laboratorio guiado explora conceptos fundamentales de computación en la nube y networking en AWS."
+    duration: 45m
+    image: "linuxtips/girus-devops:0.1"
+    privileged: true
+    tasks:
+      - name: "Creando una VPC"
+        description: "Aprende a crear y configurar una VPC en AWS."
+        steps:
+          - description: "Crea una VPC con CIDR 10.0.0.0/16"
+            command: "aws ec2 create-vpc --cidr-block 10.0.0.0/16 --tag-specifications 'ResourceType=vpc,Tags=[{Key=Name,Value=LabVPC}]'"
+            expectedOutput: "VpcId"
+            hint: "Usa el comando aws ec2 create-vpc con --cidr-block"
+
+          - description: "Crea subnets públicas y privadas"
+            command: "aws ec2 create-subnet --vpc-id $(aws ec2 describe-vpcs --filters 'Name=tag:Name,Values=LabVPC' --query 'Vpcs[0].VpcId' --output text) --cidr-block 10.0.1.0/24 --availability-zone us-east-1a --tag-specifications 'ResourceType=subnet,Tags=[{Key=Name,Value=PublicSubnet1}]'"
+            expectedOutput: "SubnetId"
+            hint: "Usa el comando aws ec2 create-subnet para crear subnets"
+
+          - description: "Configura la tabla de rutas"
+            command: "aws ec2 create-route-table --vpc-id $(aws ec2 describe-vpcs --filters 'Name=tag:Name,Values=LabVPC' --query 'Vpcs[0].VpcId' --output text) --tag-specifications 'ResourceType=route-table,Tags=[{Key=Name,Value=PublicRouteTable}]'"
+            expectedOutput: "RouteTableId"
+            hint: "Usa el comando aws ec2 create-route-table para crear la tabla de rutas"
+
+      - name: "Configurando Instancias EC2"
+        description: "Aprende a crear y configurar instancias EC2."
+        steps:
+          - description: "Crea un security group"
+            command: "aws ec2 create-security-group --group-name LabSecurityGroup --description 'Security group for lab instances' --vpc-id $(aws ec2 describe-vpcs --filters 'Name=tag:Name,Values=LabVPC' --query 'Vpcs[0].VpcId' --output text)"
+            expectedOutput: "GroupId"
+            hint: "Usa el comando aws ec2 create-security-group"
+
+          - description: "Configura reglas del security group"
+            command: "aws ec2 authorize-security-group-ingress --group-id $(aws ec2 describe-security-groups --filters 'Name=group-name,Values=LabSecurityGroup' --query 'SecurityGroups[0].GroupId' --output text) --protocol tcp --port 22 --cidr 0.0.0.0/0"
+            expectedOutput: "Return"
+            hint: "Usa el comando aws ec2 authorize-security-group-ingress"
+
+          - description: "Lanza una instancia EC2"
+            command: "aws ec2 run-instances --image-id ami-0c55b159cbfafe1f0 --instance-type t2.micro --key-name MyKeyPair --security-group-ids $(aws ec2 describe-security-groups --filters 'Name=group-name,Values=LabSecurityGroup' --query 'SecurityGroups[0].GroupId' --output text) --subnet-id $(aws ec2 describe-subnets --filters 'Name=tag:Name,Values=PublicSubnet1' --query 'Subnets[0].SubnetId' --output text) --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=LabInstance}]'"
+            expectedOutput: "InstanceId"
+            hint: "Usa el comando aws ec2 run-instances"
+
+      - name: "Administración de Instancias"
+        description: "Aprende a administrar y monitorear instancias EC2."
+        steps:
+          - description: "Verifica el estado de la instancia"
+            command: "aws ec2 describe-instances --filters 'Name=tag:Name,Values=LabInstance' --query 'Reservations[0].Instances[0].State.Name' --output text"
+            expectedOutput: "running"
+            hint: "Usa el comando aws ec2 describe-instances"
+
+          - description: "Obtén la dirección IP pública"
+            command: "aws ec2 describe-instances --filters 'Name=tag:Name,Values=LabInstance' --query 'Reservations[0].Instances[0].PublicIpAddress' --output text"
+            expectedOutput: "\\d+\\.\\d+\\.\\d+\\.\\d+"
+            hint: "Usa el comando aws ec2 describe-instances para obtener la IP"
+
+          - description: "Monitorea la utilización de CPU"
+            command: "aws cloudwatch get-metric-statistics --namespace AWS/EC2 --metric-name CPUUtilization --dimensions Name=InstanceId,Value=$(aws ec2 describe-instances --filters 'Name=tag:Name,Values=LabInstance' --query 'Reservations[0].Instances[0].InstanceId' --output text) --start-time $(date -u +%Y-%m-%dT%H:%M:%SZ) --end-time $(date -u +%Y-%m-%dT%H:%M:%SZ) --period 300 --statistics Average"
+            expectedOutput: "Datapoints"
+            hint: "Usa el comando aws cloudwatch get-metric-statistics"

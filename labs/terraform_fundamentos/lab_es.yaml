@@ -1,0 +1,69 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: terraform-fundamentos-lab-es
+  namespace: girus
+  labels:
+    app: girus-lab-template
+data:
+  lab.yaml: |
+    name: terraform-fundamentos-es
+    title: "Fundamentos de Terraform"
+    description: "aprende los conceptos básicos de Terraform, incluyendo sintaxis HCL, providers, recursos y estados. Este laboratorio guiado explora los fundamentos de la infraestructura como código."
+    duration: 40m
+    image: "linuxtips/girus-devops:0.1"
+    privileged: true
+    tasks:
+      - name: "Configuración Inicial"
+        description: "aprende a configurar un proyecto Terraform básico."
+        steps:
+          - description: "Crea un directorio para el proyecto"
+            command: "mkdir -p terraform-lab && cd terraform-lab"
+            expectedOutput: ""
+            hint: "Usa el comando mkdir para crear el directorio"
+
+          - description: "Crea el archivo de configuración principal"
+            command: "echo -e 'terraform {\n  required_providers {\n    aws = {\n      source  = \"hashicorp/aws\"\n      version = \"~> 4.0\"\n    }\n  }\n}\n\nprovider \"aws\" {\n  region = \"us-east-1\"\n}\n\nresource \"aws_instance\" \"example\" {\n  ami           = \"ami-0c55b159cbfafe1f0\"\n  instance_type = \"t2.micro\"\n\n  tags = {\n    Name = \"terraform-example\"\n  }\n}' > main.tf"
+            expectedOutput: ""
+            hint: "Crea un archivo main.tf con la configuración básica"
+
+          - description: "Inicializa Terraform"
+            command: "terraform init"
+            expectedOutput: "Terraform has been successfully initialized"
+            hint: "Usa el comando terraform init"
+
+      - name: "Gestión de Estado"
+        description: "aprende a gestionar el estado de Terraform."
+        steps:
+          - description: "Crea un plan de ejecución"
+            command: "terraform plan -out=tfplan"
+            expectedOutput: "Plan: 1 to add"
+            hint: "Usa el comando terraform plan"
+
+          - description: "Aplica los cambios"
+            command: "terraform apply tfplan"
+            expectedOutput: "Apply complete!"
+            hint: "Usa el comando terraform apply"
+
+          - description: "Verifica el estado"
+            command: "terraform show"
+            expectedOutput: "aws_instance.example"
+            hint: "Usa el comando terraform show"
+
+      - name: "Variables y Outputs"
+        description: "aprende a usar variables y outputs en Terraform."
+        steps:
+          - description: "Crea un archivo de variables"
+            command: "echo -e 'variable \"instance_type\" {\n  description = \"Tipo de la instancia EC2\"\n  type        = string\n  default     = \"t2.micro\"\n}\n\nvariable \"instance_name\" {\n  description = \"Nombre de la instancia EC2\"\n  type        = string\n  default     = \"terraform-example\"\n}' > variables.tf"
+            expectedOutput: ""
+            hint: "Crea un archivo variables.tf con las definiciones de variables"
+
+          - description: "Crea un archivo de outputs"
+            command: "echo -e 'output \"instance_id\" {\n  description = \"ID de la instancia EC2\"\n  value       = aws_instance.example.id\n}\n\noutput \"public_ip\" {\n  description = \"IP pública de la instancia EC2\"\n  value       = aws_instance.example.public_ip\n}' > outputs.tf"
+            expectedOutput: ""
+            hint: "Crea un archivo outputs.tf con las definiciones de outputs"
+
+          - description: "Actualiza la configuración"
+            command: "terraform apply -auto-approve"
+            expectedOutput: "Apply complete!"
+            hint: "Usa el comando terraform apply con -auto-approve"

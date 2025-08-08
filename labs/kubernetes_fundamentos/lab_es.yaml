@@ -1,0 +1,172 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kubernetes-fundamentos-lab-es
+  namespace: girus
+  labels:
+    app: girus-lab-template
+data:
+  lab.yaml: |
+    name: kubernetes-fundamentos-es
+    title: "Introducción a Kubernetes"
+    description: "Aprende comandos básicos de Kubernetes para gestionar recursos en un cluster. Este laboratorio guiado proporciona una introducción completa a Kubernetes con explicaciones detalladas de cada concepto."
+    duration: 15m
+    image: "linuxtips/girus-kind-single-node:0.1"
+    tasks:
+      - name: "Explorando el Cluster"
+        description: "Aprende a verificar los componentes básicos de un cluster Kubernetes. En esta sección, vas a conocer los comandos esenciales para inspeccionar y entender la estructura de tu cluster."
+        steps:
+          - "Verifica si kubectl está instalado. kubectl es la herramienta de línea de comandos que permite interactuar con clusters Kubernetes:"
+          - "`kubectl version`"
+          - "La salida anterior muestra la versión del cliente (tu herramienta kubectl) y la versión del servidor (el cluster Kubernetes)."
+          - "Ahora, verifica los nodos del cluster ejecutando:"
+          - "`kubectl get nodes`"
+          - "Un nodo es una máquina de trabajo en Kubernetes (virtual o física). Cada nodo es gestionado por el plano de control y contiene los servicios necesarios para ejecutar los pods."
+          - "Para ver información más detallada sobre los nodos, usa la bandera -o wide:"
+          - "`kubectl get nodes -o wide`"
+          - "Este comando muestra información adicional como IPs internas, sistema operativo, versión del container runtime y mucho más."
+          - "Ahora, vamos a verificar los namespaces disponibles:"
+          - "`kubectl get namespaces`"
+          - "Los namespaces son una forma de dividir los recursos del cluster en grupos virtuales, permitiendo el aislamiento lógico entre aplicaciones."
+          - "Ve los pods del namespace kube-system, que contiene los componentes internos de Kubernetes:"
+          - "`kubectl get pods -n kube-system`"
+          - "Este namespace contiene componentes críticos como kube-dns (CoreDNS), kube-proxy, y otros componentes esenciales para el funcionamiento del cluster."
+          - "Examina los detalles de un nodo específico (reemplaza NODE_NAME con el nombre del nodo obtenido anteriormente):"
+          - "`kubectl describe node NODE_NAME`"
+          - "El comando describe proporciona información detallada sobre el recurso, incluyendo capacidad, condiciones actuales, eventos y mucho más."
+        tips:
+          - type: "info"
+            title: "kubectl - Tu herramienta principal"
+            content: "kubectl es la herramienta de línea de comandos para interactuar con Kubernetes. Siempre que tengas dudas sobre un comando, usa kubectl --help o kubectl [comando] --help. La documentación online también es excelente: kubernetes.io/docs/reference/kubectl/"
+          - type: "tip"
+            title: "Formatos de salida"
+            content: "Puedes cambiar el formato de salida de cualquier comando kubectl usando -o yaml, -o json, -o wide. Para visualizaciones compactas, -o custom-columns es útil. Por ejemplo: kubectl get pods -o custom-columns=NAME:.metadata.name,STATUS:.status.phase"
+          - type: "info"
+            title: "Estructura del cluster Kubernetes"
+            content: "Un cluster Kubernetes consiste en un plano de control (control plane) y nodos de trabajo (worker nodes). El plano de control gestiona el estado del cluster, mientras que los nodos de trabajo ejecutan las cargas de trabajo (pods)."
+        validation:
+          - command: "kubectl get nodes -o name | wc -l | tr -d ' '"
+            expectedOutput: "1"
+            errorMessage: "No fue posible listar los nodos del cluster. Verifica si el cluster está en ejecución con 'kubectl get nodes'."
+      
+      - name: "Creando un Pod"
+        description: "Aprende a crear y gestionar pods, que son la unidad ejecutable más pequeña en Kubernetes. En esta sección, crearás tu primer pod y explorarás las formas de interactuar con él."
+        steps:
+          - "Primero, vamos a crear un namespace dedicado para nuestros ejercicios. Usar namespaces es una buena práctica para organizar y aislar recursos:"
+          - "`kubectl create namespace k8s-demo`"
+          - "Resultado esperado: 'namespace/k8s-demo created'"
+          - "Ahora, vamos a crear un pod de Nginx. Los pods son la unidad más pequeña que puede ser desplegada en Kubernetes y consisten en uno o más contenedores."
+          - "Crea un archivo pod.yaml con el siguiente contenido:"
+          - |
+            ```
+            apiVersion: v1
+            kind: Pod
+            metadata:
+              name: nginx-pod
+              namespace: k8s-demo
+              labels:
+                app: nginx
+            spec:
+              containers:
+              - name: nginx
+                image: nginx:latest
+                ports:
+                - containerPort: 80
+            ```
+          - "Explicación del archivo:"
+          - "- apiVersion/kind: Define el tipo de recurso (Pod) y la versión de la API"
+          - "- metadata: Contiene nombre, namespace y labels (etiquetas) del pod"
+          - "- spec: Define los contenedores que componen el pod, incluyendo imagen y puertos"
+          - "Crea el pod aplicando el archivo YAML:"
+          - "`kubectl apply -f pod.yaml`"
+          - "Verifica si el pod está ejecutándose. El estado 'Running' indica que el pod está funcionando correctamente:"
+          - "`kubectl get pods -n k8s-demo`"
+          - "Espera unos segundos y verifica nuevamente, en caso de que el estado aún no sea 'Running'."
+          - "Vamos a verificar los logs del pod para confirmar que Nginx está funcionando:"
+          - "`kubectl logs nginx-pod -n k8s-demo`"
+          - "Ahora, vamos a acceder al shell del pod para explorar su interior:"
+          - "`kubectl exec -it nginx-pod -n k8s-demo -- /bin/bash`"
+          - "Ahora estás dentro del contenedor Nginx! Vamos a verificar si el servidor web está respondiendo:"
+          - "`curl localhost:80`"
+          - "Deberías ver la página de bienvenida de Nginx en HTML."
+          - "Escribe 'exit' para salir del contenedor y volver a tu terminal."
+          - "Para una inspección detallada del pod, usa el comando describe:"
+          - "`kubectl describe pod nginx-pod -n k8s-demo`"
+          - "Este comando muestra detalles como eventos, condiciones, volúmenes, y mucho más."
+        tips:
+          - type: "warning"
+            title: "Cuidado con imágenes 'latest'"
+            content: "En entornos de producción, evita usar la tag 'latest' para imágenes. Prefiere versiones específicas para garantizar consistencia y evitar sorpresas en actualizaciones automáticas. Por ejemplo, usa nginx:1.21.3 en lugar de nginx:latest."
+          - type: "info"
+            title: "Namespaces"
+            content: "Los namespaces son una forma de crear aislamiento virtual dentro del cluster. Permiten separar recursos, definir cuotas y gestionar permisos para diferentes equipos o aplicaciones. Por defecto, los recursos se crean en el namespace 'default'."
+          - type: "tip"
+            title: "Ciclo de vida de los Pods"
+            content: "Los pods pueden pasar por varios estados: Pending (esperando programación), Running (ejecutándose), Succeeded (completado con éxito), Failed (falló) o Unknown (estado desconocido). Usa 'kubectl get pods' para verificar el estado actual."
+        validation:
+          - command: "kubectl get pod nginx-pod -n k8s-demo -o jsonpath='{.status.phase}' 2>/dev/null || echo ''"
+            expectedOutput: "Running"
+            errorMessage: "El Pod nginx-pod no está en estado Running. Verifica el estado y los eventos con 'kubectl describe pod nginx-pod -n k8s-demo'."
+
+      - name: "Explorando Deployments"
+        description: "Aprende sobre Deployments, que son recursos de nivel superior para gestionar aplicaciones a escala en Kubernetes."
+        steps:
+          - "Los Deployments son recursos que gestionan ReplicaSets, que a su vez gestionan Pods. Facilitan actualizaciones, escalabilidad y otras operaciones."
+          - "Vamos a crear un Deployment de Nginx con 3 réplicas:"
+          - "Crea un archivo deployment.yaml con el siguiente contenido:"
+          - |
+            ```
+            apiVersion: apps/v1
+            kind: Deployment
+            metadata:
+              name: nginx-deployment
+              namespace: k8s-demo
+              labels:
+                app: nginx
+            spec:
+              replicas: 3
+              selector:
+                matchLabels:
+                  app: nginx
+              template:
+                metadata:
+                  labels:
+                    app: nginx
+                spec:
+                  containers:
+                  - name: nginx
+                    image: nginx:1.21
+                    ports:
+                    - containerPort: 80
+            ```
+          - "Explicación del archivo:"
+          - "- replicas: Número de pods idénticos que se deben mantener"
+          - "- selector: Cómo el Deployment identifica los Pods que gestiona"
+          - "- template: Plantilla para los Pods que serán creados"
+          - "Aplica el archivo YAML:"
+          - "`kubectl apply -f deployment.yaml`"
+          - "Verifica si el Deployment fue creado:"
+          - "`kubectl get deployments -n k8s-demo`"
+          - "Ve los Pods creados por el Deployment:"
+          - "`kubectl get pods -n k8s-demo -l app=nginx`"
+          - "Observa que el nombre de los pods incluye el nombre del deployment seguido de un identificador aleatorio."
+          - "Vamos a escalar el Deployment a 5 réplicas:"
+          - "`kubectl scale deployment nginx-deployment --replicas=5 -n k8s-demo`"
+          - "Verifica los Pods nuevamente para confirmar el aumento de réplicas:"
+          - "`kubectl get pods -n k8s-demo -l app=nginx`"
+          - "Para ver el historial de despliegues (útil para rollbacks):"
+          - "`kubectl rollout history deployment nginx-deployment -n k8s-demo`"
+        tips:
+          - type: "info"
+            title: "Ventajas de los Deployments"
+            content: "Los Deployments ofrecen varias ventajas sobre Pods aislados: gestión de réplicas, actualizaciones controladas, rollbacks automáticos en caso de falla, y mucho más."
+          - type: "tip"
+            title: "Actualizaciones progresivas"
+            content: "Kubernetes actualiza los Pods de forma gradual durante un rollout, garantizando alta disponibilidad. Esto es configurable a través de las estrategias de actualización (RollingUpdate o Recreate)."
+          - type: "warning"
+            title: "Selectores y labels"
+            content: "Asegúrate de que los selectores en spec.selector correspondan a los labels en spec.template.metadata.labels, de lo contrario el Deployment no podrá gestionar los Pods."
+        validation:
+          - command: "kubectl get deployment nginx-deployment -n k8s-demo -o jsonpath='{.status.replicas}' 2>/dev/null || echo ''"
+            expectedOutput: "5"
+            errorMessage: "El Deployment nginx-deployment no fue escalado a 5 réplicas. Verifica con 'kubectl get deployment nginx-deployment -n k8s-demo'."

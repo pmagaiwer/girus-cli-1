@@ -1,0 +1,118 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: linux-permisos-archivos-lab-es
+  namespace: girus
+  labels:
+    app: girus-lab-template
+data:
+  lab.yaml: |
+    name: linux-permisos-archivos-es
+    title: "Permisos de archivos en Linux"
+    description: "Aprende a visualizar y modificar permisos de archivos y directorios en Linux"
+    duration: 15m
+    image: "linuxtips/girus-devops:0.1"
+    youtubeVideo: "https://www.youtube.com/watch?v=tT69ipXOzfc"
+    tasks:
+      - name: "Comprendiendo los permisos básicos"
+        description: "Aprende a visualizar e interpretar permisos de archivos y directorios"
+        steps:
+          - "Crea un directorio para los ejercicios:"
+          - "`mkdir ~/permisos`"
+          - "Entra en el directorio:"
+          - "`cd ~/permisos`"
+          - "Crea archivos de prueba:"
+          - "`touch archivo1.txt archivo2.txt`"
+          - "Muestra los permisos actuales:"
+          - "`ls -la`"
+          - "Observa el formato de los permisos - **[tipo][propietario][grupo][otros]**"
+          - "Ejemplo: **-rw-r--r--** significa archivo regular donde el propietario puede leer y escribir, y grupo y otros solo leer"
+          - "Crea un script sencillo:"
+          - "`echo '#!/bin/bash' > script.sh`"
+          - "`echo 'echo \"Hola Mundo\"' >> script.sh`"
+          - "Intenta ejecutar el script:"
+          - "`./script.sh`"
+          - "Verás un mensaje de permiso denegado"
+        tips:
+          - type: "info"
+            title: "Formato de permisos"
+            content: "Los permisos se representan con 10 caracteres: el primero indica el tipo (**-** para archivo, **d** para directorio) seguido de tres grupos **rwx** para propietario, grupo y otros."
+          - type: "tip"
+            title: "Significado de los modos"
+            content: "**r** (4) lectura, **w** (2) escritura, **x** (1) ejecución. Los valores se suman para definir los permisos en octal."
+        validation:
+          - command: "test -f ~/permisos/script.sh && echo 'ok'"
+            expectedOutput: "ok"
+            errorMessage: "El archivo script.sh no se creó correctamente"
+
+      - name: "Modificando permisos"
+        description: "Aprende a modificar permisos de archivos usando chmod"
+        steps:
+          - "Añade permiso de ejecución al script creado anteriormente:"
+          - "`chmod +x script.sh`"
+          - "Verifica los nuevos permisos:"
+          - "`ls -la script.sh`"
+          - "Ahora ejecuta el script:"
+          - "`./script.sh`"
+          - "Define permisos utilizando notación octal:"
+          - "`chmod 644 archivo1.txt`"
+          - "`chmod 640 archivo2.txt`"
+          - "Comprueba los permisos después del cambio:"
+          - "`ls -la archivo*.txt`"
+          - "Utiliza chmod de forma recursiva para modificar permisos en lote:"
+          - "`mkdir -p subdir/subsubdir`"
+          - "`touch subdir/file1 subdir/subsubdir/file2`"
+          - "`chmod -R 750 subdir`"
+          - "Verifica los permisos de forma recursiva:"
+          - "`ls -la subdir`"
+          - "`ls -la subdir/subsubdir`"
+        tips:
+          - type: "info"
+            title: "Notación simbólica vs octal"
+            content: "Puedes usar notación simbólica (chmod u+x) o octal (chmod 755). En octal, cada dígito representa los permisos para propietario, grupo y otros."
+          - type: "warning"
+            title: "Permisos y seguridad"
+            content: "Permisos demasiado abiertos (ej: 777) representan riesgos de seguridad. Utiliza siempre los mínimos permisos necesarios."
+        validation:
+          - command: "test -x ~/permisos/script.sh && echo 'ok'"
+            expectedOutput: "ok"
+            errorMessage: "El script no tiene permiso de ejecución"
+          - command: "stat -c %a ~/permisos/archivo1.txt"
+            expectedOutput: "644"
+            errorMessage: "archivo1.txt no tiene los permisos correctos (644)"
+
+      - name: "Propiedad de archivos y umask"
+        description: "Aprende a cambiar el propietario de los archivos y configurar el umask"
+        steps:
+          - "Consulta el propietario actual de los archivos:"
+          - "`ls -la`"
+          - "Verifica el umask actual:"
+          - "`umask`"
+          - "Crea un archivo nuevo con el umask por defecto:"
+          - "`touch archivo_umask_por_defecto.txt`"
+          - "`ls -la archivo_umask_por_defecto.txt`"
+          - "Cambia temporalmente el umask a 027:"
+          - "`umask 027`"
+          - "Crea otro archivo con el nuevo umask:"
+          - "`touch archivo_umask_027.txt`"
+          - "`ls -la archivo_umask_027.txt`"
+          - "Restaura el umask por defecto (generalmente 022):"
+          - "`umask 022`"
+          - "Si tienes permiso de sudo, cambia el propietario de un archivo:"
+          - "`sudo chown root:root archivo1.txt`"
+          - "Verifica el cambio de propietario:"
+          - "`ls -la archivo1.txt`"
+        tips:
+          - type: "info"
+            title: "Umask explicado"
+            content: "El umask define qué permisos se eliminan por defecto al crear nuevos archivos y directorios. Un umask de 022 quita la escritura para grupo y otros, resultando en 644 para archivos y 755 para directorios."
+          - type: "tip"
+            title: "Permisos por defecto"
+            content: "Por defecto, los directorios se crean con 777 y los archivos con 666. El valor del umask se resta de estos permisos."
+        validation:
+          - command: "umask"
+            expectedOutput: "0022"
+            errorMessage: "El umask no volvió a su valor por defecto"
+          - command: "stat -c %a ~/permisos/archivo_umask_027.txt 2>/dev/null || echo 'ausente'"
+            expectedOutput: "640"
+            errorMessage: "El archivo con umask 027 no tiene los permisos esperados o no fue creado"

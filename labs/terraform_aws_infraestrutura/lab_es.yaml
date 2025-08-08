@@ -1,0 +1,530 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: terraform-aws-infraestrutura-lab-es
+  namespace: girus
+  labels:
+    app: girus-lab-template
+data:
+  lab.yaml: |
+    name: terraform-aws-infraestrutura-es
+    title: "Terraform con AWS: Construyendo Infraestructura en la Nube"
+    description: "Aprende a usar Terraform para provisionar y administrar recursos en AWS, creando una infraestructura completa con recursos como VPC, EC2, RDS y S3."
+    duration: 30m
+    timerEnabled: true
+    maxDuration: 30m
+    image: "linuxtips/girus-localstack:0.1"
+    privileged: true
+    type: "aws"
+    entrypoint: "/entrypoint.sh"
+    tasks:
+      - name: "Instalando Vim"
+        description: "Actualiza los repositorios del sistema e instala el editor Vim"
+        steps:
+          - "Actualiza los repositorios del sistema:"
+          - "`apt update`"
+          - "Instala el editor Vim:"
+          - "`apt install -y vim`"
+          - "Verifica si Vim fue instalado correctamente:"
+          - "`vim --version | head -n 1`"
+        tips:
+          - type: "info"
+            title: "Comandos básicos de Vim"
+            content: "Para abrir un archivo usa 'vim archivo.tf'. Para insertar texto, presiona 'i'. Para guardar y salir, presiona 'ESC' y escribe ':wq'. Para salir sin guardar, presiona 'ESC' y escribe ':q!'."
+        validation:
+          - command: "which vim > /dev/null && echo 'success' || echo 'error'"
+            expectedOutput: "success"
+            errorMessage: "Vim no fue instalado correctamente. Intenta ejecutar 'apt install -y vim' nuevamente."
+
+      - name: "Configuración de Red con VPC y Subnets"
+        description: "Aprende a crear una VPC y subnets para tu aplicación en AWS usando Terraform"
+        steps:
+          - "Crea un directorio para el proyecto de infraestructura:"
+          - "`mkdir -p ~/terraform-aws-infra && cd ~/terraform-aws-infra`"
+          - "Crea un archivo para configuración de red usando vim:"
+          - "`vim network.tf`"
+          - "En el editor vim, presiona 'i' para entrar en modo de inserción y agrega el siguiente contenido:"
+          - "```terraform
+            # Configuración de red en AWS
+
+            resource \"aws_vpc\" \"main\" {
+              cidr_block           = \"10.0.0.0/16\"
+              enable_dns_support   = true
+              enable_dns_hostnames = true
+
+              tags = {
+                Name = \"main-vpc\"
+              }
+            }
+
+            # Subnets públicas
+            resource \"aws_subnet\" \"public_a\" {
+              vpc_id                  = aws_vpc.main.id
+              cidr_block              = \"10.0.2.0/24\"
+              availability_zone       = \"us-east-1a\"
+              map_public_ip_on_launch = true
+
+              tags = {
+                Name = \"public-subnet-a\"
+              }
+            }
+
+            resource \"aws_subnet\" \"public_b\" {
+              vpc_id                  = aws_vpc.main.id
+              cidr_block              = \"10.0.2.0/24\"
+              availability_zone       = \"us-east-1b\"
+              map_public_ip_on_launch = true
+
+              tags = {
+                Name = \"public-subnet-b\"
+              }
+            }
+
+            # Subnets privadas
+            resource \"aws_subnet\" \"private_a\" {
+              vpc_id            = aws_vpc.main.id
+              cidr_block        = \"10.0.3.0/24\"
+              availability_zone = \"us-east-1a\"
+
+              tags = {
+                Name = \"private-subnet-a\"
+              }
+            }
+
+            resource \"aws_subnet\" \"private_b\" {
+              vpc_id            = aws_vpc.main.id
+              cidr_block        = \"10.0.4.0/24\"
+              availability_zone = \"us-east-1b\"
+
+              tags = {
+                Name = \"private-subnet-b\"
+              }
+            }
+
+            # Internet Gateway
+            resource \"aws_internet_gateway\" \"main\" {
+              vpc_id = aws_vpc.main.id
+
+              tags = {
+                Name = \"main-igw\"
+              }
+            }
+
+            # Tabla de enrutamiento para subnets públicas
+            resource \"aws_route_table\" \"public\" {
+              vpc_id = aws_vpc.main.id
+
+              route {
+                cidr_block = \"0.0.0.0/0\"
+                gateway_id = aws_internet_gateway.main.id
+              }
+
+              tags = {
+                Name = \"public-route-table\"
+              }
+            }
+
+            # Asociación de las subnets públicas con la tabla de rutas pública
+            resource \"aws_route_table_association\" \"public_a\" {
+              subnet_id      = aws_subnet.public_a.id
+              route_table_id = aws_route_table.public.id
+            }
+
+            resource \"aws_route_table_association\" \"public_b\" {
+              subnet_id      = aws_subnet.public_b.id
+              route_table_id = aws_route_table.public.id
+            }
+            ```"
+          - "Para guardar el archivo y salir de vim, presiona 'ESC' y escribe ':wq'"
+          - "Crea el archivo principal de Terraform usando vim:"
+          - "`vim main.tf`"
+          - "En el editor vim, presiona 'i' para entrar en modo de inserción y agrega el siguiente contenido:"
+          - "```terraform
+            terraform {
+              required_providers {
+                aws = {
+                  source  = \"hashicorp/aws\"
+                  version = \"~> 5.0\"
+                }
+              }
+            }
+
+            provider \"aws\" {
+              region = \"us-east-1\"
+            }
+            ```"
+          - "Para guardar el archivo y salir de vim, presiona 'ESC' y escribe ':wq'"
+          - "Inicializa Terraform para descargar los providers necesarios:"
+          - "`terraform init`"
+          - "Verifica el plan de ejecución para la red:"
+          - "`terraform plan`"
+          - "Aplica la configuración para crear los recursos de red:"
+          - "`terraform apply -auto-approve`"
+          - "Verifica los recursos creados:"
+          - "`terraform state list | grep aws_vpc`"
+          - "`terraform state list | grep aws_subnet`"
+        tips:
+          - type: "info"
+            title: "Red en AWS"
+            content: "Una VPC (Virtual Private Cloud) es la base para cualquier infraestructura en AWS. Permite aislar recursos en una red virtual y organizar tu aplicación en diferentes capas de acceso."
+          - type: "tip"
+            title: "Alta disponibilidad"
+            content: "Distribuye tus subnets en diferentes zonas de disponibilidad (AZs) para garantizar alta disponibilidad y resistencia a fallas regionales."
+        validation:
+          - command: "terraform state list | grep aws_vpc.main && echo 'success' || echo 'error'"
+            expectedOutput: "success"
+            errorMessage: "La VPC no fue creada correctamente."
+          - command: "terraform state list | grep aws_subnet | wc -l | grep -q '[4-9]' && echo 'success' || echo 'error'"
+            expectedOutput: "success"
+            errorMessage: "Las subnets no fueron creadas correctamente. Deben existir al menos 4 subnets."
+
+      - name: "Creando Grupos de Seguridad e Instancias EC2"
+        description: "Aprende a configurar grupos de seguridad y lanzar instancias EC2 para tu aplicación"
+        steps:
+          - "Crea un archivo para los grupos de seguridad usando vim:"
+          - "`vim security.tf`"
+          - "En el editor vim, presiona 'i' para entrar en modo de inserción y agrega el siguiente contenido:"
+          - "```terraform
+            # Grupos de seguridad
+
+            # SG para instancias web públicas
+            resource \"aws_security_group\" \"web\" {
+              name        = \"web-sg\"
+              description = \"Permitir tráfico HTTP/HTTPS y SSH\"
+              vpc_id      = aws_vpc.main.id
+
+              ingress {
+                from_port   = 80
+                to_port     = 80
+                protocol    = \"tcp\"
+                cidr_blocks = [\"0.0.0.0/0\"]
+              }
+
+              ingress {
+                from_port   = 443
+                to_port     = 443
+                protocol    = \"tcp\"
+                cidr_blocks = [\"0.0.0.0/0\"]
+              }
+
+              ingress {
+                from_port   = 22
+                to_port     = 22
+                protocol    = \"tcp\"
+                cidr_blocks = [\"0.0.0.0/0\"]
+              }
+
+              egress {
+                from_port   = 0
+                to_port     = 0
+                protocol    = \"-1\"
+                cidr_blocks = [\"0.0.0.0/0\"]
+              }
+
+              tags = {
+                Name = \"web-security-group\"
+              }
+            }
+
+            # SG para base de datos (solo acceso desde web tier)
+            resource \"aws_security_group\" \"database\" {
+              name        = \"database-sg\"
+              description = \"Permitir acceso de base de datos desde web tier\"
+              vpc_id      = aws_vpc.main.id
+
+              ingress {
+                from_port       = 3306
+                to_port         = 3306
+                protocol        = \"tcp\"
+                security_groups = [aws_security_group.web.id]
+              }
+
+              tags = {
+                Name = \"database-security-group\"
+              }
+            }
+            ```"
+          - "Para guardar el archivo y salir de vim, presiona 'ESC' y escribe ':wq'"
+          - "Crea un archivo para las instancias EC2 usando vim:"
+          - "`vim ec2.tf`"
+          - "En el editor vim, presiona 'i' para entrar en modo de inserción y agrega el siguiente contenido:"
+          - "```terraform
+            # Instancias EC2
+
+            # AMI más reciente de Amazon Linux 2
+            data \"aws_ami\" \"amazon_linux\" {
+              most_recent = true
+              owners      = [\"amazon\"]
+
+              filter {
+                name   = \"name\"
+                values = [\"amzn2-ami-hvm-*-x86_64-gp2\"]
+              }
+            }
+
+            # Instancias web en subnets públicas
+            resource \"aws_instance\" \"web_a\" {
+              ami                    = data.aws_ami.amazon_linux.id
+              instance_type          = \"t2.micro\"
+              subnet_id              = aws_subnet.public_a.id
+              vpc_security_group_ids = [aws_security_group.web.id]
+
+              user_data = <<-EOF
+                          #!/bin/bash
+                          yum update -y
+                          yum install -y httpd
+                          systemctl start httpd
+                          systemctl enable httpd
+                          echo '<h1>Servidor Web A</h1>' > /var/www/html/index.html
+                          EOF
+
+              tags = {
+                Name = \"web-server-a\"
+              }
+            }
+
+            resource \"aws_instance\" \"web_b\" {
+              ami                    = data.aws_ami.amazon_linux.id
+              instance_type          = \"t2.micro\"
+              subnet_id              = aws_subnet.public_b.id
+              vpc_security_group_ids = [aws_security_group.web.id]
+
+              user_data = <<-EOF
+                          #!/bin/bash
+                          yum update -y
+                          yum install -y httpd
+                          systemctl start httpd
+                          systemctl enable httpd
+                          echo '<h1>Servidor Web B</h1>' > /var/www/html/index.html
+                          EOF
+
+              tags = {
+                Name = \"web-server-b\"
+              }
+            }
+            ```"
+          - "Para guardar el archivo y salir de vim, presiona 'ESC' y escribe ':wq'"
+          - "Verifica el plan de ejecución para los nuevos recursos:"
+          - "`terraform plan`"
+          - "Aplica la configuración para crear los grupos de seguridad e instancias:"
+          - "`terraform apply -auto-approve`"
+          - "Verifica las instancias creadas:"
+          - "`terraform state list | grep aws_instance`"
+          - "Obtén las IPs públicas de las instancias:"
+          - "`terraform output | grep ip || terraform show | grep public_ip`"
+        tips:
+          - type: "info"
+            title: "Grupos de Seguridad"
+            content: "Los grupos de seguridad actúan como firewalls virtuales para tus instancias EC2. Sigue el principio del menor privilegio, permitiendo apenas el tráfico necesario."
+          - type: "tip"
+            title: "User Data"
+            content: "El user data se ejecuta apenas al lanzar la instancia. Es útil para instalación automática de software y configuración inicial."
+        validation:
+          - command: "terraform state list | grep aws_security_group | wc -l | grep -q '[2-9]' && echo 'success' || echo 'error'"
+            expectedOutput: "success"
+            errorMessage: "Los grupos de seguridad no fueron creados correctamente."
+          - command: "terraform state list | grep aws_instance | wc -l | grep -q '[2-9]' && echo 'success' || echo 'error'"
+            expectedOutput: "success"
+            errorMessage: "Las instancias EC2 no fueron creadas correctamente."
+
+      - name: "Configurando Base de Datos RDS"
+        description: "Aprende a crear una base de datos RDS para tu aplicación"
+        steps:
+          - "Crea un archivo para la configuración de RDS usando vim:"
+          - "`vim rds.tf`"
+          - "En el editor vim, presiona 'i' para entrar en modo de inserción y agrega el siguiente contenido:"
+          - "```terraform
+            # Subnet group para RDS
+            resource \"aws_db_subnet_group\" \"main\" {
+              name       = \"main-db-subnet-group\"
+              subnet_ids = [aws_subnet.private_a.id, aws_subnet.private_b.id]
+
+              tags = {
+                Name = \"Main DB subnet group\"
+              }
+            }
+
+            # Instancia RDS MySQL
+            resource \"aws_db_instance\" \"main\" {
+              identifier             = \"main-database\"
+              allocated_storage      = 20
+              max_allocated_storage  = 100
+              storage_type           = \"gp2\"
+              engine                 = \"mysql\"
+              engine_version         = \"8.0\"
+              instance_class         = \"db.t3.micro\"
+              db_name                = \"appdb\"
+              username               = \"admin\"
+              password               = \"password123!\"
+              parameter_group_name   = \"default.mysql8.0\"
+              db_subnet_group_name   = aws_db_subnet_group.main.name
+              vpc_security_group_ids = [aws_security_group.database.id]
+              skip_final_snapshot    = true
+
+              tags = {
+                Name = \"main-database\"
+              }
+            }
+            ```"
+          - "Para guardar el archivo y salir de vim, presiona 'ESC' y escribe ':wq'"
+          - "Verifica el plan de ejecución:"
+          - "`terraform plan`"
+          - "Aplica la configuración para crear la base de datos:"
+          - "`terraform apply -auto-approve`"
+          - "Verifica la base de datos creada:"
+          - "`terraform state list | grep aws_db_instance`"
+        tips:
+          - type: "warning"
+            title: "Seguridad de Contraseñas"
+            content: "En producción, nunca hardcodees contraseñas en el código. Usa AWS Secrets Manager o variables de ambiente para manejar credenciales sensibles."
+          - type: "info"
+            title: "Subnet Groups"
+            content: "Un DB subnet group especifica las subnets donde RDS puede crear instancias de base de datos. Debe incluir subnets de al menos dos AZs."
+        validation:
+          - command: "terraform state list | grep aws_db_instance && echo 'success' || echo 'error'"
+            expectedOutput: "success"
+            errorMessage: "La instancia RDS no fue creada correctamente."
+
+      - name: "Configurando Bucket S3 y Load Balancer"
+        description: "Aprende a crear storage S3 y un load balancer para distribuir tráfico"
+        steps:
+          - "Crea un archivo para S3 y ALB usando vim:"
+          - "`vim storage-lb.tf`"
+          - "En el editor vim, presiona 'i' para entrar en modo de inserción y agrega el siguiente contenido:"
+          - "```terraform
+            # Bucket S3 para almacenamiento de archivos estáticos
+            resource \"aws_s3_bucket\" \"app_storage\" {
+              bucket = \"mi-app-storage-${random_id.bucket_suffix.hex}\"
+
+              tags = {
+                Name = \"App Storage Bucket\"
+              }
+            }
+
+            resource \"random_id\" \"bucket_suffix\" {
+              byte_length = 4
+            }
+
+            # Application Load Balancer
+            resource \"aws_lb\" \"main\" {
+              name               = \"main-alb\"
+              internal           = false
+              load_balancer_type = \"application\"
+              security_groups    = [aws_security_group.web.id]
+              subnets            = [aws_subnet.public_a.id, aws_subnet.public_b.id]
+
+              tags = {
+                Name = \"main-load-balancer\"
+              }
+            }
+
+            # Target Group para el ALB
+            resource \"aws_lb_target_group\" \"web\" {
+              name     = \"web-tg\"
+              port     = 80
+              protocol = \"HTTP\"
+              vpc_id   = aws_vpc.main.id
+
+              health_check {
+                enabled             = true
+                healthy_threshold   = 2
+                interval            = 30
+                matcher             = \"200\"
+                path                = \"/\"
+                port                = \"traffic-port\"
+                protocol            = \"HTTP\"
+                timeout             = 5
+                unhealthy_threshold = 2
+              }
+
+              tags = {
+                Name = \"web-target-group\"
+              }
+            }
+
+            # Listener del ALB
+            resource \"aws_lb_listener\" \"web\" {
+              load_balancer_arn = aws_lb.main.arn
+              port              = \"80\"
+              protocol          = \"HTTP\"
+
+              default_action {
+                type             = \"forward\"
+                target_group_arn = aws_lb_target_group.web.arn
+              }
+            }
+
+            # Attachments del Target Group
+            resource \"aws_lb_target_group_attachment\" \"web_a\" {
+              target_group_arn = aws_lb_target_group.web.arn
+              target_id        = aws_instance.web_a.id
+              port             = 80
+            }
+
+            resource \"aws_lb_target_group_attachment\" \"web_b\" {
+              target_group_arn = aws_lb_target_group.web.arn
+              target_id        = aws_instance.web_b.id
+              port             = 80
+            }
+            ```"
+          - "Para guardar el archivo y salir de vim, presiona 'ESC' y escribe ':wq'"
+          - "Crea un archivo de outputs para mostrar información importante:"
+          - "`vim outputs.tf`"
+          - "En el editor vim, presiona 'i' para entrar en modo de inserción y agrega el siguiente contenido:"
+          - "```terraform
+            # Outputs importantes
+
+            output \"vpc_id\" {
+              description = \"ID de la VPC\"
+              value       = aws_vpc.main.id
+            }
+
+            output \"web_instance_ips\" {
+              description = \"IPs públicas de las instancias web\"
+              value = [
+                aws_instance.web_a.public_ip,
+                aws_instance.web_b.public_ip
+              ]
+            }
+
+            output \"database_endpoint\" {
+              description = \"Endpoint de la base de datos RDS\"
+              value       = aws_db_instance.main.endpoint
+            }
+
+            output \"load_balancer_dns\" {
+              description = \"DNS name del Load Balancer\"
+              value       = aws_lb.main.dns_name
+            }
+
+            output \"s3_bucket_name\" {
+              description = \"Nombre del bucket S3\"
+              value       = aws_s3_bucket.app_storage.bucket
+            }
+            ```"
+          - "Para guardar el archivo y salir de vim, presiona 'ESC' y escribe ':wq'"
+          - "Verifica el plan de ejecución final:"
+          - "`terraform plan`"
+          - "Aplica toda la configuración:"
+          - "`terraform apply -auto-approve`"
+          - "Verifica todos los recursos creados:"
+          - "`terraform state list`"
+          - "Visualiza los outputs importantes:"
+          - "`terraform output`"
+        tips:
+          - type: "info"
+            title: "Load Balancer"
+            content: "Un Application Load Balancer distribuye el tráfico entre múltiples instancias, proporcionando alta disponibilidad y escalabilidad para tu aplicación."
+          - type: "tip"
+            title: "Nombres únicos"
+            content: "Los buckets S3 deben tener nombres globalmente únicos. Usar random_id ayuda a garantizar esto."
+        validation:
+          - command: "terraform state list | grep aws_s3_bucket && echo 'success' || echo 'error'"
+            expectedOutput: "success"
+            errorMessage: "El bucket S3 no fue creado correctamente."
+          - command: "terraform state list | grep aws_lb.main && echo 'success' || echo 'error'"
+            expectedOutput: "success"
+            errorMessage: "El Load Balancer no fue creado correctamente."
+          - command: "terraform output | grep -E '(vpc_id|database_endpoint|load_balancer_dns)' | wc -l | grep -q '[3-9]' && echo 'success' || echo 'error'"
+            expectedOutput: "success"
+            errorMessage: "Los outputs no fueron configurados correctamente."

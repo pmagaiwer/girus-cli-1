@@ -1,0 +1,398 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: linux-seguranca-criptografia-lab-es
+  namespace: girus
+  labels:
+    app: girus-lab-template
+data:
+  lab.yaml: |
+    name: linux-seguranca-criptografia-es
+    title: "Linux: Seguridad y Criptografía"
+    description: "Aprende a implementar medidas de seguridad en sistemas Linux, incluyendo configuración de SSH, criptografía de archivos, gestión de certificados y herramientas de auditoría de seguridad."
+    duration: 35m
+    image: "linuxtips/girus-devops:0.1"
+    privileged: true
+    tasks:
+      - name: "Configurando SSH para Máxima Seguridad"
+        description: "Aprende a crear, administrar y usar claves SSH para autenticación segura."
+        steps:
+          - "Primero, vamos a generar un par de claves SSH con cifrado fuerte:"
+          - "`ssh-keygen -t ed25519 -C 'usuario@ejemplo.com'`"
+          - "Presiona Enter para aceptar la ubicación por defecto y define una passphrase fuerte cuando se solicite."
+          - "Verifica las claves generadas:"
+          - "`ls -la ~/.ssh/`"
+          - "Debes ver dos archivos: id_ed25519 (clave privada) e id_ed25519.pub (clave pública)."
+          - "Verifica el contenido de la clave pública:"
+          - "`cat ~/.ssh/id_ed25519.pub`"
+          - "Configura permisos adecuados para el directorio SSH:"
+          - "`chmod 700 ~/.ssh/`"
+          - "`chmod 600 ~/.ssh/id_ed25519`"
+          - "`chmod 644 ~/.ssh/id_ed25519.pub`"
+          - "Genera una segunda clave para uso específico (ejemplo: para backups):"
+          - "`ssh-keygen -t ed25519 -f ~/.ssh/backup_key -C 'backup@ejemplo.com'`"
+          - "Crea el archivo de configuración SSH para gestionar múltiples claves:"
+          - "`cat > ~/.ssh/config << EOF
+Host servidor-produccion
+    HostName 192.168.1.100
+    User administrador
+    IdentityFile ~/.ssh/id_ed25519
+    Port 2222
+
+Host servidor-backup
+    HostName backup.ejemplo.com
+    User backup
+    IdentityFile ~/.ssh/backup_key
+    Port 22
+EOF`"
+          - "Configura permisos para el archivo de configuración:"
+          - "`chmod 600 ~/.ssh/config`"
+        tips:
+          - type: "info"
+            title: "Tipos de Claves SSH"
+            content: "Ed25519 es el algoritmo más moderno y seguro. RSA debe tener al menos 4096 bits para ser considerado seguro. Evita DSA y ECDSA con curvas NIST."
+          - type: "warning"
+            title: "Protección de Claves Privadas"
+            content: "Nunca compartas tu clave privada. Usa siempre passphrase para claves importantes. Considera usar ssh-agent para gestionar las claves en memoria."
+        validation:
+          - command: "test -f ~/.ssh/id_ed25519 && test -f ~/.ssh/id_ed25519.pub && echo 'success' || echo 'error'"
+            expectedOutput: "success"
+            errorMessage: "Las claves SSH no fueron generadas correctamente."
+
+      - name: "Configuración Avanzada de SSH"
+        description: "Configure SSH para usar apenas autenticación por clave"
+        steps:
+          - "Crea un directorio para simular configuración del servidor SSH:"
+          - "`mkdir -p ~/ssh-config`"
+          - "Crea un archivo de configuración SSH de servidor seguro:"
+          - "`cat > ~/ssh-config/sshd_config << EOF
+# Configuración SSH de alta seguridad
+Port 2222
+Protocol 2
+
+# Autenticación
+PermitRootLogin no
+PasswordAuthentication no
+PermitEmptyPasswords no
+PubkeyAuthentication yes
+AuthorizedKeysFile .ssh/authorized_keys
+MaxAuthTries 3
+MaxSessions 10
+
+# Algoritmos de cifrado seguros
+Ciphers chacha20-poly1305@openssh.com,aes256-gcm@openssh.com,aes128-gcm@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr
+MACs hmac-sha2-256-etm@openssh.com,hmac-sha2-512-etm@openssh.com,hmac-sha2-256,hmac-sha2-512
+KexAlgorithms curve25519-sha256@libssh.org,diffie-hellman-group16-sha512,diffie-hellman-group18-sha512
+
+# Timeouts y límites
+ClientAliveInterval 300
+ClientAliveCountMax 2
+LoginGraceTime 30
+
+# Logs
+SyslogFacility AUTH
+LogLevel INFO
+
+# Restricciones de acceso
+AllowUsers administrador backup
+DenyUsers root guest
+
+# Otros
+X11Forwarding no
+AllowTcpForwarding no
+GatewayPorts no
+PermitTunnel no
+EOF`"
+          - "Verifica la configuración creada:"
+          - "`cat ~/ssh-config/sshd_config`"
+          - "Simula autorización de una clave pública:"
+          - "`mkdir -p ~/.ssh && cat ~/.ssh/id_ed25519.pub >> ~/.ssh/authorized_keys`"
+          - "Configura permisos para authorized_keys:"
+          - "`chmod 600 ~/.ssh/authorized_keys`"
+          - "Verifica el archivo authorized_keys:"
+          - "`cat ~/.ssh/authorized_keys`"
+        tips:
+          - type: "warning"
+            title: "Prueba de Configuración"
+            content: "Siempre prueba la configuración SSH antes de aplicarla. Mantén una sesión SSH activa mientras haces cambios para evitar perder acceso."
+          - type: "info"
+            title: "Fail2Ban"
+            content: "Considera instalar fail2ban para proteger contra ataques de fuerza bruta. Configúralo para banear IPs después de múltiples intentos fallidos."
+        validation:
+          - command: "test -f ~/ssh-config/sshd_config && grep -q 'PasswordAuthentication no' ~/ssh-config/sshd_config && echo 'success' || echo 'error'"
+            expectedOutput: "success"
+            errorMessage: "La configuración SSH no fue creada correctamente o no está deshabilitando autenticación por contraseña."
+
+      - name: "Criptografía de Archivos con GPG"
+        description: "Aprende a cifrar y descifrar archivos usando GPG para proteger información sensible."
+        steps:
+          - "Instala GPG si no está disponible:"
+          - "`apt update && apt install -y gnupg`"
+          - "Genera un par de claves GPG:"
+          - "`gpg --batch --generate-key << EOF
+%echo Generando clave GPG...
+Key-Type: RSA
+Key-Length: 4096
+Subkey-Type: RSA
+Subkey-Length: 4096
+Name-Real: Usuario Ejemplo
+Name-Email: usuario@ejemplo.com
+Expire-Date: 1y
+Passphrase: contraseña_segura_123
+%commit
+%echo Clave GPG generada
+EOF`"
+          - "Lista las claves GPG generadas:"
+          - "`gpg --list-keys`"
+          - "Lista las claves privadas:"
+          - "`gpg --list-secret-keys`"
+          - "Crea un archivo de prueba con información sensible:"
+          - "`cat > archivo_sensible.txt << EOF
+Información confidencial:
+Usuario: admin
+Contraseña: password123
+Servidor: 192.168.1.100
+Datos importantes que deben ser protegidos.
+EOF`"
+          - "Cifra el archivo usando GPG:"
+          - "`gpg --batch --yes --passphrase 'contraseña_segura_123' --cipher-algo AES256 --compress-algo 2 --armor --output archivo_sensible.txt.gpg --encrypt --recipient usuario@ejemplo.com archivo_sensible.txt`"
+          - "Verifica que el archivo fue cifrado:"
+          - "`ls -la archivo_sensible.txt*`"
+          - "Verifica el contenido del archivo cifrado:"
+          - "`cat archivo_sensible.txt.gpg`"
+          - "Elimina el archivo original para probar el descifrado:"
+          - "`rm archivo_sensible.txt`"
+          - "Descifra el archivo:"
+          - "`gpg --batch --yes --passphrase 'contraseña_segura_123' --output archivo_descifrado.txt --decrypt archivo_sensible.txt.gpg`"
+          - "Verifica que el contenido fue restaurado:"
+          - "`cat archivo_descifrado.txt`"
+          - "Crea firma digital de un archivo:"
+          - "`echo 'Documento importante' > documento.txt`"
+          - "`gpg --batch --yes --passphrase 'contraseña_segura_123' --armor --detach-sign documento.txt`"
+          - "Verifica la firma:"
+          - "`gpg --verify documento.txt.asc documento.txt`"
+        tips:
+          - type: "info"
+            title: "Algoritmos de Cifrado"
+            content: "AES256 es el estándar actual para cifrado simétrico. Para archivos muy grandes, considera usar cifrado híbrido (GPG hace esto automáticamente)."
+          - type: "warning"
+            title: "Gestión de Claves"
+            content: "Haz backup de tus claves privadas de forma segura. Si pierdes la clave privada, no podrás descifrar los archivos cifrados con la clave pública correspondiente."
+        validation:
+          - command: "test -f archivo_sensible.txt.gpg && test -f archivo_descifrado.txt && echo 'success' || echo 'error'"
+            expectedOutput: "success"
+            errorMessage: "El proceso de cifrado/descifrado con GPG no se completó correctamente."
+
+      - name: "Hashing y Verificación de Integridad"
+        description: "Utiliza funciones hash para verificar la integridad de archivos y detectar alteraciones."
+        steps:
+          - "Crea varios archivos de prueba:"
+          - "`echo 'Contenido del archivo 1' > archivo1.txt`"
+          - "`echo 'Contenido del archivo 2' > archivo2.txt`"
+          - "`echo 'Contenido del archivo 3' > archivo3.txt`"
+          - "Genera hashes SHA-256 de los archivos:"
+          - "`sha256sum archivo1.txt`"
+          - "`sha256sum archivo2.txt`"
+          - "`sha256sum archivo3.txt`"
+          - "Crea un archivo con todos los hashes:"
+          - "`sha256sum archivo*.txt > checksums.sha256`"
+          - "Verifica el contenido del archivo de checksums:"
+          - "`cat checksums.sha256`"
+          - "Simula alteración de un archivo:"
+          - "`echo 'Contenido alterado maliciosamente' > archivo2.txt`"
+          - "Verifica la integridad de todos los archivos:"
+          - "`sha256sum -c checksums.sha256`"
+          - "Observa que archivo2.txt falla la verificación."
+          - "Restaura el archivo original:"
+          - "`echo 'Contenido del archivo 2' > archivo2.txt`"
+          - "Verifica nuevamente:"
+          - "`sha256sum -c checksums.sha256`"
+          - "Ahora todos los archivos deben pasar la verificación."
+          - "Crea hashes MD5 y SHA-1 para comparación (aunque son menos seguros):"
+          - "`md5sum archivo1.txt`"
+          - "`sha1sum archivo1.txt`"
+          - "Genera un hash SHA-512 para máxima seguridad:"
+          - "`sha512sum archivo1.txt`"
+          - "Crea un script de verificación automática:"
+          - "`cat > verificar_integridad.sh << 'EOF'
+#!/bin/bash
+echo "Verificando integridad de archivos..."
+if sha256sum -c checksums.sha256 --quiet; then
+    echo "✓ Todos los archivos están íntegros"
+    exit 0
+else
+    echo "✗ Se detectaron archivos alterados"
+    exit 1
+fi
+EOF`"
+          - "Da permisos de ejecución al script:"
+          - "`chmod +x verificar_integridad.sh`"
+          - "Ejecuta el script:"
+          - "`./verificar_integridad.sh`"
+        tips:
+          - type: "info"
+            title: "Algoritmos de Hash"
+            content: "SHA-256 es el estándar actual para verificación de integridad. MD5 y SHA-1 están obsoletos por vulnerabilidades criptográficas. Usa SHA-512 para mayor seguridad."
+          - type: "tip"
+            title: "Automatización"
+            content: "Crea scripts de verificación automática para ejecutar periódicamente en sistemas críticos. Considera usar herramientas como AIDE o Tripwire para monitoreo continuo."
+        validation:
+          - command: "test -f checksums.sha256 && test -f verificar_integridad.sh && echo 'success' || echo 'error'"
+            expectedOutput: "success"
+            errorMessage: "Los archivos de verificación de integridad no fueron creados correctamente."
+
+      - name: "Certificados SSL/TLS y OpenSSL"
+        description: "Aprende a generar y gestionar certificados SSL/TLS para comunicaciones seguras."
+        steps:
+          - "Instala OpenSSL si no está disponible:"
+          - "`apt update && apt install -y openssl`"
+          - "Verifica la versión de OpenSSL instalada:"
+          - "`openssl version -a`"
+          - "Genera una clave privada RSA de 4096 bits:"
+          - "`openssl genrsa -out servidor-privado.key 4096`"
+          - "Verifica la clave generada:"
+          - "`openssl rsa -in servidor-privado.key -text -noout | head -10`"
+          - "Crea una solicitud de certificado (CSR):"
+          - "`openssl req -new -key servidor-privado.key -out servidor.csr -subj '/C=BR/ST=SP/L=SaoPaulo/O=MiEmpresa/OU=TI/CN=mi-servidor.com'`"
+          - "Verifica el CSR creado:"
+          - "`openssl req -in servidor.csr -text -noout`"
+          - "Genera un certificado autofirmado (para desarrollo/testing):"
+          - "`openssl x509 -req -days 365 -in servidor.csr -signkey servidor-privado.key -out servidor.crt`"
+          - "Verifica el certificado generado:"
+          - "`openssl x509 -in servidor.crt -text -noout`"
+          - "Verifica fechas de validez del certificado:"
+          - "`openssl x509 -in servidor.crt -noout -dates`"
+          - "Verifica el fingerprint del certificado:"
+          - "`openssl x509 -in servidor.crt -noout -fingerprint -sha256`"
+          - "Crea una Autoridad Certificadora (CA) propia para ambiente de desarrollo:"
+          - "`openssl genrsa -out ca-privada.key 4096`"
+          - "`openssl req -new -x509 -days 1095 -key ca-privada.key -out ca.crt -subj '/C=BR/ST=SP/L=SaoPaulo/O=MiCA/OU=Desarrollo/CN=Mi-CA-Root'`"
+          - "Genera un certificado firmado por nuestra CA:"
+          - "`openssl genrsa -out sitio-privado.key 4096`"
+          - "`openssl req -new -key sitio-privado.key -out sitio.csr -subj '/C=BR/ST=SP/L=SaoPaulo/O=MiSitio/OU=Web/CN=www.misitio.com'`"
+          - "`openssl x509 -req -days 365 -in sitio.csr -CA ca.crt -CAkey ca-privada.key -CAcreateserial -out sitio.crt`"
+          - "Verifica la cadena de certificados:"
+          - "`openssl verify -CAfile ca.crt sitio.crt`"
+          - "Combina certificado y clave para uso en servidor web:"
+          - "`cat sitio.crt sitio-privado.key > sitio-completo.pem`"
+          - "Configura permisos seguros para archivos de certificados:"
+          - "`chmod 600 *.key *.pem`"
+          - "`chmod 644 *.crt *.csr`"
+        tips:
+          - type: "warning"
+            title: "Certificados Autofirmados"
+            content: "Los certificados autofirmados solo deben usarse para desarrollo/testing. En producción, usa certificados de una CA confiable como Let's Encrypt."
+          - type: "info"
+            title: "Gestión de Certificados"
+            content: "Mantén un inventario de todos los certificados, sus fechas de expiración y renuévalos antes del vencimiento. Considera automatizar con tools como certbot."
+        validation:
+          - command: "test -f servidor.crt && test -f ca.crt && test -f sitio.crt && echo 'success' || echo 'error'"
+            expectedOutput: "success"
+            errorMessage: "Los certificados SSL/TLS no fueron generados correctamente."
+
+      - name: "Auditoría de Seguridad y Hardening Básico"
+        description: "Implementa medidas básicas de hardening y realiza auditoría de seguridad del sistema."
+        steps:
+          - "Instala herramientas de auditoría:"
+          - "`apt update && apt install -y lynis chkrootkit rkhunter`"
+          - "Verifica usuarios con shell válido:"
+          - "`grep '/bin/bash\\|/bin/sh' /etc/passwd`"
+          - "Lista usuarios con UID 0 (privilegios de root):"
+          - "`awk -F: '$3 == 0 {print $1}' /etc/passwd`"
+          - "Verifica archivos con permisos SUID:"
+          - "`find /usr -type f -perm -4000 2>/dev/null | head -10`"
+          - "Verifica archivos world-writable:"
+          - "`find /tmp -type f -perm -002 2>/dev/null | head -5`"
+          - "Verifica configuraciones de red:"
+          - "`ss -tuln | grep -E ':22|:80|:443'`"
+          - "Verifica servicios en ejecución:"
+          - "`systemctl list-units --type=service --state=running | head -10`"
+          - "Ejecuta verificación rápida con Lynis:"
+          - "`lynis audit system --quick --quiet | grep -E 'Warning|Suggestion' | head -10`"
+          - "Ejecuta verificación básica de rootkits:"
+          - "`chkrootkit | head -10`"
+          - "Crea script de hardening básico:"
+          - "`cat > hardening_basico.sh << 'EOF'
+#!/bin/bash
+echo "Aplicando hardening básico..."
+
+# Deshabilita servicios innecesarios
+echo "1. Deshabilitando servicios innecesarios..."
+services_to_disable="avahi-daemon cups bluetooth"
+for service in $services_to_disable; do
+    if systemctl is-enabled $service 2>/dev/null | grep -q enabled; then
+        systemctl disable $service 2>/dev/null && echo "Deshabilitado: $service"
+    fi
+done
+
+# Configura límites de archivos core
+echo "2. Configurando límites de archivos core..."
+echo "* hard core 0" >> /etc/security/limits.conf
+
+# Configura parámetros de kernel para seguridad
+echo "3. Configurando parámetros de kernel..."
+cat >> /etc/sysctl.conf << 'SYSCTL_EOF'
+# Hardening de red
+net.ipv4.ip_forward = 0
+net.ipv4.conf.all.send_redirects = 0
+net.ipv4.conf.default.send_redirects = 0
+net.ipv4.conf.all.accept_redirects = 0
+net.ipv4.conf.default.accept_redirects = 0
+net.ipv4.conf.all.secure_redirects = 0
+net.ipv4.conf.default.secure_redirects = 0
+net.ipv4.icmp_ignore_bogus_error_responses = 1
+net.ipv4.icmp_echo_ignore_broadcasts = 1
+SYSCTL_EOF
+
+echo "Hardening básico aplicado. Reinicia para activar todos los cambios."
+EOF`"
+          - "Da permisos de ejecución al script:"
+          - "`chmod +x hardening_basico.sh`"
+          - "Crea un checklist de seguridad:"
+          - "`cat > checklist_seguridad.txt << 'EOF'
+CHECKLIST DE SEGURIDAD LINUX
+============================
+
+□ Usuarios y Autenticación:
+  □ Eliminar usuarios innecesarios
+  □ Deshabilitar login de root vía SSH
+  □ Implementar autenticación SSH por clave
+  □ Configurar políticas de contraseñas fuertes
+  □ Configurar timeout de sesión
+
+□ Servicios y Red:
+  □ Deshabilitar servicios innecesarios
+  □ Configurar firewall (iptables/ufw)
+  □ Cambiar puertos por defecto (SSH, etc.)
+  □ Implementar fail2ban para protección contra brute force
+
+□ Sistema de Archivos:
+  □ Configurar permisos apropiados en directorios críticos
+  □ Montar particiones con opciones nodev, nosuid cuando apropiado
+  □ Configurar umask restrictivo
+  □ Implementar auditoría de archivos (auditd)
+
+□ Monitoreo y Logs:
+  □ Configurar syslog centralizado
+  □ Implementar rotación de logs
+  □ Monitorear logs de seguridad
+  □ Configurar alertas para eventos críticos
+
+□ Actualizaciones y Patches:
+  □ Aplicar actualizaciones de seguridad regularmente
+  □ Configurar actualizaciones automáticas para patches críticos
+  □ Mantener inventario de software instalado
+EOF`"
+          - "Verifica el checklist creado:"
+          - "`cat checklist_seguridad.txt`"
+        tips:
+          - type: "warning"
+            title: "Pruebas de Hardening"
+            content: "Siempre prueba las medidas de hardening en un ambiente de testing antes de aplicarlas en producción. Algunas configuraciones pueden afectar la funcionalidad del sistema."
+          - type: "info"
+            title: "Monitoreo Continuo"
+            content: "La seguridad es un proceso continuo. Implementa monitoreo regular, auditorías periódicas y mantente actualizado sobre nuevas vulnerabilidades y amenazas."
+        validation:
+          - command: "test -f hardening_basico.sh && test -f checklist_seguridad.txt && echo 'success' || echo 'error'"
+            expectedOutput: "success"
+            errorMessage: "Los archivos de hardening y checklist no fueron creados correctamente."

@@ -43,14 +43,20 @@ type ResourceUsage struct {
 
 var statusCmd = &cobra.Command{
 	Use:   "status",
-	Short: "Exibe o status atual do GIRUS",
-	Long: `Exibe informações detalhadas sobre o estado atual do GIRUS, incluindo:
+	Short: common.T("Exibe o status atual do GIRUS", "Muestra el estado actual del GIRUS"),
+	Long: common.T(`Exibe informações detalhadas sobre o estado atual do GIRUS, incluindo:
 - Status do cluster
 - Pods em execução (backend e frontend)
 - Serviços expostos e portas
 - Laboratórios instalados
 - Uso de recursos
-- Versão do CLI`,
+- Versão do CLI`, `Muestra información detallada sobre el estado actual de GIRUS, incluyendo:
+- Estado del cluster
+- Pods en ejecución (backend y frontend)
+- Servicios expuestos y puertos
+- Laboratorios instalados
+- Uso de recursos
+- Versión de la CLI`),
 	Run: func(cmd *cobra.Command, args []string) {
 		// Criar formatadores de cores
 		green := color.New(color.FgGreen).SprintFunc()
@@ -64,38 +70,38 @@ var statusCmd = &cobra.Command{
 
 		// Exibir cabeçalho
 		fmt.Println(strings.Repeat("─", 80))
-		fmt.Println(headerColor("GIRUS STATUS"))
+		fmt.Println(headerColor(common.T("GIRUS STATUS", "GIRUS ESTADO")))
 		fmt.Println(strings.Repeat("─", 80))
 
 		// Verificar versão da CLI
-		fmt.Printf("%s: %s\n", bold("Versão da CLI"), magenta(common.Version))
+		fmt.Printf(common.T("%s: %s\n", "%s: %s\n"), bold(common.T("Versão da CLI", "Versión de la CLI")), magenta(common.Version))
 
 		// Verificar se o cluster existe
-		fmt.Println("\n" + headerColor("Verificando Cluster..."))
+		fmt.Println("\n" + headerColor(common.T("Verificando Cluster...", "Verificando Cluster...")))
 		clusterExists, clusterName := checkClusterExists()
 
 		if !clusterExists {
-			fmt.Println(red("Nenhum cluster Girus encontrado."))
-			fmt.Println("  Use 'girus create cluster' para criar um novo cluster.")
+			fmt.Println(red(common.T("Nenhum cluster Girus encontrado.", "Ningún cluster Girus encontrado.")))
+			fmt.Println(common.T("  Use 'girus create cluster' para criar um novo cluster.", "  Use 'girus create cluster' para crear un nuevo cluster."))
 			return
 		}
 
 		fmt.Printf("%s Cluster Girus '%s' está ativo\n", green("ATIVO"), magenta(clusterName))
 
 		// Verificar namespace girus
-		fmt.Println("\n" + headerColor("Verificando Namespace..."))
+		fmt.Println("\n" + headerColor(common.T("Verificando Namespace...", "Verificando Namespace...")))
 		namespaceExists := checkNamespaceExists()
 
 		if !namespaceExists {
-			fmt.Println(red("Namespace 'girus' não encontrado no cluster."))
-			fmt.Println("  O cluster pode não ter sido criado corretamente.")
+			fmt.Println(red(common.T("Namespace 'girus' não encontrado no cluster.", "El namespace 'girus' no se encontró en el cluster.")))
+			fmt.Println(common.T("  O cluster pode não ter sido criado corretamente.", "  El cluster puede no haberse creado correctamente."))
 			return
 		}
 
-		fmt.Printf("%s Namespace '%s' está presente\n", green("ATIVO"), magenta("girus"))
+		fmt.Printf(common.T("%s Namespace '%s' está presente\n", "%s Namespace '%s' está presente\n"), green(common.T("ATIVO", "ACTIVO")), magenta("girus"))
 
 		// Obter informações sobre os pods
-		fmt.Println("\n" + headerColor("Componentes da Aplicação:"))
+		fmt.Println("\n" + headerColor(common.T("Componentes da Aplicação:", "Componentes de la Aplicación:")))
 		backendStatus, frontendStatus := checkComponentStatus()
 
 		fmt.Printf("   %s: %s\n", bold("Backend"), backendStatus)

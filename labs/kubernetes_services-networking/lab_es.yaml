@@ -1,0 +1,69 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kubernetes-services-networking-lab-es
+  namespace: girus
+  labels:
+    app: girus-lab-template
+data:
+  lab.yaml: |
+    name: kubernetes-services-networking-es
+    title: "Services y Networking en Kubernetes"
+    description: "Aprende a configurar y administrar servicios y networking en Kubernetes. Este laboratorio guiado explora diferentes tipos de Services, DNS interno, y conceptos de networking en el cluster."
+    duration: 35m
+    image: "linuxtips/girus-devops:0.1"
+    privileged: true
+    tasks:
+      - name: "Creando Services"
+        description: "Aprende a crear y administrar diferentes tipos de Services."
+        steps:
+          - description: "Crea un Deployment para prueba"
+            command: "kubectl create deployment web-app --image=nginx:1.21"
+            expectedOutput: "deployment.apps/web-app created"
+            hint: "Usa el comando kubectl create deployment"
+
+          - description: "Crea un Service de tipo ClusterIP"
+            command: "kubectl expose deployment web-app --port=80 --target-port=80 --name=web-service"
+            expectedOutput: "service/web-service exposed"
+            hint: "Usa el comando kubectl expose deployment"
+
+          - description: "Verifica el Service creado"
+            command: "kubectl get services"
+            expectedOutput: "web-service"
+            hint: "Usa el comando kubectl get services"
+
+      - name: "Tipos de Service"
+        description: "Explora diferentes tipos de Services en Kubernetes."
+        steps:
+          - description: "Crea un Service de tipo NodePort"
+            command: "kubectl expose deployment web-app --port=80 --target-port=80 --name=web-nodeport --type=NodePort"
+            expectedOutput: "service/web-nodeport exposed"
+            hint: "Usa el comando kubectl expose con --type=NodePort"
+
+          - description: "Crea un Service de tipo LoadBalancer"
+            command: "kubectl expose deployment web-app --port=80 --target-port=80 --name=web-lb --type=LoadBalancer"
+            expectedOutput: "service/web-lb exposed"
+            hint: "Usa el comando kubectl expose con --type=LoadBalancer"
+
+          - description: "Verifica los Services creados"
+            command: "kubectl get services"
+            expectedOutput: "web-nodeport"
+            hint: "Verifica todos los servicios creados"
+
+      - name: "DNS y Networking"
+        description: "Implementa y prueba el DNS interno de Kubernetes."
+        steps:
+          - description: "Crea un pod de prueba"
+            command: "kubectl run test-pod --image=busybox -- sleep 3600"
+            expectedOutput: "pod/test-pod created"
+            hint: "Usa el comando kubectl run para crear un pod de prueba"
+
+          - description: "Prueba el DNS interno"
+            command: "kubectl exec test-pod -- nslookup web-service"
+            expectedOutput: "web-service"
+            hint: "Usa el comando kubectl exec con nslookup"
+
+          - description: "Prueba la conectividad"
+            command: "kubectl exec test-pod -- wget -O- web-service"
+            expectedOutput: "nginx"
+            hint: "Usa el comando kubectl exec con wget para probar la conexión"

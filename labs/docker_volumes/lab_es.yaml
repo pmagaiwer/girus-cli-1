@@ -1,0 +1,469 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: docker-volumes-lab-es
+  namespace: girus
+  labels:
+    app: girus-lab-template
+data:
+  lab.yaml: |
+    name: docker-volumes-es
+    title: "Docker: Volúmenes y Persistencia de Datos"
+    description: "Aprende a gestionar volúmenes Docker para persistencia de datos, incluyendo bind mounts, volúmenes nombrados y mejores prácticas para almacenamiento de datos en contenedores."
+    duration: 25m
+    image: "linuxtips/girus-devops:0.1"
+    privileged: true
+    tasks:
+      - name: "Fundamentos de Volúmenes Docker"
+        description: "Comprende los tipos de volúmenes y cuándo usar cada uno para persistencia de datos."
+        steps:
+          - "**¿Por qué necesitamos volúmenes?**"
+          - "Los contenedores Docker son efímeros por naturaleza. Cuando se eliminan, todos los datos dentro del contenedor se pierden."
+          - "Los volúmenes permiten persistir datos fuera del ciclo de vida del contenedor."
+          - "**Tipos de volúmenes en Docker:**"
+          - "1. **Bind Mounts**: Montan un directorio del host en el contenedor"
+          - "2. **Volúmenes Nombrados**: Gestionados completamente por Docker"
+          - "3. **tmpfs Mounts**: Datos en memoria (temporales)"
+          - "Vamos a explorar cada tipo con ejemplos prácticos:"
+          - "Primero, crea un directorio de trabajo:"
+          - "`mkdir -p ~/docker-volumes && cd ~/docker-volumes`"
+          - "**Ejemplo sin volúmenes (datos perdidos):**"
+          - "Ejecuta un contenedor y crea algunos datos:"
+          - "`docker run -it --name test-sin-volumes alpine:latest sh`"
+          - "Dentro del contenedor, ejecuta:"
+          - "`echo 'Datos importantes' > /tmp/archivo.txt`"
+          - "`cat /tmp/archivo.txt`"
+          - "`exit`"
+          - "Elimina el contenedor:"
+          - "`docker rm test-sin-volumes`"
+          - "Si intentas recuperar los datos, no podrás porque se perdieron con el contenedor."
+          - "**Lista de tipos de almacenamiento disponibles:**"
+          - "`docker system df -v`"
+          - "Este comando muestra el uso de espacio por volúmenes, imágenes y contenedores."
+        tips:
+          - type: "info"
+            title: "Ubicación de Volúmenes"
+            content: "En Linux, Docker almacena volúmenes en /var/lib/docker/volumes/. En Mac y Windows con Docker Desktop, están dentro de la VM de Docker."
+          - type: "warning"
+            title: "Persistencia de Datos"
+            content: "Sin volúmenes, TODOS los datos creados dentro del contenedor se pierden cuando el contenedor se elimina. Siempre usa volúmenes para datos importantes."
+        validation:
+          - command: "docker system df | grep -q 'VOLUMES' && echo 'success' || echo 'error'"
+            expectedOutput: "success"
+            errorMessage: "No se pudo verificar el sistema de volúmenes Docker."
+
+      - name: "Bind Mounts - Montando Directorios del Host"
+        description: "Aprende a usar bind mounts para montar directorios del sistema host en contenedores."
+        steps:
+          - "Los bind mounts vinculan un directorio específico del host con un directorio en el contenedor."
+          - "**Ventajas**: Control total sobre la ubicación de archivos, fácil acceso desde el host"
+          - "**Desventajas**: Dependiente de la estructura del sistema host, menos portables"
+          - "Crea un directorio para compartir datos:"
+          - "`mkdir -p ~/shared-data`"
+          - "Crea algunos archivos de prueba:"
+          - "`echo 'Archivo desde el host' > ~/shared-data/host-file.txt`"
+          - "`echo 'Configuración de la aplicación' > ~/shared-data/app.config`"
+          - "**Sintaxis básica de bind mount:**"
+          - "`docker run -it --rm -v /ruta/host:/ruta/contenedor imagen:tag comando`"
+          - "Ejecuta un contenedor con bind mount:"
+          - "`docker run -it --rm -v ~/shared-data:/app/data alpine:latest sh`"
+          - "Dentro del contenedor, verifica los archivos:"
+          - "`ls -la /app/data/`"
+          - "`cat /app/data/host-file.txt`"
+          - "Crea un nuevo archivo desde el contenedor:"
+          - "`echo 'Archivo creado desde el contenedor' > /app/data/container-file.txt`"
+          - "`exit`"
+          - "Verifica que el archivo se creó en el host:"
+          - "`ls -la ~/shared-data/`"
+          - "`cat ~/shared-data/container-file.txt`"
+          - "**Ejemplo práctico: Servidor web con contenido personalizado**"
+          - "Crea un directorio para contenido web:"
+          - "`mkdir -p ~/web-content`"
+          - "Crea una página HTML simple:"
+          - "`cat > ~/web-content/index.html << 'EOF'
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mi Sitio con Bind Mount</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background: #f5f5f5; }
+        .container { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { color: #333; }
+        .info { background: #e8f4fd; padding: 15px; border-radius: 5px; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <div class=\"container\">
+        <h1>¡Servidor Web con Docker Bind Mount!</h1>
+        <div class=\"info\">
+            <strong>Información:</strong><br>
+            Este contenido está montado desde el host usando bind mount.<br>
+            Puedes editar este archivo desde el host y los cambios se reflejarán inmediatamente.
+        </div>
+        <p>Tiempo de carga: <span id=\"time\"></span></p>
+    </div>
+    <script>
+        document.getElementById('time').textContent = new Date().toLocaleString();
+    </script>
+</body>
+</html>
+EOF`"
+          - "Ejecuta un servidor web con bind mount:"
+          - "`docker run -d --name web-bindmount -p 8080:80 -v ~/web-content:/usr/share/nginx/html:ro nginx:alpine`"
+          - "Prueba el servidor:"
+          - "`curl http://localhost:8080`"
+          - "Edita el archivo HTML desde el host:"
+          - "`echo '<h2>Actualización en tiempo real!</h2>' >> ~/web-content/index.html`"
+          - "Prueba nuevamente para ver los cambios:"
+          - "`curl http://localhost:8080`"
+          - "Los cambios se reflejan inmediatamente porque el archivo está montado."
+          - "Detén y elimina el contenedor:"
+          - "`docker stop web-bindmount && docker rm web-bindmount`"
+          - "**Permisos y seguridad en bind mounts:**"
+          - "Ejecuta un contenedor para verificar permisos:"
+          - "`docker run --rm -v ~/shared-data:/data alpine:latest ls -la /data`"
+          - "Nota los permisos de los archivos montados."
+        tips:
+          - type: "tip"
+            title: "Modo Solo Lectura"
+            content: "Agrega ':ro' al final del bind mount para montarlo en modo solo lectura: -v ~/data:/app/data:ro"
+          - type: "warning"
+            title: "Permisos de Archivos"
+            content: "Los bind mounts mantienen los permisos del sistema host. Esto puede causar problemas si el usuario del contenedor no tiene permisos apropiados."
+          - type: "info"
+            title: "Rutas Relativas"
+            content: "Usa rutas absolutas para bind mounts. Docker no resuelve rutas relativas y puede causar errores."
+        validation:
+          - command: "test -f ~/shared-data/container-file.txt && echo 'success' || echo 'error'"
+            expectedOutput: "success"
+            errorMessage: "El archivo creado desde el contenedor no se encuentra en el host."
+
+      - name: "Volúmenes Nombrados - Gestión por Docker"
+        description: "Aprende a crear y gestionar volúmenes nombrados manejados completamente por Docker."
+        steps:
+          - "Los volúmenes nombrados son la forma recomendada de persistir datos en Docker."
+          - "**Ventajas**: Portables, respaldables, gestionados por Docker, mejor rendimiento"
+          - "**Desventajas**: Menos control directo sobre la ubicación de archivos"
+          - "**Creando volúmenes nombrados:**"
+          - "Crea un volumen para base de datos:"
+          - "`docker volume create mi-base-datos`"
+          - "Crea un volumen para archivos de la aplicación:"
+          - "`docker volume create mi-app-files`"
+          - "Lista todos los volúmenes:"
+          - "`docker volume ls`"
+          - "Inspecciona los detalles del volumen:"
+          - "`docker volume inspect mi-base-datos`"
+          - "Observa la información como Mountpoint, Driver, etc."
+          - "**Usando volúmenes nombrados con contenedores:**"
+          - "Ejecuta un contenedor con volumen nombrado:"
+          - "`docker run -it --name test-volume -v mi-app-files:/app/data alpine:latest sh`"
+          - "Dentro del contenedor, crea algunos datos:"
+          - "`echo 'Datos persistentes en volumen nombrado' > /app/data/persistent-file.txt`"
+          - "`echo 'Configuración de aplicación' > /app/data/config.json`"
+          - "`ls -la /app/data/`"
+          - "`exit`"
+          - "Elimina el contenedor:"
+          - "`docker rm test-volume`"
+          - "Crea un nuevo contenedor usando el mismo volumen:"
+          - "`docker run -it --rm -v mi-app-files:/app/data alpine:latest sh`"
+          - "Verifica que los datos persisten:"
+          - "`ls -la /app/data/`"
+          - "`cat /app/data/persistent-file.txt`"
+          - "`exit`"
+          - "**Ejemplo práctico: Base de datos PostgreSQL persistente**"
+          - "Crea un volumen para PostgreSQL:"
+          - "`docker volume create postgres-data`"
+          - "Ejecuta PostgreSQL con volumen persistente:"
+          - "`docker run -d --name postgres-persistent \\
+  -e POSTGRES_DB=miapp \\
+  -e POSTGRES_USER=usuario \\
+  -e POSTGRES_PASSWORD=password123 \\
+  -v postgres-data:/var/lib/postgresql/data \\
+  -p 5432:5432 \\
+  postgres:13-alpine`"
+          - "Espera unos segundos para que inicie:"
+          - "`sleep 10`"
+          - "Conecta a la base de datos y crea una tabla:"
+          - "`docker exec -i postgres-persistent psql -U usuario -d miapp << 'PSQL_EOF'
+CREATE TABLE usuarios (
+    id SERIAL PRIMARY KEY,
+    nombre VARCHAR(100),
+    email VARCHAR(100),
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO usuarios (nombre, email) VALUES 
+('Juan Pérez', 'juan@email.com'),
+('María García', 'maria@email.com'),
+('Carlos López', 'carlos@email.com');
+
+SELECT * FROM usuarios;
+PSQL_EOF`"
+          - "Detén y elimina el contenedor de PostgreSQL:"
+          - "`docker stop postgres-persistent && docker rm postgres-persistent`"
+          - "Inicia un nuevo contenedor PostgreSQL con el mismo volumen:"
+          - "`docker run -d --name postgres-recovered \\
+  -e POSTGRES_DB=miapp \\
+  -e POSTGRES_USER=usuario \\
+  -e POSTGRES_PASSWORD=password123 \\
+  -v postgres-data:/var/lib/postgresql/data \\
+  -p 5432:5432 \\
+  postgres:13-alpine`"
+          - "Espera y verifica que los datos persisten:"
+          - "`sleep 10`"
+          - "`docker exec postgres-recovered psql -U usuario -d miapp -c 'SELECT * FROM usuarios;'`"
+          - "Los datos deben seguir ahí, demostrando la persistencia."
+          - "Limpia:"
+          - "`docker stop postgres-recovered && docker rm postgres-recovered`"
+        tips:
+          - type: "info"
+            title: "Backup de Volúmenes"
+            content: "Usa 'docker run --rm -v mi-volumen:/data -v $(pwd):/backup alpine tar czf /backup/backup.tar.gz -C /data .' para crear backups."
+          - type: "tip"
+            title: "Naming Convention"
+            content: "Usa nombres descriptivos para volúmenes: proyecto-tipo-ambiente (ej: myapp-db-production, myapp-uploads-staging)."
+          - type: "warning"
+            title: "Eliminación de Volúmenes"
+            content: "Los volúmenes nombrados no se eliminan automáticamente cuando eliminas contenedores. Usa 'docker volume rm' o 'docker volume prune' para limpiar."
+        validation:
+          - command: "docker volume ls | grep -q mi-app-files && echo 'success' || echo 'error'"
+            expectedOutput: "success"
+            errorMessage: "El volumen nombrado no fue creado correctamente."
+
+      - name: "Compartiendo Volúmenes entre Contenedores"
+        description: "Aprende a compartir datos entre múltiples contenedores usando volúmenes."
+        steps:
+          - "Los volúmenes pueden ser compartidos entre múltiples contenedores simultáneamente."
+          - "Esto es útil para arquitecturas de microservicios, caches compartidos, logs centralizados, etc."
+          - "**Ejemplo: Sistema de logs compartidos**"
+          - "Crea un volumen para logs compartidos:"
+          - "`docker volume create shared-logs`"
+          - "**Contenedor 1: Aplicación que genera logs**"
+          - "Crea un script generador de logs:"
+          - "`cat > log-generator.sh << 'EOF'
+#!/bin/bash
+while true; do
+    echo \"$(date '+%Y-%m-%d %H:%M:%S') [APP1] - Log desde aplicación 1: Procesando usuario $(( RANDOM % 1000 ))\" >> /var/log/app/application.log
+    echo \"$(date '+%Y-%m-%d %H:%M:%S') [APP1] - Memoria usada: $(( RANDOM % 100 ))%\" >> /var/log/app/system.log
+    sleep 3
+done
+EOF`"
+          - "`chmod +x log-generator.sh`"
+          - "Ejecuta el primer contenedor (generador de logs):"
+          - "`docker run -d --name app1-logger \\
+  -v shared-logs:/var/log/app \\
+  -v $(pwd)/log-generator.sh:/app/log-generator.sh \\
+  alpine:latest \\
+  sh -c '/app/log-generator.sh'`"
+          - "**Contenedor 2: Otra aplicación que también genera logs**"
+          - "Crea otro script generador:"
+          - "`cat > log-generator2.sh << 'EOF'
+#!/bin/bash
+while true; do
+    echo \"$(date '+%Y-%m-%d %H:%M:%S') [APP2] - Log desde aplicación 2: Orden procesada #$(( RANDOM % 10000 ))\" >> /var/log/app/application.log
+    echo \"$(date '+%Y-%m-%d %H:%M:%S') [APP2] - CPU usada: $(( RANDOM % 100 ))%\" >> /var/log/app/system.log
+    sleep 5
+done
+EOF`"
+          - "`chmod +x log-generator2.sh`"
+          - "Ejecuta el segundo contenedor:"
+          - "`docker run -d --name app2-logger \\
+  -v shared-logs:/var/log/app \\
+  -v $(pwd)/log-generator2.sh:/app/log-generator2.sh \\
+  alpine:latest \\
+  sh -c '/app/log-generator2.sh'`"
+          - "**Contenedor 3: Monitor de logs (lector)**"
+          - "Ejecuta un contenedor para monitorear los logs:"
+          - "`docker run -d --name log-monitor \\
+  -v shared-logs:/var/log/app:ro \\
+  alpine:latest \\
+  sh -c 'while true; do echo \"=== LOGS DE APLICACIÓN ===\"; tail -n 5 /var/log/app/application.log; echo; echo \"=== LOGS DE SISTEMA ===\"; tail -n 5 /var/log/app/system.log; echo; sleep 10; done'`"
+          - "Verifica los logs generados:"
+          - "`sleep 10`"
+          - "`docker logs log-monitor | tail -20`"
+          - "Verifica que múltiples aplicaciones escriban al mismo volumen:"
+          - "`docker exec app1-logger ls -la /var/log/app/`"
+          - "`docker exec app2-logger ls -la /var/log/app/`"
+          - "Examina el contenido de los archivos de log compartidos:"
+          - "`docker exec log-monitor cat /var/log/app/application.log`"
+          - "**Ejemplo: Cache compartido entre aplicaciones**"
+          - "Crea un volumen para cache Redis:"
+          - "`docker volume create redis-cache`"
+          - "Ejecuta Redis con volumen persistente:"
+          - "`docker run -d --name redis-server \\
+  -v redis-cache:/data \\
+  -p 6379:6379 \\
+  redis:7-alpine \\
+  redis-server --appendonly yes`"
+          - "Ejecuta una aplicación que usa el cache:"
+          - "`docker run -it --rm --link redis-server:redis alpine:latest sh`"
+          - "Dentro del contenedor, instala redis-cli y prueba:"
+          - "`apk add --no-cache redis`"
+          - "`redis-cli -h redis ping`"
+          - "`redis-cli -h redis set \"user:1001\" \"Juan Perez\"`"
+          - "`redis-cli -h redis get \"user:1001\"`"
+          - "`exit`"
+          - "El cache persiste en el volumen y puede ser accedido por otros contenedores."
+          - "**Limpieza:**"
+          - "`docker stop app1-logger app2-logger log-monitor redis-server`"
+          - "`docker rm app1-logger app2-logger log-monitor redis-server`"
+        tips:
+          - type: "info"
+            title: "Patrones de Uso"
+            content: "Volúmenes compartidos son útiles para: logs centralizados, caches distribuidos, archivos de configuración compartidos, y datos de aplicaciones que deben persistir."
+          - type: "warning"
+            title: "Concurrencia"
+            content: "Ten cuidado con la escritura concurrente al mismo archivo. Usa logs rotativos, bases de datos apropiadas o sistemas de colas para escrituras concurrentes."
+          - type: "tip"
+            title: "Modo Solo Lectura"
+            content: "Monta volúmenes en modo solo lectura (:ro) para contenedores que no necesitan escribir, mejorando la seguridad."
+        validation:
+          - command: "docker volume ls | grep -q shared-logs && echo 'success' || echo 'error'"
+            expectedOutput: "success"
+            errorMessage: "El volumen compartido no fue creado correctamente."
+
+      - name: "Gestión Avanzada y Mejores Prácticas"
+        description: "Aprende técnicas avanzadas de gestión de volúmenes y mejores prácticas para producción."
+        steps:
+          - "**Backup y Restore de Volúmenes**"
+          - "Crea un volumen con datos importantes:"
+          - "`docker volume create important-data`"
+          - "Agrega algunos datos al volumen:"
+          - "`docker run --rm -v important-data:/data alpine:latest sh -c \\
+  'echo \"Datos críticos de la aplicación\" > /data/critical.txt && \\
+   echo \"Configuración de producción\" > /data/production.config && \\
+   mkdir -p /data/uploads && \\
+   echo \"Archivo subido por usuario\" > /data/uploads/user-file.jpg'`"
+          - "**Crear backup del volumen:**"
+          - "`docker run --rm \\
+  -v important-data:/source:ro \\
+  -v $(pwd):/backup \\
+  alpine:latest \\
+  tar czf /backup/important-data-backup-$(date +%Y%m%d).tar.gz -C /source .`"
+          - "Verifica el backup:"
+          - "`ls -la important-data-backup-*.tar.gz`"
+          - "**Simular pérdida de datos (eliminar volumen):**"
+          - "`docker volume rm important-data`"
+          - "**Restaurar desde backup:**"
+          - "Crea un nuevo volumen:"
+          - "`docker volume create important-data-restored`"
+          - "Restaura los datos:"
+          - "`docker run --rm \\
+  -v important-data-restored:/target \\
+  -v $(pwd):/backup \\
+  alpine:latest \\
+  sh -c 'cd /target && tar xzf /backup/important-data-backup-*.tar.gz'`"
+          - "Verifica la restauración:"
+          - "`docker run --rm -v important-data-restored:/data alpine:latest ls -la /data`"
+          - "`docker run --rm -v important-data-restored:/data alpine:latest cat /data/critical.txt`"
+          - "**Migración de volúmenes entre hosts:**"
+          - "Crea un script de migración:"
+          - "`cat > migrate-volume.sh << 'EOF'
+#!/bin/bash
+VOLUME_NAME=$1
+BACKUP_FILE=\"${VOLUME_NAME}-migration-$(date +%Y%m%d-%H%M%S).tar.gz\"
+
+if [ -z \"$VOLUME_NAME\" ]; then
+    echo \"Uso: $0 <nombre-del-volumen>\"
+    exit 1
+fi
+
+echo \"Creando backup de migración para volumen: $VOLUME_NAME\"
+docker run --rm \\
+  -v \"$VOLUME_NAME\":/source:ro \\
+  -v \"$(pwd)\":/backup \\
+  alpine:latest \\
+  tar czf \"/backup/$BACKUP_FILE\" -C /source .
+
+echo \"Backup creado: $BACKUP_FILE\"
+echo \"Para restaurar en otro host:\"
+echo \"1. Copiar $BACKUP_FILE al host destino\"
+echo \"2. docker volume create $VOLUME_NAME\"
+echo \"3. docker run --rm -v $VOLUME_NAME:/target -v \\$(pwd):/backup alpine:latest sh -c 'cd /target && tar xzf /backup/$BACKUP_FILE'\"
+EOF`"
+          - "`chmod +x migrate-volume.sh`"
+          - "Usa el script para migrar un volumen:"
+          - "`./migrate-volume.sh important-data-restored`"
+          - "**Monitoreo de uso de volúmenes:**"
+          - "Crea un script de monitoreo:"
+          - "`cat > monitor-volumes.sh << 'EOF'
+#!/bin/bash
+echo \"=== REPORTE DE VOLÚMENES DOCKER ===\"
+echo \"Fecha: $(date)\"
+echo
+
+echo \"=== VOLÚMENES EXISTENTES ===\"
+docker volume ls
+
+echo
+echo \"=== USO DE ESPACIO ===\"
+docker system df -v | grep -A 10 \"Local Volumes\"
+
+echo
+echo \"=== VOLÚMENES HUÉRFANOS (no usados) ===\"
+docker volume ls -f dangling=true
+
+echo
+echo \"=== DETALLE DE VOLÚMENES GRANDES ===\"
+for volume in $(docker volume ls -q); do
+    size=$(docker run --rm -v \"$volume\":/data alpine:latest du -sh /data 2>/dev/null | cut -f1)
+    echo \"Volumen: $volume | Tamaño: $size\"
+done
+
+echo
+echo \"=== RECOMENDACIONES ===\"
+echo \"- Usa 'docker volume prune' para limpiar volúmenes huérfanos\"
+echo \"- Hacer backups regulares de volúmenes importantes\"
+echo \"- Monitorear el crecimiento de volúmenes en producción\"
+EOF`"
+          - "`chmod +x monitor-volumes.sh`"
+          - "Ejecuta el monitoreo:"
+          - "`./monitor-volumes.sh`"
+          - "**Configuración de políticas de cleanup:**"
+          - "Crea un script de limpieza automatizada:"
+          - "`cat > cleanup-volumes.sh << 'EOF'
+#!/bin/bash
+echo \"Iniciando limpieza de volúmenes Docker...\"
+
+# Backup de volúmenes importantes antes de limpiar
+IMPORTANT_VOLUMES=(\"postgres-data\" \"redis-cache\" \"important-data-restored\")
+
+for vol in \"${IMPORTANT_VOLUMES[@]}\"; do
+    if docker volume ls | grep -q \"$vol\"; then
+        echo \"Creando backup de seguridad para: $vol\"
+        docker run --rm \\
+          -v \"$vol\":/source:ro \\
+          -v \"$(pwd)\":/backup \\
+          alpine:latest \\
+          tar czf \"/backup/safety-backup-$vol-$(date +%Y%m%d).tar.gz\" -C /source . 2>/dev/null || echo \"Backup falló para $vol\"
+    fi
+done
+
+# Limpiar volúmenes huérfanos
+echo \"Limpiando volúmenes huérfanos...\"
+docker volume prune -f
+
+# Mostrar estadísticas finales
+echo \"Limpieza completada. Estado actual:\"
+docker system df
+
+echo \"Backups de seguridad creados en: $(pwd)\"
+ls -la safety-backup-*.tar.gz 2>/dev/null || echo \"No hay backups de seguridad\"
+EOF`"
+          - "`chmod +x cleanup-volumes.sh`"
+          - "**NOTA**: No ejecutes el script de limpieza en este laboratorio para preservar los volúmenes de ejemplo."
+          - "En producción, ejecutarías: `./cleanup-volumes.sh`"
+        tips:
+          - type: "tip"
+            title: "Automatización de Backups"
+            content: "Programa backups automáticos usando cron para volúmenes críticos: '0 2 * * * /path/to/backup-script.sh' para backups diarios a las 2 AM."
+          - type: "warning"
+            title: "Testing de Restauración"
+            content: "Siempre prueba tus procesos de restauración regularmente. Un backup que no se puede restaurar es inútil."
+          - type: "info"
+            title: "Drivers de Volumen"
+            content: "Docker soporta drivers de volumen personalizados para almacenamiento en red (NFS, AWS EBS, etc.). Útil para clusters y alta disponibilidad."
+        validation:
+          - command: "test -f important-data-backup-*.tar.gz && echo 'success' || echo 'error'"
+            expectedOutput: "success"
+            errorMessage: "El backup del volumen no fue creado correctamente."

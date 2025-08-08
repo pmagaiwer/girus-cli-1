@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/badtuxx/girus-cli/internal/common"
 	"github.com/badtuxx/girus-cli/internal/helpers"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
@@ -19,7 +20,7 @@ var verboseDelete bool
 
 var deleteCmd = &cobra.Command{
 	Use:   "delete [subcommand]",
-	Short: "Comandos para excluir recursos",
+	Short: common.T("Comandos para excluir recursos", "Comandos para eliminar recursos"),
 	Run: func(cmd *cobra.Command, args []string) {
 		cmd.Help()
 	},
@@ -27,8 +28,8 @@ var deleteCmd = &cobra.Command{
 
 var deleteClusterCmd = &cobra.Command{
 	Use:   "cluster",
-	Short: "Exclui o cluster Girus",
-	Long:  "Exclui o cluster Girus do sistema, incluindo todos os recursos do Girus.",
+	Short: common.T("Exclui o cluster Girus", "Elimina el cluster Girus"),
+	Long:  common.T("Exclui o cluster Girus do sistema, incluindo todos os recursos do Girus.", "Elimina el cluster Girus del sistema, incluyendo todos los recursos de Girus."),
 	Run: func(cmd *cobra.Command, args []string) {
 		// Criar formatadores de cores
 		red := color.New(color.FgRed).SprintFunc()
@@ -43,7 +44,7 @@ var deleteClusterCmd = &cobra.Command{
 		checkCmd := exec.Command("kind", "get", "clusters")
 		output, err := checkCmd.Output()
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "%s Erro ao obter lista de clusters: %v\n", red("ERRO:"), err)
+			fmt.Fprintf(os.Stderr, "%s %s: %v\n", red("ERRO:"), common.T("Erro ao obter lista de clusters", "Error al obtener la lista de clusters"), err)
 			os.Exit(1)
 		}
 
@@ -57,27 +58,28 @@ var deleteClusterCmd = &cobra.Command{
 		}
 
 		if !clusterExists {
-			fmt.Fprintf(os.Stderr, "%s Cluster %s não encontrado\n", red("ERRO:"), magenta("girus"))
+			fmt.Fprintf(os.Stderr, "%s %s %s %s\n", red("ERRO:"), common.T("Cluster", "Cluster"), magenta("girus"), common.T("não encontrado", "no encontrado"))
 			os.Exit(1)
 		}
 
 		// Confirmar a exclusão se -f/--force não estiver definido
 		if !forceDelete {
-			fmt.Printf("%s Você está prestes a excluir o cluster %s. Esta ação é irreversível.\n",
+			fmt.Printf(common.T("%s Você está prestes a excluir o cluster %s. Esta ação é irreversível.\n",
+				"%s Está a punto de eliminar el cluster %s. Esta acción es irreversible.\n"),
 				yellow("AVISO:"), magenta(clusterName))
-			fmt.Print("Deseja continuar? [s/N]: ")
+			fmt.Print(common.T("Deseja continuar? [s/N]: ", "¿Desea continuar? [s/N]: "))
 
 			reader := bufio.NewReader(os.Stdin)
 			confirmStr, _ := reader.ReadString('\n')
 			confirm := strings.TrimSpace(strings.ToLower(confirmStr))
 
 			if confirm != "s" && confirm != "sim" && confirm != "y" && confirm != "yes" {
-				fmt.Println("Operação cancelada pelo usuário.")
+				fmt.Println(common.T("Operação cancelada pelo usuário.", "Operación cancelada por el usuario."))
 				return
 			}
 		}
 
-		fmt.Println(headerColor("Excluindo o cluster Girus..."))
+		fmt.Println(headerColor(common.T("Excluindo o cluster Girus...", "Eliminando el cluster Girus...")))
 
 		if verboseDelete {
 			// Excluir o cluster mostrando o output normal
@@ -86,14 +88,14 @@ var deleteClusterCmd = &cobra.Command{
 			deleteCmd.Stderr = os.Stderr
 
 			if err := deleteCmd.Run(); err != nil {
-				fmt.Fprintf(os.Stderr, "%s Erro ao excluir o cluster Girus: %v\n", red("ERRO:"), err)
+				fmt.Fprintf(os.Stderr, "%s %s: %v\n", red("ERRO:"), common.T("Erro ao excluir o cluster Girus", "Error al eliminar el cluster Girus"), err)
 				os.Exit(1)
 			}
 		} else {
 			// Usando barra de progresso (padrão)
 			barConfig := helpers.ProgressBarConfig{
 				Total:            100,
-				Description:      "Excluindo cluster...",
+				Description:      common.T("Excluindo cluster...", "Eliminando cluster..."),
 				Width:            80,
 				Throttle:         65,
 				SpinnerType:      14,
@@ -111,7 +113,7 @@ var deleteClusterCmd = &cobra.Command{
 			// Iniciar o comando
 			err := deleteCmd.Start()
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "%s Erro ao iniciar o comando: %v\n", red("ERRO:"), err)
+				fmt.Fprintf(os.Stderr, "%s %s: %v\n", red("ERRO:"), common.T("Erro ao iniciar o comando", "Error al iniciar el comando"), err)
 				os.Exit(1)
 			}
 
@@ -135,12 +137,12 @@ var deleteClusterCmd = &cobra.Command{
 			bar.Finish()
 
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "%s Erro ao excluir o cluster Girus: %v\n%s\n", red("ERRO:"), err, stderr.String())
+				fmt.Fprintf(os.Stderr, "%s %s: %v\n%s\n", red("ERRO:"), common.T("Erro ao excluir o cluster Girus", "Error al eliminar el cluster Girus"), err, stderr.String())
 				os.Exit(1)
 			}
 		}
 
-		fmt.Println("\n" + green("SUCESSO:") + " Cluster " + magenta("Girus") + " excluído com sucesso!")
+		fmt.Println("\n" + green(common.T("SUCESSO:", "ÉXITO:")) + " " + common.T("Cluster", "Cluster") + " " + magenta("Girus") + " " + common.T("excluído com sucesso!", "eliminado con éxito!"))
 	},
 }
 
@@ -148,8 +150,8 @@ func init() {
 	deleteCmd.AddCommand(deleteClusterCmd)
 
 	// Flag para forçar a exclusão sem confirmação
-	deleteClusterCmd.Flags().BoolVarP(&forceDelete, "force", "f", false, "Força a exclusão sem confirmação")
+	deleteClusterCmd.Flags().BoolVarP(&forceDelete, "force", "f", false, common.T("Força a exclusão sem confirmação", "Fuerza la eliminación sin confirmación"))
 
 	// Flag para modo detalhado com output completo
-	deleteClusterCmd.Flags().BoolVarP(&verboseDelete, "verbose", "v", false, "Modo detalhado com output completo em vez da barra de progresso")
+	deleteClusterCmd.Flags().BoolVarP(&verboseDelete, "verbose", "v", false, common.T("Modo detalhado com output completo em vez da barra de progresso", "Modo detallado con salida completa en lugar de la barra de progreso"))
 }

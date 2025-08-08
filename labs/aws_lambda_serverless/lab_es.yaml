@@ -1,0 +1,420 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: aws-lambda-serverless-lab-es
+  namespace: girus
+  labels:
+    app: girus-lab-template
+data:
+  lab.yaml: |
+    name: aws-lambda-serverless-es
+    title: "AWS Lambda: Computación Serverless"
+    description: "Explora AWS Lambda, el servicio de computación serverless de AWS. Aprende a crear funciones, configurar eventos y construir aplicaciones sin administrar servidores."
+    duration: 20m
+    timerEnabled: true
+    maxDuration: 30m
+    image: "linuxtips/girus-localstack:0.1"
+    youtubeVideo: ""
+    privileged: true
+    type: "aws"
+    entrypoint: "/entrypoint.sh"
+    tasks:
+      - name: "Instalando Vim"
+        description: "Actualiza los repositorios del sistema e instala el editor Vim"
+        steps:
+          - "Actualiza los repositorios del sistema:"
+          - "`apt update`"
+          - "Instala el editor Vim:"
+          - "`apt install -y vim`"
+          - "Verifica si Vim fue instalado correctamente:"
+          - "`vim --version | head -n 1`"
+        tips:
+          - type: "info"
+            title: "Comandos básicos de Vim"
+            content: "Para abrir un archivo usa 'vim archivo.py'. Para insertar texto, presiona 'i'. Para guardar y salir, presiona 'ESC' y escribe ':wq'. Para salir sin guardar, presiona 'ESC' y escribe ':q!'."
+        validation:
+          - command: "which vim > /dev/null && echo 'success' || echo 'error'"
+            expectedOutput: "success"
+            errorMessage: "Vim no fue instalado correctamente. Intenta ejecutar 'apt install -y vim' nuevamente."
+
+      - name: "Creando Funciones Lambda Básicas"
+        description: "Crea tu primera función Lambda usando Python"
+        steps:
+          - "Crea un directorio para el código de la función:"
+          - "`mkdir -p lambda-hello`"
+          - "Crea un archivo Python con el código de la función usando vim:"
+          - "`vim lambda-hello/hello.py`"
+          - "En el editor vim, presiona 'i' para entrar en modo de inserción y añade el siguiente contenido:"
+          - "```python
+            import json
+
+            def lambda_handler(event, context):
+                print('Evento recibido:', event)
+                return {
+                    'statusCode': 200,
+                    'body': json.dumps('¡Hola desde Lambda!')
+                }
+            ```"
+          - "Para guardar el archivo y salir de vim, presiona 'ESC' y escribe ':wq'"
+          - "Comprime el archivo para crear un paquete de despliegue:"
+          - "`cd lambda-hello && zip hello.zip hello.py && cd ..`"
+          - "Crea una función Lambda usando el paquete zip:"
+          - "`aws lambda create-function \\\n    --function-name hello-world \\\n    --runtime python3.9 \\\n    --handler hello.lambda_handler \\\n    --zip-file fileb://lambda-hello/hello.zip \\\n    --role arn:aws:iam::000000000000:role/lambda-role`"
+          - "Lista las funciones Lambda creadas:"
+          - "`aws lambda list-functions`"
+          - "Invoca la función para ver la respuesta:"
+          - "`aws lambda invoke \\\n    --function-name hello-world \\\n    --payload '{}' \\\n    output.json`"
+          - "Verifica la salida de la función:"
+          - "`cat output.json`"
+        tips:
+          - type: "info"
+            title: "Modelo de Programación Lambda"
+            content: "Todas las funciones Lambda tienen una función de manipulador que es invocada cuando la función se ejecuta. Recibe dos argumentos: event (datos del evento que activó la función) y context (información sobre la invocación)."
+          - type: "tip"
+            title: "Runtimes Soportados"
+            content: "AWS Lambda soporta varios lenguajes como Node.js, Python, Java, Go, Ruby, .NET Core y más. En nuestro laboratorio usamos Python, pero puedes usar cualquier lenguaje soportado."
+        validation:
+          - command: "aws lambda list-functions --query 'Functions[?FunctionName==`hello-world`]' | grep -q hello-world && echo 'success' || echo 'error'"
+            expectedOutput: "success"
+            errorMessage: "La función Lambda 'hello-world' no fue creada correctamente."
+      
+      - name: "Creando Funciones con Variables de Entorno y Tiempos de Ejecución"
+        description: "Configura variables de entorno y timeouts para tus funciones Lambda"
+        steps:
+          - "Crea una nueva función que usa variables de entorno:"
+          - "`mkdir -p lambda-env`"
+          - "Crea el archivo de función usando vim:"
+          - "`vim lambda-env/env_function.py`"
+          - "En el editor vim, presiona 'i' para entrar en modo de inserción y añade el siguiente contenido:"
+          - "```python
+            import json
+            import os
+
+            def lambda_handler(event, context):
+                # Obtener valores de las variables de entorno
+                ambiente = os.environ.get('AMBIENTE')
+                nombre_app = os.environ.get('NOMBRE_APP')
+                
+                # Crear respuesta
+                respuesta = {
+                    'mensaje': f'Función ejecutada en el ambiente {ambiente} para la aplicación {nombre_app}',
+                    'event': event
+                }
+                
+                return {
+                    'statusCode': 200,
+                    'body': json.dumps(respuesta)
+                }
+            ```"
+          - "Para guardar el archivo y salir de vim, presiona 'ESC' y escribe ':wq'"
+          - "Comprime el código de la función:"
+          - "`cd lambda-env && zip env_function.zip env_function.py && cd ..`"
+          - "Crea la función con variables de entorno y timeout personalizado:"
+          - "`aws lambda create-function \\\n    --function-name ambiente-function \\\n    --runtime python3.9 \\\n    --handler env_function.lambda_handler \\\n    --zip-file fileb://lambda-env/env_function.zip \\\n    --role arn:aws:iam::000000000000:role/lambda-role \\\n    --environment \"Variables={AMBIENTE=produccion,NOMBRE_APP=mi-servicio}\" \\\n    --timeout 10 \\\n    --memory-size 256`"
+          - "Invoca la función para ver el resultado:"
+          - "`aws lambda invoke \\\n    --function-name ambiente-function \\\n    --payload '{\"usuario\": \"prueba\"}' \\\n    env-output.json`"
+          - "Ve la respuesta que incluye las variables de entorno:"
+          - "`cat env-output.json`"
+          - "Actualiza las variables de entorno de la función:"
+          - "`aws lambda update-function-configuration \\\n    --function-name ambiente-function \\\n    --environment \"Variables={AMBIENTE=desarrollo,NOMBRE_APP=test-app}\"`"
+          - "Invoca la función nuevamente para ver los cambios:"
+          - "`aws lambda invoke \\\n    --function-name ambiente-function \\\n    --payload '{\"usuario\": \"prueba\"}' \\\n    env-output-2.json`"
+          - "Ve la respuesta actualizada:"
+          - "`cat env-output-2.json`"
+        tips:
+          - type: "info"
+            title: "Variables de Entorno"
+            content: "Las variables de entorno en Lambda son una forma de pasar configuraciones a tu función sin necesidad de alterar el código. Son útiles para separar configuraciones por entorno (dev, prueba, producción)."
+          - type: "warning"
+            title: "Límites de Lambda"
+            content: "Ten en cuenta los límites de Lambda: timeout máximo de 15 minutos, tamaño máximo de paquete de 50MB descomprimido, y límites de memoria de 128MB a 10GB."
+        validation:
+          - command: "aws lambda get-function-configuration --function-name ambiente-function --query 'Environment.Variables.AMBIENTE' | grep -q desarrollo && echo 'success' || echo 'error'"
+            expectedOutput: "success"
+            errorMessage: "La variable de entorno 'AMBIENTE' no fue actualizada correctamente a 'desarrollo'."
+      
+      - name: "Configurando Disparadores e Integraciones"
+        description: "Configura disparadores para invocar funciones Lambda automáticamente"
+        steps:
+          - "Primero, vamos a crear un bucket S3 para usar como disparador:"
+          - "`aws s3 mb s3://mi-bucket-lambda`"
+          - "Crea una función que procesará los eventos de S3:"
+          - "`mkdir -p lambda-s3`"
+          - "Crea el archivo de la función S3 usando vim:"
+          - "`vim lambda-s3/s3_processor.py`"
+          - "En el editor vim, presiona 'i' para entrar en modo de inserción y añade el siguiente contenido:"
+          - "```python
+            import json
+
+            def lambda_handler(event, context):
+                # Extraer información de los eventos de S3
+                records = event.get('Records', [])
+                bucket_notifications = []
+                
+                for record in records:
+                    if record.get('eventSource') == 'aws:s3':
+                        bucket = record.get('s3', {}).get('bucket', {}).get('name')
+                        objeto = record.get('s3', {}).get('object', {}).get('key')
+                        evento = record.get('eventName')
+                        
+                        bucket_notifications.append({
+                            'bucket': bucket,
+                            'objeto': objeto,
+                            'evento': evento
+                        })
+                
+                return {
+                    'statusCode': 200,
+                    'body': json.dumps({
+                        'mensaje': f'Procesados {len(bucket_notifications)} eventos de S3',
+                        'detalles': bucket_notifications
+                    })
+                }
+            ```"
+          - "Para guardar el archivo y salir de vim, presiona 'ESC' y escribe ':wq'"
+          - "Comprime el código de la función:"
+          - "`cd lambda-s3 && zip s3_processor.zip s3_processor.py && cd ..`"
+          - "Crea la función Lambda:"
+          - "`aws lambda create-function \\\n    --function-name s3-processor \\\n    --runtime python3.9 \\\n    --handler s3_processor.lambda_handler \\\n    --zip-file fileb://lambda-s3/s3_processor.zip \\\n    --role arn:aws:iam::000000000000:role/lambda-role`"
+          - "Añade permiso para que S3 invoque la función Lambda:"
+          - "`aws lambda add-permission \\\n    --function-name s3-processor \\\n    --statement-id s3-trigger \\\n    --action lambda:InvokeFunction \\\n    --principal s3.amazonaws.com \\\n    --source-arn arn:aws:s3:::mi-bucket-lambda`"
+          - "Configura la notificación en el bucket S3 para invocar la función Lambda:"
+          - "`aws s3api put-bucket-notification-configuration \\\n    --bucket mi-bucket-lambda \\\n    --notification-configuration '{\n      \"LambdaFunctionConfigurations\": [\n        {\n          \"LambdaFunctionArn\": \"arn:aws:lambda:us-east-1:000000000000:function:s3-processor\",\n          \"Events\": [\"s3:ObjectCreated:*\"]\n        }\n      ]\n    }'`"
+          - "Crea un archivo de prueba:"
+          - "`vim test-file.txt`"
+          - "En el editor vim, presiona 'i' para entrar en modo de inserción y añade el siguiente contenido:"
+          - "```
+            Contenido de prueba para disparador Lambda
+            ```"
+          - "Para guardar el archivo y salir de vim, presiona 'ESC' y escribe ':wq'"
+          - "Sube el archivo al bucket:"
+          - "`aws s3 cp test-file.txt s3://mi-bucket-lambda/`"
+          - "Lambda debería ser invocado automáticamente. Puedes verificar en los logs."
+        tips:
+          - type: "info"
+            title: "Fuentes de Eventos Lambda"
+            content: "Además de S3, Lambda puede ser invocado por muchos otros servicios como API Gateway, DynamoDB, SQS, SNS, EventBridge, CloudWatch Events y más."
+          - type: "warning"
+            title: "Permisos de Ejecución"
+            content: "Asegúrate de que la función Lambda tenga los permisos necesarios (IAM role) para acceder a otros recursos de AWS que necesite."
+        validation:
+          - command: "aws s3 ls s3://mi-bucket-lambda/ | grep -q test-file.txt && echo 'success' || echo 'error'"
+            expectedOutput: "success"
+            errorMessage: "El archivo test-file.txt no fue cargado correctamente en el bucket S3."
+          - command: "aws lambda get-policy --function-name s3-processor | grep -q s3-trigger && echo 'success' || echo 'error'"
+            expectedOutput: "success"
+            errorMessage: "La permisión del S3 para invocar la función Lambda no fue configurada correctamente."
+      
+      - name: "Creando una API serverless"
+        description: "Integre Lambda con API Gateway para crear una API serverless"
+        steps:
+          - "Crea una función Lambda para la API:"
+          - "`mkdir -p lambda-api`"
+          - "Crea el archivo de la función API usando vim:"
+          - "`vim lambda-api/api_function.py`"
+          - "En el editor vim, presiona 'i' para entrar en modo de inserción y añade el siguiente contenido:"
+          - "```python
+            import json
+
+            def lambda_handler(event, context):
+                # Extraer parámetros y cuerpo de la solicitud
+                http_method = event.get('httpMethod', 'GET')
+                path = event.get('path', '/')
+                query_params = event.get('queryStringParameters', {})
+                body = event.get('body')
+                
+                # Procesamiento basado en el método HTTP
+                if http_method == 'GET':
+                    response_body = {
+                        'message': 'Este es un endpoint GET',
+                        'path': path,
+                        'query_params': query_params
+                    }
+                elif http_method == 'POST':
+                    try:
+                        if body:
+                            body_json = json.loads(body)
+                        else:
+                            body_json = {}
+                        response_body = {
+                            'message': 'Datos recibidos con éxito',
+                            'data': body_json
+                        }
+                    except Exception as e:
+                        response_body = {
+                            'message': 'Error al procesar datos',
+                            'error': str(e)
+                        }
+                else:
+                    response_body = {
+                        'message': f'Método {http_method} no soportado'
+                    }
+                
+                return {
+                    'statusCode': 200,
+                    'headers': {
+                        'Content-Type': 'application/json'
+                    },
+                    'body': json.dumps(response_body)
+                }
+            ```"
+          - "Para guardar el archivo y salir de vim, presiona 'ESC' y escribe ':wq'"
+          - "Comprime el código:"
+          - "`cd lambda-api && zip api_function.zip api_function.py && cd ..`"
+          - "Crea la función Lambda:"
+          - "`aws lambda create-function \\\n    --function-name api-handler \\\n    --runtime python3.9 \\\n    --handler api_function.lambda_handler \\\n    --zip-file fileb://lambda-api/api_function.zip \\\n    --role arn:aws:iam::000000000000:role/lambda-role`"
+          - "Crea un API Gateway REST API:"
+          - "`aws apigateway create-rest-api \\\n    --name 'Lambda API' \\\n    --description 'API Gateway + Lambda' \\\n    --endpoint-configuration '{\"types\":[\"REGIONAL\"]}'`"
+          - "Captura el ID de la API creada:"
+          - "`API_ID=$(aws apigateway get-rest-apis --query 'items[?name==`Lambda API`].id' --output text)`"
+          - "Obtén el ID del recurso raíz de la API:"
+          - "`ROOT_ID=$(aws apigateway get-resources --rest-api-id $API_ID --query 'items[?path==`/`].id' --output text)`"
+          - "Crea un recurso para la API:"
+          - "`aws apigateway create-resource \\\n    --rest-api-id $API_ID \\\n    --parent-id $ROOT_ID \\\n    --path-part 'teste'`"
+          - "Obtén el ID del nuevo recurso:"
+          - "`RESOURCE_ID=$(aws apigateway get-resources --rest-api-id $API_ID --query 'items[?path==`/teste`].id' --output text)`"
+          - "Configura el método GET en el recurso:"
+          - "`aws apigateway put-method \\\n    --rest-api-id $API_ID \\\n    --resource-id $RESOURCE_ID \\\n    --http-method GET \\\n    --authorization-type NONE`"
+          - "Ahora, debemos configurar la integración con la función Lambda. En AWS real, lo haríamos así!"
+        tips:
+          - type: "info"
+            title: "Arquitectura Serverless"
+            content: "Una arquitectura serverless permite construir aplicaciones sin administrar la infraestructura, centrándose solo en el código. Lambda + API Gateway es una combinación poderosa para APIs serverless."
+          - type: "tip"
+            title: "Formatos de eventos"
+            content: "Cada servicio de AWS que invoca Lambda envía eventos en formatos específicos. Familiarízate con el formato del servicio que estás usando."
+        validation:
+          - command: "aws lambda list-functions --query 'Functions[?FunctionName==`api-handler`]' | grep -q api-handler && echo 'success' || echo 'error'"
+            expectedOutput: "success"
+            errorMessage: "La función Lambda 'api-handler' no fue creada correctamente."
+      
+      - name: "Diagnosticando Problemas en Lambda"
+        description: "Aprende a identificar y resolver problemas comunes en funciones Lambda"
+        steps:
+          - "Crea una función Lambda que va a fallar deliberadamente:"
+          - "`mkdir -p lambda-debug`"
+          - "Crea el archivo de la función con un error usando vim:"
+          - "`vim lambda-debug/error_function.py`"
+          - "En el editor vim, presiona 'i' para entrar en modo de inserción y añade el siguiente contenido:"
+          - "```python
+            import json
+            import os
+
+            def lambda_handler(event, context):
+                # Este código tiene un error deliberado
+                try:
+                    # Intentando acceder a una variable de entorno que no existe
+                    config = os.environ['CONFIG_NAO_EXISTE']
+                    
+                    # Este código nunca se ejecutará
+                    return {
+                        'statusCode': 200,
+                        'body': json.dumps('Éxito!')
+                    }
+                except Exception as e:
+                    # Capturando y devolviendo el error
+                    return {
+                        'statusCode': 500,
+                        'body': json.dumps({
+                            'error': str(e),
+                            'message': 'Ocurrió un error en la función Lambda'
+                        })
+                    }
+            ```"
+          - "Para guardar el archivo y salir de vim, presiona 'ESC' y escribe ':wq'"
+          - "Comprime el código de la función:"
+          - "`cd lambda-debug && zip error_function.zip error_function.py && cd ..`"
+          - "Crea la función Lambda con error:"
+          - "`aws lambda create-function \\\n    --function-name error-function \\\n    --runtime python3.9 \\\n    --handler error_function.lambda_handler \\\n    --zip-file fileb://lambda-debug/error_function.zip \\\n    --role arn:aws:iam::000000000000:role/lambda-role`"
+          - "Invoca la función y ve el error siendo manejado:"
+          - "`aws lambda invoke \\\n    --function-name error-function \\\n    --payload '{}' \\\n    error-output.json`"
+          - "Examina la respuesta con el error:"
+          - "`cat error-output.json`"
+          - "Ahora corrige la función agregando la variable de entorno:"
+          - "`aws lambda update-function-configuration \\\n    --function-name error-function \\\n    --environment \"Variables={CONFIG_NAO_EXISTE=valor_prueba}\"`"
+          - "Modifica el código para manejar mejor la variable:"
+          - "`vim lambda-debug/error_fixed.py`"
+          - "En el editor vim, presiona 'i' para entrar en modo de inserción y añade el siguiente contenido:"
+          - "```python
+            import json
+            import os
+
+            def lambda_handler(event, context):
+                # Versión corregida del código
+                try:
+                    # Usando get() para obtener la variable o valor predeterminado
+                    config = os.environ.get('CONFIG_NAO_EXISTE', 'valor_predeterminado')
+                    
+                    return {
+                        'statusCode': 200,
+                        'body': json.dumps({
+                            'message': 'Éxito!',
+                            'config': config
+                        })
+                    }
+                except Exception as e:
+                    # Aún manteniendo el manejo de errores
+                    return {
+                        'statusCode': 500,
+                        'body': json.dumps({
+                            'error': str(e),
+                            'message': 'Ocurrió un error en la función Lambda'
+                        })
+                    }
+            ```"
+          - "Para guardar el archivo y salir de vim, presiona 'ESC' y escribe ':wq'"
+          - "Comprime el código corregido:"
+          - "`cd lambda-debug && zip error_fixed.zip error_fixed.py && cd ..`"
+          - "Actualiza la función Lambda con el código corregido:"
+          - "`aws lambda update-function-code \\\n    --function-name error-function \\\n    --zip-file fileb://lambda-debug/error_fixed.zip`"
+          - "Actualiza el manejador para apuntar al nuevo archivo:"
+          - "`aws lambda update-function-configuration \\\n    --function-name error-function \\\n    --handler error_fixed.lambda_handler`"
+          - "Invoca la función nuevamente para ver el éxito:"
+          - "`aws lambda invoke \\\n    --function-name error-function \\\n    --payload '{}' \\\n    fixed-output.json`"
+          - "Examina la respuesta corregida:"
+          - "`cat fixed-output.json`"
+        tips:
+          - type: "warning"
+            title: "Manejo de errores"
+            content: "Es fundamental manejar errores adecuadamente en funciones Lambda. Usa bloques try-except y registra información útil para depuración."
+          - type: "info"
+            title: "Logs y Monitoreo"
+            content: "En AWS real, los logs de las funciones Lambda van a CloudWatch Logs, donde puedes investigar errores. Usa herramientas como X-Ray para rastrear la ejecución."
+          - type: "tip"
+            title: "Pruebas locales"
+            content: "Antes de implementar, prueba tus funciones localmente siempre que sea posible para identificar problemas más temprano."
+        validation:
+          - command: "aws lambda invoke --function-name error-function --payload '{}' test-output.json && cat test-output.json | grep -q 'Éxito' && echo 'success' || echo 'error'"
+            expectedOutput: "success"
+            errorMessage: "La función Lambda no fue corregida correctamente. La respuesta no contiene el mensaje 'Éxito'."
+
+      - name: "Nota sobre Ejecución de Lambda en LocalStack"
+        description: "Entendiendo limitaciones de ejecución de Lambda en el entorno de laboratorio"
+        steps:
+          - "LocalStack puede presentar el error 'Docker not available' al intentar crear funciones Lambda:"
+          - "Ejecuta el comando de creación de función y observa el error:"
+          - "`aws lambda create-function \\\n    --function-name test-function \\\n    --runtime python3.9 \\\n    --handler test.handler \\\n    --zip-file fileb://lambda-hello/hello.zip \\\n    --role arn:aws:iam::000000000000:role/lambda-role`"
+          - "Verifica el estado de la función y observa el error de creación:"
+          - "`aws lambda get-function --function-name test-function`"
+          - "Verás un error como: 'Error while creating lambda: Docker not available'"
+          - "Esto ocurre porque LocalStack intenta usar Docker para ejecutar las funciones Lambda, pero el contenedor del LocalStack no tiene acceso al Docker del host."
+          - "En entornos reales o más complejos, se puede resolver de varias formas:"
+          - "1. Configurando el LocalStack para usar el executor local (LAMBDA_EXECUTOR=local)"
+          - "2. Montando el socket del Docker dentro del contenedor (dind - Docker in Docker)"
+          - "3. utilizando AWS SAM con el LocalStack para desarrollo local"
+          - "4. En el entorno real de AWS, eso no es un problema, porque la AWS gestiona toda la infraestructura de ejecución"
+          - "Para los propósitos de este laboratorio, enfócate en comprender los conceptos y comandos de Lambda, incluso si la ejecución falla."
+        tips:
+          - type: "warning"
+            title: "Limitaciones del Entorno de laboratorio"
+            content: "El entorno de laboratorio usa LocalStack, que puede tener limitaciones en relación a los servicios reales de AWS. En un entorno AWS real, no te enfrentarías a ese tipo específico de problema."
+          - type: "info"
+            title: "Probando Lambda Localmente"
+            content: "Para pruebas más robustas localmente, considera usar AWS SAM (Serverless Application Model) o AWS Toolkit en tu entorno de desarrollo local."
+          - type: "tip" 
+            title: "Alternativa para Pruebas"
+            content: "Una alternativa para pruebas locales es usar el simulador de Lambda del SAM, que no depende de Docker: 'sam local invoke' o 'sam local start-api'"
+        validation:
+          - command: "echo 'Este paso es solo informativo' && echo 'success'"
+            expectedOutput: "success"
+            errorMessage: "Este paso es informativo sobre las limitaciones del entorno."

@@ -1,0 +1,453 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: terraform-provisioners-modulos-lab-es
+  namespace: girus
+  labels:
+    app: girus-lab-template
+data:
+  lab.yaml: |
+    name: terraform-provisioners-modulos-es
+    title: "Terraform: Provisioners y Módulos"
+    description: "Aprende a utilizar provisioners para configuración de recursos después de su creación y organiza tu código Terraform con módulos reutilizables."
+    duration: 25m
+    image: "linuxtips/girus-localstack:0.1"
+    privileged: true
+    type: "terraform"
+    entrypoint: "/entrypoint.sh"
+    tasks:
+      - name: "Instalando Vim"
+        description: "Actualiza los repositórios del sistema e instala el editor Vim"
+        steps:
+          - "Actualiza los repositórios del sistema:"
+          - "`apt update`"
+          - "Instala el editor Vim:"
+          - "`apt install -y vim`"
+          - "Verifica si Vim fue instalado correctamente:"
+          - "`vim --version | head -n 1`"
+        tips:
+          - type: "info"
+            title: "Comandos básicos de Vim"
+            content: "Para abrir un archivo usa 'vim archivo.tf'. Para insertar texto, presiona 'i'. Para guardar y salir, presiona 'ESC' y escribe ':wq'. Para salir sin guardar, presiona 'ESC' y escribe ':q!'."
+        validation:
+          - command: "which vim > /dev/null && echo 'success' || echo 'error'"
+            expectedOutput: "success"
+            errorMessage: "Vim no fue instalado correctamente. Intenta ejecutar 'apt install -y vim' nuevamente."
+
+      - name: "Utilizando Provisioners para Configuración Local"
+        description: "Aprende cómo utilizar provisioners para ejecutar comandos locales y crear archivos después de la creación de recursos"
+        steps:
+          - "Crea un directorio para el proyecto:"
+          - "`mkdir -p ~/terraform-provisioners && cd ~/terraform-provisioners`"
+          - "Crea el archivo principal de Terraform usando vim:"
+          - "`vim main.tf`"
+          - "En el editor vim, presiona 'i' para entrar en modo de inserción y agrega el siguiente contenido:"
+          - "```terraform
+            terraform {
+              required_providers {
+                aws = {
+                  source  = \"hashicorp/aws\"
+                  version = \"~> 5.0\"
+                }
+              }
+            }
+
+            provider \"aws\" {
+              region = \"us-east-1\"
+            }
+
+            # Recurso de bucket S3 con provisioner local-exec
+            resource \"aws_s3_bucket\" \"log_bucket\" {
+              bucket = \"terraform-logs-${uuid()}\"
+
+              tags = {
+                Name        = \"Log Bucket\"
+                Environment = \"Dev\"
+              }
+
+              # Ejecutado cuando el bucket es creado
+              provisioner \"local-exec\" {
+                command = \"echo 'Bucket ${self.bucket} creado en ${timestamp()}' > bucket_info.txt\"
+              }
+
+              # Ejecutado cuando el bucket es destruido
+              provisioner \"local-exec\" {
+                when    = destroy
+                command = \"echo 'Bucket ${self.bucket} está siendo destruido' > bucket_destruido.txt\"
+              }
+            }
+
+            # Recurso de archivo local
+            resource \"local_file\" \"bucket_details\" {
+              content  = \"Información del bucket:\\nNombre: ${aws_s3_bucket.log_bucket.bucket}\\nARN: ${aws_s3_bucket.log_bucket.arn}\"
+              filename = \"${path.module}/bucket_details.txt\"
+            }
+            ```"
+          - "Para guardar el archivo y salir de vim, presiona 'ESC' y escribe ':wq'"
+          - "Inicializa Terraform:"
+          - "`terraform init`"
+          - "Verifica el plan de ejecución:"
+          - "`terraform plan`"
+          - "Aplica la configuración:"
+          - "`terraform apply -auto-approve`"
+          - "Verifica los archivos creados por el provisioner y el recurso local_file:"
+          - "`ls -la *.txt`"
+          - "Examina el contenido del archivo bucket_info.txt:"
+          - "`cat bucket_info.txt`"
+          - "Examina el contenido del archivo bucket_details.txt:"
+          - "`cat bucket_details.txt`"
+        tips:
+          - type: "info"
+            title: "Tipos de Provisioners"
+            content: "Terraform soporta varios tipos de provisioners, incluyendo 'local-exec' para ejecutar comandos en la máquina local, 'remote-exec' para ejecutar comandos en recursos remotos, y 'file' para copiar archivos."
+          - type: "warning"
+            title: "Uso cauteloso de provisioners"
+            content: "Los provisioners deben ser usados con cautela, pues son considerados un último recurso en Terraform. Siempre que sea posible, prefiere recursos nativos o configuración basada en imágenes."
+        validation:
+          - command: "test -f bucket_info.txt && echo 'success' || echo 'error'"
+            expectedOutput: "success"
+            errorMessage: "El archivo bucket_info.txt no fue creado por el provisioner local-exec."
+          - command: "test -f bucket_details.txt && echo 'success' || echo 'error'"
+            expectedOutput: "success"
+            errorMessage: "El archivo bucket_details.txt no fue creado por el recurso local_file."
+
+      - name: "Implementando Provisioners Remote-exec"
+        description: "Utiliza provisioners remote-exec para configurar recursos remotos después de su creación"
+        steps:
+          - "Crea un nuevo directorio para esta etapa:"
+          - "`mkdir -p ~/terraform-remote-exec && cd ~/terraform-remote-exec`"
+          - "Crea un archivo para la clave SSH:"
+          - "`vim ssh_key.tf`"
+          - "En el editor vim, presiona 'i' para entrar en modo de inserción y agrega el siguiente contenido:"
+          - "```terraform
+            resource \"tls_private_key\" \"example\" {
+              algorithm = \"RSA\"
+              rsa_bits  = 4096
+            }
+
+            resource \"local_file\" \"private_key\" {
+              content  = tls_private_key.example.private_key_pem
+              filename = \"${path.module}/id_rsa\"
+
+              provisioner \"local-exec\" {
+                command = \"chmod 600 ${path.module}/id_rsa\"
+              }
+            }
+
+            resource \"local_file\" \"public_key\" {
+              content  = tls_private_key.example.public_key_openssh
+              filename = \"${path.module}/id_rsa.pub\"
+            }
+
+            resource \"aws_key_pair\" \"example\" {
+              key_name   = \"terraform-example-key\"
+              public_key = tls_private_key.example.public_key_openssh
+            }
+            ```"
+          - "Para guardar el archivo y salir de vim, presiona 'ESC' y escribe ':wq'"
+          - "Ahora, crea el archivo para la instancia EC2:"
+          - "`vim ec2_instance.tf`"
+          - "En el editor vim, presiona 'i' para entrar en modo de inserción y agrega el siguiente contenido:"
+          - "```terraform
+            terraform {
+              required_providers {
+                aws = {
+                  source  = \"hashicorp/aws\"
+                  version = \"~> 5.0\"
+                }
+                tls = {
+                  source  = \"hashicorp/tls\"
+                  version = \"~> 4.0\"
+                }
+              }
+            }
+
+            provider \"aws\" {
+              region = \"us-east-1\"
+            }
+
+            resource \"aws_security_group\" \"example\" {
+              name        = \"terraform-example-sg\"
+              description = \"Allow SSH and HTTP\"
+
+              ingress {
+                description = \"SSH\"
+                from_port   = 22
+                to_port     = 22
+                protocol    = \"tcp\"
+                cidr_blocks = [\"0.0.0.0/0\"]
+              }
+
+              ingress {
+                description = \"HTTP\"
+                from_port   = 80
+                to_port     = 80
+                protocol    = \"tcp\"
+                cidr_blocks = [\"0.0.0.0/0\"]
+              }
+
+              egress {
+                from_port   = 0
+                to_port     = 0
+                protocol    = \"-1\"
+                cidr_blocks = [\"0.0.0.0/0\"]
+              }
+            }
+
+            resource \"aws_instance\" \"example\" {
+              ami                    = \"ami-0c55b159cbfafe1f0\"  # Amazon Linux 2
+              instance_type          = \"t2.micro\"
+              key_name               = aws_key_pair.example.key_name
+              vpc_security_group_ids = [aws_security_group.example.id]
+
+              # Usar connection y provisioner remote-exec
+              connection {
+                type        = \"ssh\"
+                user        = \"ec2-user\"
+                private_key = tls_private_key.example.private_key_pem
+                host        = self.public_ip
+              }
+
+              provisioner \"remote-exec\" {
+                inline = [
+                  \"sudo yum update -y\",
+                  \"sudo yum install -y httpd\",
+                  \"sudo systemctl start httpd\",
+                  \"sudo systemctl enable httpd\",
+                  \"echo '<h1>Servidor Web configurado con Terraform!</h1>' | sudo tee /var/www/html/index.html\"
+                ]
+              }
+
+              tags = {
+                Name = \"terraform-example-instance\"
+              }
+            }
+            ```"
+          - "Para guardar el archivo y salir de vim, presiona 'ESC' y escribe ':wq'"
+          - "Inicializa Terraform para este nuevo proyecto:"
+          - "`terraform init`"
+          - "Aplica la configuración:"
+          - "`terraform apply -auto-approve`"
+          - "Obtén la IP pública de la instancia:"
+          - "`terraform output instance_public_ip || terraform show | grep public_ip`"
+        tips:
+          - type: "warning"
+            title: "Conexiones SSH"
+            content: "El provisioner remote-exec requiere conectividad SSH. En LocalStack, las instancias EC2 simuladas pueden no tener conectividad real, pero la configuración es válida para entornos AWS reales."
+          - type: "info"
+            title: "Provisioners y Estados"
+            content: "Los provisioners se ejecutan solo durante la creación y destrucción de recursos. No se vuelven a ejecutar en aplicaciones posteriores a menos que el recurso sea recreado."
+        validation:
+          - command: "terraform state list | grep aws_instance.example && echo 'success' || echo 'error'"
+            expectedOutput: "success"
+            errorMessage: "La instancia EC2 no fue creada correctamente."
+          - command: "terraform state list | grep tls_private_key.example && echo 'success' || echo 'error'"
+            expectedOutput: "success"
+            errorMessage: "La clave privada TLS no fue creada correctamente."
+
+      - name: "Organizando Código con Módulos"
+        description: "Aprende a organizar tu código Terraform en módulos reutilizables"
+        steps:
+          - "Crea un nuevo directorio para el proyecto de módulos:"
+          - "`mkdir -p ~/terraform-modules && cd ~/terraform-modules`"
+          - "Crea la estructura de directorios para el módulo:"
+          - "`mkdir -p modules/web-server`"
+          - "Crea el archivo principal del módulo:"
+          - "`vim modules/web-server/main.tf`"
+          - "En el editor vim, presiona 'i' para entrar en modo de inserción y agrega el siguiente contenido:"
+          - "```terraform
+            # Módulo Web Server
+            resource \"aws_security_group\" \"web_sg\" {
+              name        = \"${var.project_name}-web-sg\"
+              description = \"Security group for web server\"
+
+              ingress {
+                from_port   = 80
+                to_port     = 80
+                protocol    = \"tcp\"
+                cidr_blocks = [\"0.0.0.0/0\"]
+              }
+
+              ingress {
+                from_port   = 22
+                to_port     = 22
+                protocol    = \"tcp\"
+                cidr_blocks = [\"0.0.0.0/0\"]
+              }
+
+              egress {
+                from_port   = 0
+                to_port     = 0
+                protocol    = \"-1\"
+                cidr_blocks = [\"0.0.0.0/0\"]
+              }
+
+              tags = var.common_tags
+            }
+
+            resource \"aws_instance\" \"web\" {
+              count                  = var.instance_count
+              ami                    = var.ami_id
+              instance_type          = var.instance_type
+              vpc_security_group_ids = [aws_security_group.web_sg.id]
+
+              user_data = <<-EOF
+                #!/bin/bash
+                yum update -y
+                yum install -y httpd
+                systemctl start httpd
+                systemctl enable httpd
+                echo '<h1>${var.project_name} - Servidor ${count.index + 1}</h1>' > /var/www/html/index.html
+              EOF
+
+              tags = merge(var.common_tags, {
+                Name = \"${var.project_name}-web-${count.index + 1}\"
+              })
+            }
+            ```"
+          - "Para guardar el archivo y salir de vim, presiona 'ESC' y escribe ':wq'"
+          - "Crea el archivo de variables del módulo:"
+          - "`vim modules/web-server/variables.tf`"
+          - "En el editor vim, presiona 'i' para entrar en modo de inserción y agrega el siguiente contenido:"
+          - "```terraform
+            variable \"project_name\" {
+              description = \"Nombre del proyecto\"
+              type        = string
+            }
+
+            variable \"instance_count\" {
+              description = \"Número de instancias web a crear\"
+              type        = number
+              default     = 1
+            }
+
+            variable \"instance_type\" {
+              description = \"Tipo de instancia EC2\"
+              type        = string
+              default     = \"t2.micro\"
+            }
+
+            variable \"ami_id\" {
+              description = \"ID de la AMI a usar\"
+              type        = string
+              default     = \"ami-0c55b159cbfafe1f0\"
+            }
+
+            variable \"common_tags\" {
+              description = \"Tags comunes para aplicar a todos los recursos\"
+              type        = map(string)
+              default     = {}
+            }
+            ```"
+          - "Para guardar el archivo y salir de vim, presiona 'ESC' y escribe ':wq'"
+          - "Crea el archivo de outputs del módulo:"
+          - "`vim modules/web-server/outputs.tf`"
+          - "En el editor vim, presiona 'i' para entrar en modo de inserción y agrega el siguiente contenido:"
+          - "```terraform
+            output \"instance_ids\" {
+              description = \"IDs de las instancias web creadas\"
+              value       = aws_instance.web[*].id
+            }
+
+            output \"instance_public_ips\" {
+              description = \"IPs públicas de las instancias web\"
+              value       = aws_instance.web[*].public_ip
+            }
+
+            output \"security_group_id\" {
+              description = \"ID del security group\"
+              value       = aws_security_group.web_sg.id
+            }
+            ```"
+          - "Para guardar el archivo y salir de vim, presiona 'ESC' y escribe ':wq'"
+          - "Ahora crea el archivo principal que usa el módulo:"
+          - "`vim main.tf`"
+          - "En el editor vim, presiona 'i' para entrar en modo de inserción y agrega el siguiente contenido:"
+          - "```terraform
+            terraform {
+              required_providers {
+                aws = {
+                  source  = \"hashicorp/aws\"
+                  version = \"~> 5.0\"
+                }
+              }
+            }
+
+            provider \"aws\" {
+              region = \"us-east-1\"
+            }
+
+            module \"web_server_dev\" {
+              source = \"./modules/web-server\"
+
+              project_name   = \"mi-app-dev\"
+              instance_count = 2
+              instance_type  = \"t2.micro\"
+
+              common_tags = {
+                Environment = \"development\"
+                Project     = \"terraform-modules\"
+                Owner       = \"DevOps Team\"
+              }
+            }
+
+            module \"web_server_prod\" {
+              source = \"./modules/web-server\"
+
+              project_name   = \"mi-app-prod\"
+              instance_count = 3
+              instance_type  = \"t2.small\"
+
+              common_tags = {
+                Environment = \"production\"
+                Project     = \"terraform-modules\"
+                Owner       = \"DevOps Team\"
+              }
+            }
+            ```"
+          - "Para guardar el archivo y salir de vim, presiona 'ESC' y escribe ':wq'"
+          - "Crea un archivo de outputs para el proyecto principal:"
+          - "`vim outputs.tf`"
+          - "En el editor vim, presiona 'i' para entrar en modo de inserción y agrega el siguiente contenido:"
+          - "```terraform
+            output \"dev_instance_ips\" {
+              description = \"IPs de las instancias de desarrollo\"
+              value       = module.web_server_dev.instance_public_ips
+            }
+
+            output \"prod_instance_ips\" {
+              description = \"IPs de las instancias de producción\"
+              value       = module.web_server_prod.instance_public_ips
+            }
+
+            output \"total_instances\" {
+              description = \"Total de instancias creadas\"
+              value       = length(module.web_server_dev.instance_ids) + length(module.web_server_prod.instance_ids)
+            }
+            ```"
+          - "Para guardar el archivo y salir de vim, presiona 'ESC' y escribe ':wq'"
+          - "Inicializa Terraform:"
+          - "`terraform init`"
+          - "Verifica el plan:"
+          - "`terraform plan`"
+          - "Aplica la configuración:"
+          - "`terraform apply -auto-approve`"
+          - "Verifica los outputs:"
+          - "`terraform output`"
+        tips:
+          - type: "info"
+            title: "Beneficios de los Módulos"
+            content: "Los módulos permiten reutilizar código, mantener configuraciones consistentes, y organizar recursos complejos de forma lógica. Son especialmente útiles para equipos grandes."
+          - type: "tip"
+            title: "Versionado de Módulos"
+            content: "En entornos de producción, versiona tus módulos usando Git tags o registros de módulos. Esto garantiza reproducibilidad y facilita actualizaciones controladas."
+          - type: "warning"
+            title: "Revisión de Código"
+            content: "Siempre revisa el código de módulos externos antes de usarlos en producción. Asegúrate de entender lo que hace cada recurso, pero siempre revisa el código antes de usar."
+        validation:
+          - command: "terraform state list | grep 'module.web_server_dev' && echo 'success' || echo 'error'"
+            expectedOutput: "success"
+            errorMessage: "El módulo web_server_dev no fue aplicado correctamente."
+          - command: "terraform state list | grep 'module.web_server_prod' && echo 'success' || echo 'error'"
+            expectedOutput: "success"
+            errorMessage: "El módulo web_server_prod no fue aplicado correctamente."

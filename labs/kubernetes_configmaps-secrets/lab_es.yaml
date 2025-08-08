@@ -1,0 +1,69 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kubernetes-configmaps-secrets-lab-es
+  namespace: girus
+  labels:
+    app: girus-lab-template
+data:
+  lab.yaml: |
+    name: kubernetes-configmaps-secrets-es
+    title: "ConfigMaps y Secrets en Kubernetes"
+    description: "Aprende a administrar configuraciones y secretos en Kubernetes usando ConfigMaps y Secrets. Este laboratorio guiado explora buenas prácticas de administración de configuraciones y datos sensibles en aplicaciones contenerizadas."
+    duration: 35m
+    image: "linuxtips/girus-devops:0.1"
+    privileged: true
+    tasks:
+      - name: "Trabajando con ConfigMaps"
+        description: "Aprende a crear y usar ConfigMaps en Kubernetes."
+        steps:
+          - description: "Crea un ConfigMap a partir de un archivo"
+            command: "echo -e 'DB_HOST=localhost\nDB_PORT=5432' > config.env && kubectl create configmap app-config --from-env-file=config.env"
+            expectedOutput: "configmap/app-config created"
+            hint: "Usa el comando kubectl create configmap con --from-env-file"
+
+          - description: "Verifica el ConfigMap creado"
+            command: "kubectl get configmap app-config -o yaml"
+            expectedOutput: "app-config"
+            hint: "Usa el comando kubectl get configmap con -o yaml"
+
+          - description: "Crea un pod usando el ConfigMap"
+            command: "kubectl run config-pod --image=nginx --overrides='{\"spec\":{\"containers\":[{\"name\":\"nginx\",\"image\":\"nginx\",\"envFrom\":[{\"configMapRef\":{\"name\":\"app-config\"}}]}]}}'"
+            expectedOutput: "pod/config-pod created"
+            hint: "Usa el comando kubectl run con --overrides para montar el ConfigMap"
+
+      - name: "Gestionando Secrets"
+        description: "Aprende a crear y usar Secrets en Kubernetes."
+        steps:
+          - description: "Crea un Secret para credenciales"
+            command: "kubectl create secret generic db-credentials --from-literal=username=admin --from-literal=password=secret123"
+            expectedOutput: "secret/db-credentials created"
+            hint: "Usa el comando kubectl create secret generic"
+
+          - description: "Verifica el Secret creado"
+            command: "kubectl get secret db-credentials -o yaml"
+            expectedOutput: "db-credentials"
+            hint: "Usa el comando kubectl get secret con -o yaml"
+
+          - description: "Crea un pod usando el Secret"
+            command: "kubectl run secret-pod --image=nginx --overrides='{\"spec\":{\"containers\":[{\"name\":\"nginx\",\"image\":\"nginx\",\"env\":[{\"name\":\"DB_USER\",\"valueFrom\":{\"secretKeyRef\":{\"name\":\"db-credentials\",\"key\":\"username\"}}},{\"name\":\"DB_PASS\",\"valueFrom\":{\"secretKeyRef\":{\"name\":\"db-credentials\",\"key\":\"password\"}}}]}}'"
+            expectedOutput: "pod/secret-pod created"
+            hint: "Usa el comando kubectl run con --overrides para montar el Secret"
+
+      - name: "Montando ConfigMaps y Secrets como Volúmenes"
+        description: "Implementa ConfigMaps y Secrets como volúmenes en pods."
+        steps:
+          - description: "Crea un ConfigMap para configuración"
+            command: "echo -e 'server {\n    listen 80;\n    server_name localhost;\n}' > nginx.conf && kubectl create configmap nginx-config --from-file=nginx.conf"
+            expectedOutput: "configmap/nginx-config created"
+            hint: "Usa el comando kubectl create configmap con --from-file"
+
+          - description: "Crea un pod montando el ConfigMap como volumen"
+            command: "kubectl run nginx-config-pod --image=nginx --overrides='{\"spec\":{\"containers\":[{\"name\":\"nginx\",\"image\":\"nginx\",\"volumeMounts\":[{\"name\":\"config-volume\",\"mountPath\":\"/etc/nginx/conf.d\"}],\"volumes\":[{\"name\":\"config-volume\",\"configMap\":{\"name\":\"nginx-config\"}}]}]}}'"
+            expectedOutput: "pod/nginx-config-pod created"
+            hint: "Usa el comando kubectl run con --overrides para montar el ConfigMap como volumen"
+
+          - description: "Verifica el montaje del volumen"
+            command: "kubectl exec nginx-config-pod -- ls -l /etc/nginx/conf.d"
+            expectedOutput: "nginx.conf"
+            hint: "Usa el comando kubectl exec para verificar el contenido del directorio"

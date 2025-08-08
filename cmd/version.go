@@ -9,7 +9,7 @@ import (
 
 var versionCmd = &cobra.Command{
 	Use:   "version",
-	Short: "Exibe a versão do Girus CLI",
+	Short: common.T("Exibe a versão do Girus CLI", "Muestra la versión del Girus CLI"),
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Print(common.GetVersion())
 	},

@@ -1,0 +1,251 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: linux-shell-script-lab-es
+  namespace: girus
+  labels:
+    app: girus-lab-template
+data:
+  lab.yaml: |
+    name: linux-shell-script-es
+    title: "Introducción a Shell Script Bash"
+    description: "Crea tus primeros scripts Bash, aprendiendo sobre variables, bucles y condicionales en este laboratorio detallado y guiado. Ideal para principiantes que quieren dominar los conceptos básicos de automatización en Linux."
+    duration: 25m
+    image: "linuxtips/girus-devops:0.1"
+    tasks:
+      - name: "Creando y Ejecutando un Script Simple"
+        description: "Aprende la estructura básica de un script Bash, cómo crear, guardar y ejecutar scripts, y entiende los componentes fundamentales que todo script debe tener."
+        steps:
+          - "El shell script es una herramienta poderosa para automatizar tareas en Linux. Vamos a crear nuestro primer script siguiendo estos pasos:"
+          - "Primero, crea un archivo llamado 'mi_script.sh':"
+          - "`touch mi_script.sh`"
+          - "Ahora, vamos a usar el editor nano para escribir el script (es más amigable para principiantes):"
+          - "`nano mi_script.sh`"
+          - "En el editor, escribe el siguiente contenido (línea por línea):"
+          - |
+            ```bash
+            #!/bin/bash
+            # Este es un comentario
+            # Los comentarios no se ejecutan y sirven para documentar el código
+
+            # Comando para mostrar un mensaje en pantalla
+            echo "¡Hola, Girus!"
+            
+            # Comando con sustitución de comando $(comando)
+            echo "El directorio actual es: $(pwd)"
+            
+            # Mostrando la fecha y hora actual
+            echo "Fecha y hora actual: $(date)"
+            ```
+          - "Después de escribir el contenido, guarda el archivo presionando Ctrl+O, luego Enter, y sal del editor con Ctrl+X."
+          - "Si prefieres usar otro editor como vim o no quieres usar un editor interactivo, también puedes crear el archivo con el comando cat:"
+          - |
+            cat > mi_script.sh << 'EOF'
+            #!/bin/bash
+            # Este es un comentario
+            # Los comentarios no se ejecutan y sirven para documentar el código
+
+            # Comando para mostrar un mensaje en pantalla
+            echo "¡Hola, Girus!"
+
+            # Comando con sustitución de comando $(comando)
+            echo "El directorio actual es: $(pwd)"
+
+            # Mostrando la fecha y hora actual
+            echo "Fecha y hora actual: $(date)"
+            EOF
+          - "Ahora, vamos a verificar el contenido del script para confirmar que se creó correctamente:"
+          - "`cat mi_script.sh`"
+          - "Por defecto, los archivos nuevos no tienen permisos de ejecución. Vamos a hacer el script ejecutable:"
+          - "`chmod +x mi_script.sh`"
+          - "Podemos verificar los permisos del archivo con el comando:"
+          - "`ls -l mi_script.sh`"
+          - "Deberías ver algo como '-rwxr-xr-x', donde las 'x' indican permisos de ejecución."
+          - "Ahora ejecuta el script:"
+          - "`./mi_script.sh`"
+          - "El './' antes del nombre del archivo indica que queremos ejecutar el archivo en el directorio actual."
+          - "Deberías ver el mensaje '¡Hola, Girus!', seguido del directorio actual y la fecha/hora."
+        tips:
+          - type: "info"
+            title: "Shebang (#!/bin/bash)"
+            content: "La primera línea `#!/bin/bash` se llama 'shebang' e indica al sistema qué intérprete usar para ejecutar el script. Aunque es opcional, es una buena práctica incluirla siempre para garantizar que el script sea interpretado por bash, incluso si se ejecuta en diferentes entornos."
+          - type: "tip"
+            title: "Permisos de Ejecución"
+            content: "Los archivos de script necesitan el permiso de ejecución ('x') para ejecutarse directamente con `./nombre_script.sh`. Usa `chmod +x` para agregarlo. Alternativamente, puedes ejecutar el script con `bash mi_script.sh`, lo que no requiere permisos de ejecución."
+          - type: "info"
+            title: "Sustitución de comando"
+            content: "La sintaxis $(comando) se llama 'sustitución de comando' y permite incluir la salida de un comando dentro de otro comando o cadena. Una sintaxis más antigua es usar comillas invertidas: `comando`."
+        validation:
+          - command: "./mi_script.sh | grep '¡Hola, Girus!'"
+            expectedOutput: "¡Hola, Girus!"
+            errorMessage: "El script no produjo la salida esperada '¡Hola, Girus!'. Verifica si creaste el archivo correctamente y si tiene permisos de ejecución."
+
+      - name: "Usando Variables y Argumentos"
+        description: "Aprende a declarar y usar variables en scripts Bash, además de acceder y procesar argumentos de línea de comandos pasados al script."
+        steps:
+          - "Las variables permiten almacenar y reutilizar valores en el script. Los argumentos son valores pasados al script cuando se ejecuta."
+          - "Vamos a modificar nuestro script 'mi_script.sh' para usar variables y argumentos. Abre el archivo con el editor:"
+          - "`nano mi_script.sh`"
+          - "Reemplaza el contenido existente con el siguiente:"
+          - |
+            ```bash
+            #!/bin/bash
+            
+            # Declaración de variables (sin espacios alrededor del signo igual)
+            NOMBRE="Estudiante Girus"
+            CURSO="Shell Script"
+            FECHA_ACTUAL=$(date +"%d/%m/%Y")
+            
+            # Usando las variables
+            echo "¡Hola, $NOMBRE!"
+            echo "Bienvenido al curso de $CURSO"
+            echo "Hoy es: $FECHA_ACTUAL"
+            
+            # Trabajando con argumentos de línea de comandos
+            echo "----------------------------"
+            echo "Información sobre argumentos:"
+            echo "----------------------------"
+            echo "El script fue llamado con $# argumento(s)."
+            echo "El nombre del script es: $0"
+            echo "El primer argumento fue: $1"
+            echo "El segundo argumento fue: $2"
+            echo "Todos los argumentos: $@"
+            
+            # Capturando el valor de un argumento en una variable
+            ARGUMENTO1=$1
+            echo "----------------------------"
+            echo "El valor de ARGUMENTO1 es: $ARGUMENTO1"
+            ```
+          - "Guarda los cambios (Ctrl+O, Enter, Ctrl+X)."
+          - "Vamos a ejecutar el script sin argumentos primero:"
+          - "`./mi_script.sh`"
+          - "Observa que las variables $1, $2, etc. estarán vacías, ya que no pasamos argumentos."
+          - "Ahora, vamos a ejecutar el script con argumentos:"
+          - "`./mi_script.sh 'Aprendiendo Bash' 42`"
+          - "Observa cómo se accede a los argumentos: $1 contiene 'Aprendiendo Bash' y $2 contiene '42'."
+          - "Vamos a experimentar con más argumentos:"
+          - "`./mi_script.sh argumento1 'argumento con espacios' 123 \"otro argumento\"`"
+          - "Nota que los argumentos con espacios deben estar entre comillas para ser tratados como un único argumento."
+        tips:
+          - type: "info"
+            title: "Variables en Bash"
+            content: "En Bash, las variables no tienen tipo (el tipo se infiere automáticamente). No uses espacios alrededor del signo igual (**NOMBRE='valor'** es correcto, **NOMBRE = 'valor'** causará error). Para acceder al valor de una variable, usa el prefijo $ (ej: **$NOMBRE**)."
+          - type: "info"
+            title: "Variables Especiales"
+            content: "Bash tiene varias variables especiales útiles para scripts - **$#** (número de argumentos), **$0** (nombre del script), **$1**, **$2**... (argumentos posicionales), **$@** (todos los argumentos como palabras separadas), **$*** (todos los argumentos como una sola palabra), **$?** (estado de salida del último comando, 0 significa éxito)."
+          - type: "warning"
+            title: "Usando comillas con variables"
+            content: "Es una buena práctica usar variables entre comillas dobles cuando el valor puede contener espacios o caracteres especiales - **echo \"$NOMBRE\"** en lugar de **echo $NOMBRE**. Esto evita comportamientos inesperados."
+          - type: "tip"
+            title: "Capturando Salida de comandos"
+            content: "Además de **$(comando)**, puedes usar la notación más antigua - **RESULTADO=\\`comando\\`**"
+        validation:
+          - command: "./mi_script.sh prueba | grep 'El primer argumento fue: prueba'"
+            expectedOutput: "El primer argumento fue: prueba"
+            errorMessage: "El script no parece estar procesando el primer argumento correctamente. Verifica el código y confirma que estás pasando el argumento 'prueba'."
+
+      - name: "Estructuras de Control: Bucle For e If"
+        description: "Aprende a usar estructuras de control como bucles 'for' para iteración y condicionales 'if' para toma de decisiones, permitiendo crear scripts más poderosos y dinámicos."
+        steps:
+          - "Las estructuras de control permiten que los scripts tomen decisiones y realicen repeticiones, haciéndolos mucho más poderosos."
+          - "Vamos a modificar 'mi_script.sh' para incluir bucles y condicionales. Abre el archivo:"
+          - "`nano mi_script.sh`"
+          - "Reemplaza todo el contenido con el siguiente:"
+          - |
+            ```bash
+            #!/bin/bash
+            
+            echo "====================="
+            echo "   BUCLES EN BASH    "
+            echo "====================="
+            
+            # Bucle básico con for
+            echo "Bucle for con lista de números:"
+            for i in 1 2 3 4 5; do
+              echo "  Número: $i"
+            done
+            
+            # Bucle for con secuencia usando la sintaxis {inicio..fin}
+            echo "Bucle for con secuencia {1..5}:"
+            for i in {1..5}; do
+              echo "  Valor: $i"
+            done
+            
+            # Bucle for con cadenas
+            echo "Bucle for con lista de palabras:"
+            for palabra in Linux "Shell Script" Automatización DevOps; do
+              echo "  Palabra: $palabra"
+            done
+            
+            # Bucle for con sustitución de comando
+            echo "Bucle for con archivos en el directorio actual:"
+            for archivo in $(ls); do
+              echo "  Archivo: $archivo"
+            done
+            
+            echo "====================="
+            echo " CONDICIONALES EN BASH "
+            echo "====================="
+            
+            # Verificando si se proporcionó un argumento
+            if [ $# -eq 0 ]; then
+              echo "No se proporcionó ningún argumento."
+              echo "Ejecuta el script con: ./mi_script.sh ARGUMENTO"
+            else
+              echo "Se proporcionaron $# argumentos."
+              
+              # Verificando el valor del primer argumento
+              if [ "$1" == "prueba" ]; then
+                echo "¡El primer argumento es 'prueba'!"
+              elif [ "$1" == "ayuda" ]; then
+                echo "Mostrando ayuda del script..."
+                echo "Uso: $0 [argumento]"
+                echo "Opciones:"
+                echo "  prueba  - Ejecuta el modo de prueba"
+                echo "  ayuda   - Muestra esta ayuda"
+              else
+                echo "El primer argumento es: $1"
+                echo "No es un valor especial reconocido."
+              fi
+              
+              # Verificando si el número de argumentos es mayor que 2
+              if [ $# -gt 2 ]; then
+                echo "¡Tienes más de 2 argumentos!"
+                echo "Los argumentos extras son útiles para scripts complejos."
+              fi
+            fi
+            
+            echo "====================="
+            echo "   FIN DEL SCRIPT    "
+            echo "====================="
+            ```
+          - "Guarda los cambios (Ctrl+O, Enter, Ctrl+X)."
+          - "Ahora vamos a probar el script con diferentes argumentos:"
+          - "`./mi_script.sh`"
+          - "Ejecuta sin argumentos para ver el mensaje de ayuda."
+          - "`./mi_script.sh prueba`"
+          - "Ejecuta con 'prueba' para ver el comportamiento especial."
+          - "`./mi_script.sh ayuda`"
+          - "Ejecuta con 'ayuda' para ver las opciones disponibles."
+          - "`./mi_script.sh argumento1 argumento2 argumento3`"
+          - "Ejecuta con múltiples argumentos para ver todos los comportamientos."
+        tips:
+          - type: "info"
+            title: "Operadores de Comparación"
+            content: "Bash usa operadores específicos para comparaciones: **-eq** (igual), **-ne** (no igual), **-lt** (menor que), **-gt** (mayor que), **-le** (menor o igual), **-ge** (mayor o igual). Para cadenas usa **==** o **!=**."
+          - type: "warning"
+            title: "Espacios en Condicionales"
+            content: "Los espacios son importantes en las expresiones condicionales. Siempre usa espacios alrededor de los corchetes: **[ $# -eq 0 ]** es correcto, **[$# -eq 0]** causará error."
+          - type: "tip"
+            title: "Bucles Avanzados"
+            content: "Además del bucle **for**, Bash también tiene **while** y **until**. El bucle **for** es ideal para iterar sobre listas conocidas, mientras que **while** es mejor para condiciones dinámicas."
+          - type: "info"
+            title: "Variables en Bucles"
+            content: "Las variables definidas dentro de bucles mantienen su valor después de que el bucle termine. Esto es diferente de algunos otros lenguajes de programación."
+        validation:
+          - command: "./mi_script.sh prueba | grep 'El primer argumento es' | head -1"
+            expectedOutput: "¡El primer argumento es 'prueba'!"
+            errorMessage: "El script no está manejando correctamente el argumento 'prueba'. Verifica la lógica condicional en tu script."
+          - command: "./mi_script.sh | grep 'No se proporcionó'"
+            expectedOutput: "No se proporcionó ningún argumento."
+            errorMessage: "El script no está manejando correctamente el caso sin argumentos. Verifica la condición [ $# -eq 0 ]."

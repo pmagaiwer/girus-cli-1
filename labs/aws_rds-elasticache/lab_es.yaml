@@ -1,0 +1,69 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: aws-rds-elasticache-lab-es
+  namespace: girus
+  labels:
+    app: girus-lab-template
+data:
+  lab.yaml: |
+    name: aws-rds-elasticache-es
+    title: "RDS y ElastiCache en AWS"
+    description: "Aprende a configurar y administrar bases de datos administradas con RDS y caches con ElastiCache en AWS. Este laboratorio guiado explora conceptos de base de datos y cache en la nube."
+    duration: 45m
+    image: "linuxtips/girus-devops:0.1"
+    privileged: true
+    tasks:
+      - name: "Configurando RDS"
+        description: "Aprende a crear y configurar instancias RDS."
+        steps:
+          - description: "Crea un grupo de subnets para RDS"
+            command: "aws rds create-db-subnet-group --db-subnet-group-name lab-subnet-group --db-subnet-group-description 'Subnet group for RDS lab' --subnet-ids $(aws ec2 describe-subnets --filters 'Name=tag:Name,Values=PublicSubnet1' --query 'Subnets[0].SubnetId' --output text)"
+            expectedOutput: "DBSubnetGroup"
+            hint: "Usa el comando aws rds create-db-subnet-group"
+
+          - description: "Crea un grupo de seguridad para RDS"
+            command: "aws ec2 create-security-group --group-name RDSSecurityGroup --description 'Security group for RDS' --vpc-id $(aws ec2 describe-vpcs --filters 'Name=tag:Name,Values=LabVPC' --query 'Vpcs[0].VpcId' --output text)"
+            expectedOutput: "GroupId"
+            hint: "Usa el comando aws ec2 create-security-group"
+
+          - description: "Crea una instancia RDS"
+            command: "aws rds create-db-instance --db-instance-identifier lab-db --db-instance-class db.t3.micro --engine mysql --master-username admin --master-user-password password123 --allocated-storage 20 --db-subnet-group-name lab-subnet-group --vpc-security-group-ids $(aws ec2 describe-security-groups --filters 'Name=group-name,Values=RDSSecurityGroup' --query 'SecurityGroups[0].GroupId' --output text)"
+            expectedOutput: "DBInstance"
+            hint: "Usa el comando aws rds create-db-instance"
+
+      - name: "Administración de RDS"
+        description: "Aprende a administrar y monitorear instancias RDS."
+        steps:
+          - description: "Verifica el estado de la instancia RDS"
+            command: "aws rds describe-db-instances --db-instance-identifier lab-db --query 'DBInstances[0].DBInstanceStatus' --output text"
+            expectedOutput: "available"
+            hint: "Usa el comando aws rds describe-db-instances"
+
+          - description: "Crea un snapshot de la base de datos"
+            command: "aws rds create-db-snapshot --db-snapshot-identifier lab-snapshot --db-instance-identifier lab-db"
+            expectedOutput: "DBSnapshot"
+            hint: "Usa el comando aws rds create-db-snapshot"
+
+          - description: "Configura backups automáticos"
+            command: "aws rds modify-db-instance --db-instance-identifier lab-db --backup-retention-period 7 --preferred-backup-window '03:00-04:00'"
+            expectedOutput: "DBInstance"
+            hint: "Usa el comando aws rds modify-db-instance"
+
+      - name: "Configurando ElastiCache"
+        description: "Aprende a crear y configurar clusters ElastiCache."
+        steps:
+          - description: "Crea un grupo de subnets para ElastiCache"
+            command: "aws elasticache create-cache-subnet-group --cache-subnet-group-name lab-cache-subnet --cache-subnet-group-description 'Subnet group for ElastiCache lab' --subnet-ids $(aws ec2 describe-subnets --filters 'Name=tag:Name,Values=PublicSubnet1' --query 'Subnets[0].SubnetId' --output text)"
+            expectedOutput: "CacheSubnetGroup"
+            hint: "Usa el comando aws elasticache create-cache-subnet-group"
+
+          - description: "Crea un grupo de seguridad para ElastiCache"
+            command: "aws ec2 create-security-group --group-name CacheSecurityGroup --description 'Security group for ElastiCache' --vpc-id $(aws ec2 describe-vpcs --filters 'Name=tag:Name,Values=LabVPC' --query 'Vpcs[0].VpcId' --output text)"
+            expectedOutput: "GroupId"
+            hint: "Usa el comando aws ec2 create-security-group"
+
+          - description: "Crea un cluster ElastiCache"
+            command: "aws elasticache create-cache-cluster --cache-cluster-id lab-cache --engine redis --cache-node-type cache.t3.micro --num-cache-nodes 1 --cache-subnet-group-name lab-cache-subnet --security-group-ids $(aws ec2 describe-security-groups --filters 'Name=group-name,Values=CacheSecurityGroup' --query 'SecurityGroups[0].GroupId' --output text)"
+            expectedOutput: "CacheCluster"
+            hint: "Usa el comando aws elasticache create-cache-cluster"

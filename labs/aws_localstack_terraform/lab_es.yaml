@@ -1,0 +1,144 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: aws-localstack-terraform-lab-es
+  namespace: girus
+  labels:
+    app: girus-lab-template
+data:
+  lab.yaml: |
+    name: aws-localstack-terraform-es
+    title: "Desafío: AWS con Terraform"
+    description: "En este desafío con tiempo limitado, debes demostrar tu habilidad para usar Terraform para crear y administrar recursos AWS localmente. El ambiente está configurado para simular AWS real, y necesitas completar todas las tareas dentro del plazo."
+    duration: 30m
+    timerEnabled: true
+    maxDuration: 45m
+    image: "linuxtips/girus-localstack:0.1"
+    privileged: true
+    type: "aws"
+    entrypoint: "/entrypoint.sh"
+    tasks:
+      - name: "Desafío 1: Preparar el Ambiente"
+        description: "Prepara el ambiente para el desafío configurando las herramientas necesarias"
+        steps:
+          - "Instala el editor Vim:"
+          - "Verifica la configuración de AWS CLI para LocalStack:"
+          - "Crea un bucket S3 llamado 'terraform-state-bucket'"
+          - "Lista los buckets S3 para verificar la creación"
+        tips:
+          - type: "info"
+            title: "Requisitos"
+            content: "Necesitarás Vim y jq para completar este desafío."
+          - type: "tip"
+            title: "Comandos AWS"
+            content: "Para crear un bucket S3, usa el comando: aws s3 mb s3://nombre-del-bucket"
+        validation:
+          - command: "which vim > /dev/null && echo 'success' || echo 'error'"
+            expectedOutput: "success"
+            errorMessage: "Vim no fue instalado correctamente. Instálalo usando 'apt install -y vim'."
+          - command: "aws s3 ls | grep -q 'terraform-state-bucket' && echo 'success' || echo 'error'"
+            expectedOutput: "success"
+            errorMessage: "El bucket 'terraform-state-bucket' no fue creado. Utiliza 'aws s3 mb s3://terraform-state-bucket'"
+
+      - name: "Desafío 2: Configurar Terraform"
+        description: "Configura e inicializa un proyecto Terraform en el directorio de trabajo"
+        steps:
+          - "Cambia al directorio /terraform"
+          - "Crea un archivo main.tf con configuración para un bucket S3 y una instancia EC2:"
+          - "- El bucket S3 debe llamarse 'challenge-bucket'"
+          - "- La instancia EC2 debe ser tipo t2.micro con la etiqueta Name='challenge-instance'"
+          - "Inicializa Terraform"
+          - "Aplica la configuración"
+          - "Verifica que los recursos fueron creados correctamente"
+        tips:
+          - type: "info"
+            title: "Configuración del Provider"
+            content: "El ambiente ya posee la configuración necesaria para el provider AWS. Solo necesitas definir los recursos."
+          - type: "warning"
+            title: "Sintaxis correcta"
+            content: "Asegúrate de usar la sintaxis correcta de Terraform. Pequeños errores pueden causar falla en la validación."
+        validation:
+          - command: "aws s3 ls | grep -q 'challenge-bucket' && echo 'success' || echo 'error'"
+            expectedOutput: "success"
+            errorMessage: "El bucket 'challenge-bucket' no fue creado por Terraform. Verifica tu configuración."
+          - command: "aws ec2 describe-instances --filters \"Name=tag:Name,Values=challenge-instance\" --query 'Reservations[].Instances[].InstanceId' | grep -q . && echo 'success' || echo 'error'"
+            expectedOutput: "success"
+            errorMessage: "La instancia EC2 con etiqueta Name='challenge-instance' no fue creada. Verifica tu configuración de Terraform."
+
+      - name: "Desafío 3: Crear una Tabla DynamoDB"
+        description: "Configura y crea una tabla DynamoDB con Terraform"
+        steps:
+          - "Agrega a tu archivo main.tf la configuración para una tabla DynamoDB:"
+          - "- Nombre: 'challenge-table'"
+          - "- Clave primaria: 'id' (tipo string)"
+          - "- Capacidad provisionada: 5 para lectura y escritura"
+          - "Aplica la configuración"
+          - "Inserta al menos 2 elementos en la tabla usando AWS CLI"
+          - "Verifica los elementos insertados"
+        tips:
+          - type: "info"
+            title: "Recurso DynamoDB"
+            content: "Usa el recurso aws_dynamodb_table para configurar la tabla."
+          - type: "tip"
+            title: "Inserción de elementos"
+            content: "Para insertar elementos vía CLI, usa el comando: aws dynamodb put-item --table-name nombre-tabla --item ..."
+        validation:
+          - command: "aws dynamodb describe-table --table-name challenge-table --query 'Table.TableName' 2>/dev/null | grep -q 'challenge-table' && echo 'success' || echo 'error'"
+            expectedOutput: "success"
+            errorMessage: "La tabla DynamoDB 'challenge-table' no fue creada. Verifica tu configuración de Terraform."
+          - command: "aws dynamodb scan --table-name challenge-table --query 'Count' 2>/dev/null || echo '0'"
+            expectedOutput: "2"
+            errorMessage: "La tabla DynamoDB no contiene al menos 2 elementos. Insértalos usando el comando put-item."
+
+      - name: "Desafío 4: Crear una Cola SQS y una Función Lambda"
+        description: "Configura recursos adicionales de AWS: Cola SQS y función Lambda"
+        steps:
+          - "Crea un archivo sqs-lambda.tf con las siguientes configuraciones:"
+          - "- Una cola SQS llamada 'challenge-queue'"
+          - "- Una función Lambda llamada 'challenge-function' usando Python 3.9"
+          - "- El código Lambda debe retornar un mensaje con el texto 'desafío completado con éxito!'"
+          - "- Configura la cola SQS como fuente de eventos para la función Lambda"
+          - "Aplica la configuración"
+          - "Verifica la creación de los recursos"
+        tips:
+          - type: "warning"
+            title: "Funciones Lambda en LocalStack"
+            content: "LocalStack puede presentar limitaciones al ejecutar funciones Lambda. Concéntrate en la configuración correcta, incluso si la ejecución falla."
+          - type: "info"
+            title: "Código de la función"
+            content: "Para el código Lambda en Python, puedes usar un archivo ZIP o inline en Terraform usando la función filebase64 o heredoc."
+        validation:
+          - command: "aws sqs list-queues --queue-name-prefix challenge-queue --query 'QueueUrls[0]' 2>/dev/null | grep -q 'challenge-queue' && echo 'success' || echo 'error'"
+            expectedOutput: "success"
+            errorMessage: "La cola SQS 'challenge-queue' no fue creada. Verifica tu configuración de Terraform."
+          - command: "aws lambda list-functions --query 'Functions[?FunctionName==`challenge-function`].FunctionName' 2>/dev/null | grep -q 'challenge-function' && echo 'success' || echo 'error'"
+            expectedOutput: "success"
+            errorMessage: "La función Lambda 'challenge-function' no fue creada. Verifica tu configuración de Terraform."
+
+      - name: "Desafío 5: Utilizar Módulos y Outputs"
+        description: "Demuestra conocimiento avanzado de Terraform usando módulos y outputs"
+        steps:
+          - "Crea una estructura de módulo para recursos de red:"
+          - "- Crea un directorio 'modules/vpc'"
+          - "- Define variables, outputs y recursos para una VPC simple"
+          - "- El módulo debe crear: VPC, subnet, internet gateway y route table"
+          - "Crea un archivo network.tf que use el módulo creado para provisionar la infraestructura de red"
+          - "Agrega outputs para mostrar el ID de la VPC y subnet creadas"
+          - "Aplica la configuración y verifica los outputs"
+        tips:
+          - type: "info"
+            title: "Estructura de módulos"
+            content: "Un módulo Terraform debe contener al menos: main.tf (recursos), variables.tf (inputs) y outputs.tf (outputs)"
+          - type: "tip"
+            title: "Reutilización"
+            content: "Los módulos permiten reutilizar código y organizar configuraciones complejas en componentes menores."
+        validation:
+          - command: "find /terraform/modules/vpc -name \"*.tf\" | wc -l | awk '$1 >= 3 {print \"success\"} $1 < 3 {print \"error\"}'"
+            expectedOutput: "success"
+            errorMessage: "La estructura del módulo VPC no está configurada correctamente. Verifica que hayas creado los archivos necesarios."
+          - command: "aws ec2 describe-vpcs --filters \"Name=tag:Name,Values=challenge-vpc\" --query 'Vpcs[0].VpcId' 2>/dev/null | grep -q 'vpc-' && echo 'success' || echo 'error'"
+            expectedOutput: "success"
+            errorMessage: "La VPC 'challenge-vpc' no fue creada por el módulo. Verifica tu configuración."
+          - command: "terraform output -state=/terraform/terraform.tfstate vpc_id 2>/dev/null | grep -q 'vpc-' && echo 'success' || echo 'error'"
+            expectedOutput: "success"
+            errorMessage: "El output 'vpc_id' no está definido o configurado correctamente."
