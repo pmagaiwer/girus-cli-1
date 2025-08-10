@@ -252,6 +252,60 @@ Os workflows CI/CD do projeto também utilizam este mecanismo de versionamento d
 * **`make tidy`**: Executa `go mod tidy` para remover dependências não utilizadas e limpar os arquivos `go.mod` e `go.sum`.
 * **`make deps`**: Exibe o gráfico de dependências do projeto.
 
+### Primeiros Passos
+## Criando seu Primeiro Cluster
+Após instalar o GIRUS, o primeiro passo é criar um cluster Kubernetes local usando Kind:
+
+  ```bash
+  girus create cluster
+  ```
+## Este comando irá:
+
+- **Verificar se o Docker está rodando**
+- **Instalar o Kind (se não estiver presente)**
+- **Criar um cluster Kubernetes local**
+- **Instalar os componentes do GIRUS (backend, frontend, etc.)**
+- **Configurar os serviços necessários**
+
+> **Nota:** O processo pode levar alguns minutos na primeira execução, pois precisa baixar as imagens Docker necessárias.
+
+- **Verificando o Status do Cluster**:
+Para verificar se o cluster foi criado com sucesso:
+  ```bash
+  # Verificar clusters Kind disponíveis
+  kind get clusters
+
+  # Verificar pods do GIRUS
+  kubectl get pods -n girus
+
+  # Verificar serviços do GIRUS
+  kubectl get services -n girus
+  ```
+
+**Gerenciando o Cluster**:
+Para verificar o status:
+  ```bash
+  # Listar clusters disponíveis
+  kind get clusters
+
+  # Verificar se o cluster está saudável
+  kubectl cluster-info
+  ```
+
+ **Deletar o Cluster**:
+
+  ```bash
+  # Remover o cluster quando não precisar mais
+  kind delete cluster --name girus
+  ```
+**Recriar o Cluster**:
+
+  ```bash
+  # Se precisar recriar o cluster
+  kind delete cluster --name girus
+  girus create cluster
+  ```
+
 ## Repositório de Labs
 
 Este repositório contém uma coleção de labs práticos para diferentes tecnologias, organizados nas seguintes categorias:
