@@ -4,15 +4,16 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"gopkg.in/yaml.v3"
-	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/util/intstr"
-	"k8s.io/utils/ptr"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"gopkg.in/yaml.v3"
+	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/utils/ptr"
 
 	"github.com/badtuxx/girus-cli/internal/common"
 	"github.com/fatih/color"
@@ -667,8 +668,7 @@ func (k *KubernetesClient) GetProgressFromConfigMap(ctx context.Context, name st
 func (k *KubernetesClient) GetAllLabs(ctx context.Context) ([]common.Lab, error) {
 	data, err := k.GetProgressFromConfigMap(ctx, "progresso.yaml")
 	if err != nil {
-		fmt.Println(err)
-		return nil, err
+		return nil, fmt.Errorf("falha ao coletar os dados de progresso: %w", err)
 	}
 
 	var labs []common.Lab
