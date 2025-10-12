@@ -27,6 +27,13 @@ Desenvolvida pela LINUXtips, a plataforma GIRUS se diferencia por ser executada 
 
 O GIRUS implementa um sistema robusto de gerenciamento de repositórios e laboratórios, similar ao Helm para Kubernetes. Este sistema permite:
 
+### Instalação
+```bash
+curl -sSL girus.linuxtips.io | bash
+```
+
+Você precisa ter o Docker instalado em seu computador para poder instalar o Girus.
+
 ### Atualização da CLI
 
 - **Verificar e Atualizar para a Última Versão**:
