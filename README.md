@@ -450,3 +450,6 @@ A: Sim, após o download inicial das imagens, o GIRUS opera localmente sem neces
 
 **Q: Posso contribuir com novos laboratórios para o projeto?**  
 A: Definitivamente! Contribuições são bem-vindas e valorizadas. Consulte a seção ["Contribuição e Comunidade"](#contribui%C3%A7%C3%A3o-e-comunidade) para detalhes.
+
+
+<!-- IMAGEM UTILIZADA EM 30/10/2025 ubuntu-24.04.3-live-server-amd64.iso -->
